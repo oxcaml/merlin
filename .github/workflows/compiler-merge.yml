@@ -1,4 +1,4 @@
-name: Syntax changes reminder
+name: Compiler merge checklist
 
 on:
   pull_request_target:
