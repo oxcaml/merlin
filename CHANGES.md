@@ -4,6 +4,8 @@ unreleased
   + merlin binary
     - Fix occurrences not working when the definition comes from a hidden source
       file (#1865)
+    - Use new 5.3 features to improve locate behavior in some cases. Merlin no
+      longer confuses uids from interfaces and implementations. (#1857)
 
 merlin 5.2
 ==========
