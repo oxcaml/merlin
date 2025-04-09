@@ -6,6 +6,7 @@ unreleased
       file (#1865)
     - Use new 5.3 features to improve locate behavior in some cases. Merlin no
       longer confuses uids from interfaces and implementations. (#1857)
+    - Perform less merges in the indexer (#1881)
 
 merlin 5.2
 ==========
