@@ -1,3 +1,10 @@
+unreleased
+==========
+
+  + merlin binary
+    - Fix occurrences not working when the definition comes from a hidden source
+      file (#1865)
+
 merlin 5.2
 ==========
 Thu Sep 26 18:48:42 CEST 2024
