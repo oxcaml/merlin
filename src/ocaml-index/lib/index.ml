@@ -20,12 +20,11 @@ let add_root ~root (lid : Longident.t Location.loc) =
     }
 
 let merge m m' =
-  Shape.Uid.Map.union
-    (fun _uid locs locs' -> Some (Lid_set.union locs locs'))
-    m m'
+  Uid_map.union (fun _uid locs locs' -> Some (Lid_set.union locs locs')) m m'
 
 let add_one uid lid map =
-  Shape.Uid.Map.update uid
+  let lid = Lid.of_lid lid in
+  Uid_map.update uid
     (function
       | None -> Some (Lid_set.singleton lid)
       | Some set -> Some (Lid_set.add lid set))
@@ -156,8 +155,7 @@ let index_of_artifact ~into ~root ~rewrite_root ~build_path
         let map_update uid =
           Uid_map.update uid (function
             | None -> Some union
-            | Some union' ->
-              Some (Union_find.union ~f:Uid_set.union union' union))
+            | Some union' -> Some (Union_find.union union' union))
         in
         acc |> map_update uid1 |> map_update uid2)
       into.related_uids cmt_declaration_dependencies
@@ -173,12 +171,12 @@ let index_of_artifact ~into ~root ~rewrite_root ~build_path
 let shape_of_artifact ~impl_shape ~modname =
   let cu_shape = Hashtbl.create 1 in
   Option.iter (Hashtbl.add cu_shape modname) impl_shape;
-  { defs = Shape.Uid.Map.empty;
-    approximated = Shape.Uid.Map.empty;
+  { defs = Uid_map.empty ();
+    approximated = Uid_map.empty ();
     cu_shape;
     stats = Stats.empty;
     root_directory = None;
-    related_uids = Uid_map.empty
+    related_uids = Uid_map.empty ()
   }
 
 let shape_of_cmt { Cmt_format.cmt_impl_shape; cmt_modname; _ } =
@@ -243,7 +241,7 @@ let merge_index ~store_shapes ~into index =
   let stats = Stats.union (fun _ f1 _f2 -> Some f1) into.stats index.stats in
   let related_uids =
     Uid_map.union
-      (fun _ a b -> Some (Union_find.union ~f:Uid_set.union a b))
+      (fun _ a b -> Some (Union_find.union a b))
       index.related_uids into.related_uids
   in
   if store_shapes then
@@ -254,12 +252,12 @@ let from_files ~store_shapes ~output_file ~root ~rewrite_root ~build_path
     ~do_not_use_cmt_loadpath files =
   Log.debug "Debug log is enabled";
   let initial_index =
-    { defs = Shape.Uid.Map.empty;
-      approximated = Shape.Uid.Map.empty;
+    { defs = Uid_map.empty ();
+      approximated = Uid_map.empty ();
       cu_shape = Hashtbl.create 64;
       stats = Stats.empty;
       root_directory = root;
-      related_uids = Uid_map.empty
+      related_uids = Uid_map.empty ()
     }
   in
   let final_index =
@@ -298,12 +296,12 @@ let from_files ~store_shapes ~output_file ~root ~rewrite_root ~build_path
 
 let gather_shapes ~output_file files =
   let initial_index =
-    { defs = Shape.Uid.Map.empty;
-      approximated = Shape.Uid.Map.empty;
+    { defs = Uid_map.empty ();
+      approximated = Uid_map.empty ();
       cu_shape = Hashtbl.create 64;
       stats = Stats.empty;
       root_directory = None;
-      related_uids = Uid_map.empty
+      related_uids = Uid_map.empty ()
     }
   in
   let final_index =
