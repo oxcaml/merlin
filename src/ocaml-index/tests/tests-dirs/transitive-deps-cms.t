@@ -38,11 +38,13 @@ between visible and hidden dependencies:
    uid: Stdlib__List.45; locs:
      "List.init": File "main.ml", line 1, characters 8-17
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
   $ ocaml-index dump lib1/foo.uideps
   1 uids:
   {uid: Bar; locs: "Bar": File "lib1/foo.ml", line 1, characters 8-11 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
   $ ocaml-index dump test.uideps
   5 uids:
@@ -55,4 +57,5 @@ between visible and hidden dependencies:
    uid: Stdlib__List.45; locs:
      "List.init": File "main.ml", line 1, characters 8-17
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
