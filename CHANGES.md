@@ -9,6 +9,8 @@ unreleased
     - Perform less merges in the indexer (#1881)
     - Add initial support for project-wide renaming: occurrences can now return
       all usages of all related definitions. (#1877)
+  + ocaml-index
+    - Bump magic number after index file format change. Index can now be read lazilly (#1886)
 
 merlin 5.2
 ==========
