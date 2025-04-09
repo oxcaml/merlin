@@ -72,7 +72,7 @@ val from_path :
   local_defs:Mtyper.typedtree ->
   namespace:Env_lookup.Namespace.t ->
   Path.t ->
-  [> `File_not_found of string
+  [> `File_not_found of result
   | `Found of result
   | `Builtin of Shape.Uid.t * string
   | `Not_in_env of string
@@ -86,7 +86,7 @@ val from_string :
   ?let_pun_behavior:Mbrowse.Let_pun_behavior.t ->
   ?namespaces:Namespace_resolution.t ->
   string ->
-  [> `File_not_found of string
+  [> `File_not_found of result
   | `Found of result
   | `Builtin of Shape.Uid.t * string
   | `Missing_labels_namespace
@@ -102,8 +102,7 @@ val get_doc :
   pos:Lexing.position ->
   [ `User_input of string
   | `Completion_entry of Env_lookup.Namespace.t * Path.t * Location.t ] ->
-  [> `File_not_found of string
-  | `Found of string
+  [> `Found of string
   | `Builtin of string
   | `Not_found of string * string option
   | `Not_in_env of string
