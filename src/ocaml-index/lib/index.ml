@@ -24,6 +24,13 @@ let merge m m' =
     (fun _uid locs locs' -> Some (Lid_set.union locs locs'))
     m m'
 
+let add_one uid lid map =
+  Shape.Uid.Map.update uid
+    (function
+      | None -> Some (Lid_set.singleton lid)
+      | Some set -> Some (Lid_set.add lid set))
+    map
+
 (** Cmt files contains a table of declarations' Uids associated to a typedtree
     fragment. [add_locs_from_fragments] gather locations from these *)
 let gather_locs_from_fragments ~root ~rewrite_root map fragments =
@@ -36,7 +43,7 @@ let gather_locs_from_fragments ~root ~rewrite_root map fragments =
     | Some lid ->
       let lid = to_located_lid lid in
       let lid = if rewrite_root then add_root ~root lid else lid in
-      Shape.Uid.Map.add uid (Lid_set.singleton lid) acc
+      add_one uid lid acc
   in
   Shape.Uid.Tbl.fold add_loc fragments map
 
@@ -95,16 +102,16 @@ let init_load_path_once ~do_not_use_cmt_loadpath =
       Load_path.(init ~auto_include:no_auto_include ~visible ~hidden);
       loaded := true)
 
-let index_of_artifact ~root ~rewrite_root ~build_path ~do_not_use_cmt_loadpath
-    ~shapes ~cmt_loadpath ~cmt_impl_shape ~cmt_modname ~uid_to_loc
-    ~cmt_ident_occurrences ~cmt_initial_env ~cmt_sourcefile ~cmt_source_digest =
+let index_of_artifact ~into ~root ~rewrite_root ~build_path
+    ~do_not_use_cmt_loadpath ~shapes ~cmt_loadpath ~cmt_impl_shape ~cmt_modname
+    ~uid_to_loc ~cmt_ident_occurrences ~cmt_initial_env ~cmt_sourcefile
+    ~cmt_source_digest =
   init_load_path_once ~do_not_use_cmt_loadpath ~dirs:build_path cmt_loadpath;
   let module Reduce = Shape_reduce.Make (Reduce_conf (struct
     let shapes = shapes
   end)) in
   let defs =
-    gather_locs_from_fragments ~root ~rewrite_root Shape.Uid.Map.empty
-      uid_to_loc
+    gather_locs_from_fragments ~root ~rewrite_root into.defs uid_to_loc
   in
   (* The list [cmt_ident_occurrences] associate each ident usage location in the
      module with its (partially) reduced shape. We finish the reduction and
@@ -119,30 +126,30 @@ let index_of_artifact ~root ~rewrite_root ~build_path ~do_not_use_cmt_loadpath
           | result -> result
         in
         match Locate.uid_of_result ~traverse_aliases:false resolved with
-        | Some uid, false -> (add acc_defs uid (Lid_set.singleton lid), acc_apx)
-        | Some uid, true -> (acc_defs, add acc_apx uid (Lid_set.singleton lid))
+        | Some uid, false -> (add_one uid lid acc_defs, acc_apx)
+        | Some uid, true -> (acc_defs, add_one uid lid acc_apx)
         | None, _ -> acc)
-      (defs, Shape.Uid.Map.empty)
-      cmt_ident_occurrences
+      (defs, into.approximated) cmt_ident_occurrences
   in
-  let cu_shape = Hashtbl.create 1 in
+  let cu_shape = into.cu_shape in
   Option.iter (Hashtbl.add cu_shape cmt_modname) cmt_impl_shape;
   let stats =
     match cmt_sourcefile with
-    | None -> Stats.empty
+    | None -> into.stats
     | Some src -> (
       let rooted_src = with_root ?root src in
       try
         let stats = Unix.stat rooted_src in
         let src = if rewrite_root then rooted_src else src in
-        Stats.singleton src
+        Stats.add src
           { mtime = stats.st_mtime;
             size = stats.st_size;
             source_digest = cmt_source_digest
           }
-      with Unix.Unix_error _ -> Stats.empty)
+          into.stats
+      with Unix.Unix_error _ -> into.stats)
   in
-  { defs; approximated; cu_shape; stats; root_directory = None }
+  { defs; approximated; cu_shape; stats; root_directory = into.root_directory }
 
 let shape_of_artifact ~impl_shape ~modname =
   let cu_shape = Hashtbl.create 1 in
@@ -232,27 +239,25 @@ let from_files ~store_shapes ~output_file ~root ~rewrite_root ~build_path
     List.fold_left
       (fun into file ->
         Log.debug "Indexing from file: %s" file;
-        let index =
-          match Cms_cache.read file with
-          | cms_item ->
-            index_of_cms ~root ~rewrite_root ~build_path
-              ~do_not_use_cmt_loadpath ~shapes:into.cu_shape cms_item.cms_infos
+        match Cms_cache.read file with
+        | cms_item ->
+          index_of_cms ~into ~root ~rewrite_root ~build_path
+            ~do_not_use_cmt_loadpath ~shapes:into.cu_shape cms_item.cms_infos
+        | exception _ -> (
+          match Cmt_cache.read file with
+          | cmt_item ->
+            index_of_cmt ~into ~root ~rewrite_root ~build_path
+              ~do_not_use_cmt_loadpath ~shapes:into.cu_shape cmt_item.cmt_infos
           | exception _ -> (
-            match Cmt_cache.read file with
-            | cmt_item ->
-              index_of_cmt ~root ~rewrite_root ~build_path
-                ~do_not_use_cmt_loadpath ~shapes:into.cu_shape
-                cmt_item.cmt_infos
-            | exception _ -> (
-              match read ~file with
-              | Index index -> index
-              | _ ->
-                Log.error "Unknown file type: %s" file;
-                exit 1))
-        in
-        (* We add the shapes into `into` because we need to collect them so we can use
-           them for shape reduction, regardless of whether store_shapes is true *)
-        merge_index ~store_shapes:true index ~into)
+            match read ~file with
+            | Index index ->
+              (* We add the shapes into `into` because we need to collect them so we can use
+                 them for shape reduction, regardless of whether store_shapes
+                 is true *)
+              merge_index ~store_shapes:true index ~into
+            | _ ->
+              Log.error "Unknown file type: %s" file;
+              exit 1)))
       initial_index files
   in
   let final_index =
