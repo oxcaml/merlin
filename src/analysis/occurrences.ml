@@ -71,7 +71,7 @@ let set_fname ~file (loc : Location.t) =
       correspond to a ppx extension node.) In such a case, attempting to modify the
       location to only include the last segment of the identifier is nonsensical. Since we
       don't have a way to detect such a case, it forces us to not try. *)
-(*
+
 (* A longident can have the form: A.B.x Right now we are only interested in
    values, but we will eventually want to index all occurrences of modules in
    such longidents. However there is an issue with that: we only have the
@@ -83,20 +83,25 @@ let set_fname ~file (loc : Location.t) =
    when the ident does not require parenthesis. In that case the loc sie differs
    from the name size in a way that depends on the concrete syntax which is
    lost. *)
-let last_loc (loc : Location.t) lid =
-  match lid with
-  | Longident.Lident _ -> loc
-  | _ ->
-    let last_segment = Longident.last lid in
-    let needs_parens = Pprintast.needs_parens last_segment in
-    if not needs_parens then
-      let last_size = last_segment |> String.length in
-      { loc with
-        loc_start =
-          { loc.loc_end with pos_cnum = loc.loc_end.pos_cnum - last_size }
-      }
-    else loc
-*)
+let last_loc_for_renaming (loc : Location.t) lid =
+  (* Merlin-jst: we do want to keep some of these ghost locs in cases like
+     punning, but not in the case of ppxes, the disctinction is not obvious to
+     make. *)
+  if loc.loc_ghost then None
+  else
+    Some
+      (match lid with
+      | Longident.Lident _ -> loc
+      | _ ->
+        let last_segment = Longident.last lid in
+        let needs_parens = Pprintast.needs_parens last_segment in
+        if not needs_parens then
+          let last_size = last_segment |> String.length in
+          { loc with
+            loc_start =
+              { loc.loc_end with pos_cnum = loc.loc_end.pos_cnum - last_size }
+          }
+        else loc)
 
 let uid_and_loc_of_node env node =
   let open Browse_raw in
@@ -224,25 +229,53 @@ let get_external_locs ~(config : Mconfig.t) ~current_buffer_path uid =
               locs,
             Stat_check.get_outdated_files stats )))
 
-let find_linked_uids ~config ~name uid =
+let lookup_related_uids_in_indexes ~(config : Mconfig.t) uid =
+  let title = "lookup_related_uids_in_indexes" in
+  let open Index_format in
+  let related_uids =
+    List.fold_left ~init:Uid_map.empty config.merlin.index_files
+      ~f:(fun acc index_file ->
+        try
+          let index = Index_cache.read index_file in
+          Uid_map.union
+            (fun _ a b -> Some (Union_find.union ~f:Uid_set.union a b))
+            index.related_uids acc
+        with Index_format.Not_an_index _ | Sys_error _ ->
+          log ~title "Could not load index %s" index_file;
+          acc)
+  in
+  Uid_map.find_opt uid related_uids
+  |> Option.value_map ~default:[] ~f:(fun x ->
+         x |> Union_find.get |> Uid_set.to_list)
+
+let find_linked_uids ~config ~scope ~name uid =
   let title = "find_linked_uids" in
   match uid with
-  | Shape.Uid.Item { from = _; comp_unit; _ } -> (
-    let config =
+  | Shape.Uid.Item { from = _; comp_unit; _ } ->
+    let locate_config =
       { Locate.mconfig = config; ml_or_mli = `ML; traverse_aliases = false }
     in
-    match Locate.get_linked_uids ~config ~comp_unit uid with
-    | [ uid' ] ->
-      log ~title "Found linked uid: %a" Logger.fmt (fun fmt ->
-          Shape.Uid.print fmt uid');
-      let name_check =
-        Locate.lookup_uid_loc_of_decl ~config:config.mconfig uid'
-        |> Option.value_map
-             ~f:(fun { Location.txt; _ } -> String.equal name txt)
-             ~default:false
-      in
-      if name_check then [ uid' ] else []
-    | _ -> [])
+    let check_name uid =
+      Locate.lookup_uid_loc_of_decl ~config uid
+      |> Option.value_map
+           ~f:(fun { Location.txt; _ } ->
+             let result = String.equal name txt in
+             if not result then
+               log ~title "Found clashing idents %S <> %S. Ignoring UID %a."
+                 name txt Logger.fmt
+                 (Fun.flip Shape.Uid.print uid);
+             result)
+           ~default:false
+    in
+    let related_uids =
+      match scope with
+      | `Buffer -> []
+      | `Project -> Locate.get_linked_uids ~config:locate_config ~comp_unit uid
+      | `Renaming -> lookup_related_uids_in_indexes ~config uid
+    in
+    log ~title "Found related uids: [%a]" Logger.fmt (fun fmt ->
+        List.iter ~f:(fprintf fmt "%a;" Shape.Uid.print) related_uids);
+    List.filter ~f:check_name related_uids
   | _ -> []
 
 let locs_of ~config ~env ~typer_result ~pos ~scope path =
@@ -301,7 +334,7 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
         let name =
           String.split_on_char ~sep:'.' path |> List.last |> Option.get
         in
-        let additional_uids = find_linked_uids ~config ~name def_uid in
+        let additional_uids = find_linked_uids ~config ~scope ~name def_uid in
         List.concat_map
           (def_uid :: additional_uids)
           ~f:(get_external_locs ~config ~current_buffer_path)
@@ -316,43 +349,33 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
     let occurrences =
       Occurrence_set.union buffer_occurrences external_occurrences
     in
-    let occurrences = Occurrence_set.to_list occurrences in
-    log ~title:"occurrences" "Found %i locs" (List.length occurrences);
-    let occurrences =
-      List.filter_map occurrences
-        ~f:(fun (({ txt; loc } : _ Location.loc), staleness) ->
-          (* Canonoicalize filenames. Some of the paths may have redundant `.`s or `..`s in
-             them. Although canonicalizing is not necessary for correctness, it makes the
-             output a bit nicer. *)
-          let file =
-            Misc.canonicalize_filename ?cwd:config.merlin.source_root
-              loc.loc_start.pos_fname
-          in
-          let loc = set_fname ~file loc in
-          let lid = try Longident.head txt with _ -> "not flat lid" in
-          log ~title:"occurrences" "Found occ: %s %a" lid Logger.fmt
-            (Fun.flip Location.print_loc loc);
-          (* Merlin-jst: See comment at the commented-out definition of last_loc for
-             explanation of why this is commented out. *)
-          (* let loc = last_loc loc txt in *)
-          let fname = loc.Location.loc_start.Lexing.pos_fname in
-          let loc =
-            if not (Filename.is_relative fname) then Some loc
-            else
-              match config.merlin.source_root with
-              | Some path ->
-                let file = Filename.concat path loc.loc_start.pos_fname in
-                Some (set_fname ~file loc)
-              | None -> begin
-                match Locate.find_source ~config loc fname with
-                | `Found (file, _) -> Some (set_fname ~file loc)
-                | `File_not_found msg ->
-                  log ~title:"occurrences" "%s" msg;
-                  None
-              end
-          in
-          Option.map loc ~f:(fun loc : Query_protocol.occurrence ->
-              { loc; is_stale = Staleness.is_stale staleness }))
+    let locs = Lid_set.map canonicalize_file_in_loc locs in
+    let locs =
+      log ~title:"occurrences" "Found %i locs" (Lid_set.cardinal locs);
+      Lid_set.elements locs
+      |> List.filter_map ~f:(fun { Location.txt; loc } ->
+             let lid = try Longident.head txt with _ -> "not flat lid" in
+             log ~title:"occurrences" "Found occ: %s %a" lid Logger.fmt
+               (Fun.flip Location.print_loc loc);
+             let loc =
+               if scope = `Renaming then last_loc_for_renaming loc txt
+               else Some loc
+             in
+             Option.bind loc ~f:(fun loc ->
+                 let fname = loc.Location.loc_start.Lexing.pos_fname in
+                 if not (Filename.is_relative fname) then Some loc
+                 else
+                   match config.merlin.source_root with
+                   | Some path ->
+                     let file = Filename.concat path loc.loc_start.pos_fname in
+                     Some (set_fname ~file loc)
+                   | None -> begin
+                     match Locate.find_source ~config loc fname with
+                     | `Found (file, _) -> Some (set_fname ~file loc)
+                     | `File_not_found msg ->
+                       log ~title:"occurrences" "%s" msg;
+                       None
+                   end))
     in
     let def_uid_is_in_current_unit =
       let uid_comp_unit = comp_unit_of_uid def_uid in
@@ -361,9 +384,9 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
     in
     let status =
       match (scope, String.Set.to_list out_of_sync_files) with
-      | `Project, [] -> `Included
-      | `Project, l -> `Out_of_sync l
       | `Buffer, _ -> `Not_requested
+      | _, [] -> `Included
+      | _, l -> `Out_of_sync l
     in
     if not def_uid_is_in_current_unit then { occurrences; status }
     else

@@ -268,8 +268,8 @@ type _ t =
   | Extension_list : [ `All | `Enabled | `Disabled ] -> string list t
   | Path_list : [ `Build | `Source ] -> string list t
   | Occurrences (* *) :
-      [ `Ident_at of Msource.position ] * [ `Project | `Buffer ]
-      -> (occurrence list * occurrences_status) t
+      [ `Ident_at of Msource.position ] * [ `Project | `Buffer | `Renaming ]
+      -> (Location.t list * occurrences_status) t
   | Signature_help : signature_help -> signature_help_result option t
       (** In current version, Merlin only uses the parameter [position] to answer
         signature_help queries. The additionnal parameters are described in the

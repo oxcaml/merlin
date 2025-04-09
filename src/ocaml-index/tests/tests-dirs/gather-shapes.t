@@ -39,6 +39,7 @@ us to avoid loading the cms files of dependencies.
    uid: Main.2; locs: "b": File "main.ml", line 3, characters 4-5
    uid: Main.3; locs: "Bar": File "main.ml", line 4, characters 7-10 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 Order matters; if we don't load the shapes file before the cms, we will fail to index
 properly:
@@ -50,3 +51,4 @@ properly:
    uid: Main.2; locs: "b": File "main.ml", line 3, characters 4-5
    uid: Main.3; locs: "Bar": File "main.ml", line 4, characters 7-10 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
