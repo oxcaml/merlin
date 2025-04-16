@@ -29,6 +29,18 @@
     "class": "return",
     "value": [
       {
+        "file": "$TESTCASE_ROOT/main.ml",
+        "start": {
+          "line": 1,
+          "col": 26
+        },
+        "end": {
+          "line": 1,
+          "col": 29
+        },
+        "stale": false
+      },
+      {
         "file": "$TESTCASE_ROOT/lib.ml",
         "start": {
           "line": 1,

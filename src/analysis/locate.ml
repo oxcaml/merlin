@@ -922,7 +922,7 @@ let rec uid_of_result ~traverse_aliases = function
   | Approximated _ | Unresolved _ | Internal_error_missing_uid -> (None, true)
 
 (** This is the main function here *)
-let from_path ~config ~env ~local_defs ~decl path =
+let from_path ~config ~env ~local_defs ~decl ?ident:_ path =
   let title = "from_path" in
   let unalias (decl : Env_lookup.item) =
     if not config.traverse_aliases then (path, decl.uid)
@@ -969,9 +969,12 @@ let from_path ~config ~env ~local_defs ~decl path =
   in
   (* Step 2:  Uid => Location *)
   let loc =
+    let ident =
+      (* TODO it might not be useful to check the ident without impl_uid *)
+      Path.last path
+    in
     match impl_uid with
     | Some impl_uid ->
-      let ident = Path.last path in
       find_loc_of_uid ~config ~local_defs ~ident ~fallback:uid impl_uid
     | None -> find_loc_of_uid ~config ~local_defs uid
   in
@@ -1009,7 +1012,9 @@ let from_longident ~config ~env ~local_defs nss ident =
   in
   match Env_lookup.by_longident nss ident env with
   | None -> `Not_in_env str_ident
-  | Some (path, decl) -> from_path ~config ~env ~local_defs ~decl path
+  | Some (path, decl) ->
+    let ident = Longident.last ident in
+    from_path ~config ~env ~local_defs ~decl ~ident path
 
 let from_path ~config ~env ~local_defs ~namespace path =
   File_switching.reset ();
