@@ -53,6 +53,18 @@
         }
       },
       {
+        "file": "$TESTCASE_ROOT/main.ml",
+        "start": {
+          "line": 5,
+          "col": 25
+        },
+        "end": {
+          "line": 5,
+          "col": 26
+        },
+        "stale": false
+      },
+      {
         "file": "$TESTCASE_ROOT/lib.ml",
         "start": {
           "line": 2,

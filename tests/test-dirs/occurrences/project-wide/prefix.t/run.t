@@ -96,6 +96,18 @@ Merlin successfully finds occurrences outside file when UNIT_NAME directive is u
         }
       },
       {
+        "file": "$TESTCASE_ROOT/b.ml",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
+      },
+      {
         "file": "$TESTCASE_ROOT/a.ml",
         "start": {
           "line": 1,
@@ -153,6 +165,18 @@ Merlin successfully finds occurrences outside file when WRAPPING_PREFIX directiv
           "line": 1,
           "col": 5
         }
+      },
+      {
+        "file": "$TESTCASE_ROOT/b.ml",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/a.ml",

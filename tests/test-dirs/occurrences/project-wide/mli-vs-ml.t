@@ -47,6 +47,18 @@ the interface and the implementation.
         }
       },
       {
+        "file": "$TESTCASE_ROOT/main.mli",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
+      },
+      {
         "file": "$TESTCASE_ROOT/main.ml",
         "start": {
           "line": 2,
@@ -100,6 +112,18 @@ Same when the cursor is at the origin:
           "line": 1,
           "col": 6
         }
+      },
+      {
+        "file": "$TESTCASE_ROOT/main.mli",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/main.ml",
