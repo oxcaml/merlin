@@ -15,7 +15,13 @@ type mismatch.
 Locate bar (the function being applied with a mismatched argument):
   $ $MERLIN single locate -position 7:9 \
   > -filename test.ml <test.ml | jq '.value'
-  "Not in environment 'bar'"
+  {
+    "file": "$TESTCASE_ROOT/test.ml",
+    "pos": {
+      "line": 2,
+      "col": 6
+    }
+  }
 
 Locate baz (the ill-typed argument) still works too:
   $ $MERLIN single locate -position 7:12 \
