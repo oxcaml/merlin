@@ -308,6 +308,8 @@ let rec core_type i ppf x =
   | Ttyp_open (path, _mod_ident, t) ->
       line i ppf "Ttyp_open %a\n" fmt_path path;
       core_type i ppf t
+  | Ttyp_of_kind jkind ->
+      line i ppf "Ttyp_of_kind %a\n" (jkind_annotation i) jkind;
   | Ttyp_call_pos -> line i ppf "Ttyp_call_pos\n";
 
 and labeled_core_type i ppf (l, t) =
@@ -418,7 +420,8 @@ and function_body i ppf (body : function_body) =
       expression (i+1) ppf e
   | Tfunction_cases
       { fc_cases; fc_loc; fc_exp_extra; fc_attributes; fc_arg_mode;
-        fc_arg_sort; fc_param = _; fc_partial; fc_env = _; fc_ret_type = _ }
+        fc_arg_sort; fc_param = _; fc_param_debug_uid = _;
+        fc_partial; fc_env = _; fc_ret_type = _ }
     ->
       line i ppf "Tfunction_cases%a %a\n"
         fmt_partiality fc_partial
@@ -543,7 +546,7 @@ and expression i ppf x =
       line i ppf "representation =\n";
       record_representation (i+1) ppf representation;
       line i ppf "extended_expression =\n";
-      option (i+1) expression ppf (Option.map fst extended_expression);
+      option (i+1) expression ppf (Option.map Misc.fst3 extended_expression);
   | Texp_record_unboxed_product
         { fields; representation; extended_expression } ->
       line i ppf "Texp_record_unboxed_product\n";
@@ -554,7 +557,7 @@ and expression i ppf x =
       record_unboxed_product_representation (i+1) ppf representation;
       line i ppf "extended_expression =\n";
       option (i+1) expression ppf (Option.map fst extended_expression);
-  | Texp_field (e, li, _, _, _) ->
+  | Texp_field (e, _, li, _, _, _) ->
       line i ppf "Texp_field\n";
       expression i ppf e;
       longident i ppf li;

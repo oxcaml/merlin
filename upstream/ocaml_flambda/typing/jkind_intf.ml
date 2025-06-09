@@ -80,7 +80,7 @@ module type Sort = sig
 
     val for_variant_arg : t
 
-    val for_record : t
+    val for_boxed_record : t
 
     val for_block_element : t
 
@@ -235,6 +235,7 @@ module History = struct
     | Univar : string -> (allowed * allowed) annotation_context
     | Type_variable : string -> (allowed * allowed) annotation_context
     | Type_wildcard : Location.t -> (allowed * allowed) annotation_context
+    | Type_of_kind : Location.t -> (allowed * allowed) annotation_context
     | With_error_message :
         string * 'd annotation_context
         -> 'd annotation_context
@@ -290,6 +291,8 @@ module History = struct
     | Default_type_jkind
     | Existential_type_variable
     | Array_comprehension_element
+    | List_comprehension_iterator_element
+    | Array_comprehension_iterator_element
     | Lazy_expression
     | Class_type_argument
     | Class_term_argument
