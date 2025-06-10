@@ -125,6 +125,11 @@ for file in $(git diff --no-ext-diff --name-only HEAD^ HEAD); do
     utils/compilation_unit.ml*|utils/import_info.ml*)
       tgt=${base/#utils/typing};;
 
+    # We can't have this module in `parsing/`, it breaks Merlin's dependency
+    # structure
+    parsing/unit_info.ml*)
+      tgt=${base/#parsing/typing};;
+
     # We have to inspect these files by hand, we only care about a subset of the
     # changes
     utils/clflags.ml*|utils/config.ml*)
