@@ -663,6 +663,11 @@ let stamped_mem table value =
 let stamped_find table value =
   Stamped_hashtable.find table value
 
+let stamped_find_opt table value =
+  if Stamped_hashtable.mem table value
+  then Some (Stamped_hashtable.find table value)
+  else None
+
 let stamped_create n =
   Stamped_hashtable.create !stamped_changelog n
 
@@ -2493,16 +2498,16 @@ and store_label
     | Unboxed_version k_boxed ->
       (* Never warn if an unboxed version of a label is unused, but its uses
          count as uses of the boxed version. *)
-      begin match stamped_find_opt !used_labels k_boxed with
+      begin match stamped_find_opt used_labels k_boxed with
       | Some boxed_usages ->
-        stamped_add !used_labels k boxed_usages
+        stamped_uid_add used_labels k boxed_usages
       | None ->
         ()
       end
     | _ ->
-    if not (Types.Uid.Tbl.mem !used_labels k) then
+    if not (stamped_mem used_labels k) then
       let used = label_usages () in
-      stamped_uid_add !used_labels k
+      stamped_uid_add used_labels k
         (add_label_usage used);
       if not (ty_name = "" || ty_name.[0] = '_' || name.[0] = '_')
       then !add_delayed_check_forward
@@ -3139,7 +3144,7 @@ let mark_extension_used usage ext =
   | exception Not_found -> ()
 
 let mark_label_used usage ld =
-  match Types.Uid.Tbl.find !used_labels ld.ld_uid with
+  match stamped_find used_labels ld.ld_uid with
   | mark -> mark usage
   | exception Not_found -> ()
 
@@ -3157,7 +3162,7 @@ let mark_label_description_used usage env lbl =
     | _ -> assert false
   in
   mark_type_path_used env ty_path;
-  match Types.Uid.Tbl.find !used_labels lbl.lbl_uid with
+  match stamped_find used_labels lbl.lbl_uid with
   | mark -> mark usage
   | exception Not_found -> ()
 
@@ -5179,7 +5184,6 @@ let cleanup_usage_tables ~stamp =
   Stamped_hashtable.backtrack module_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack used_constructors_changelog ~stamp;
   Stamped_hashtable.backtrack used_labels_changelog ~stamp;
-  Stamped_hashtable.backtrack used_unboxed_labels_changelog ~stamp
 
 type 'acc fold_all_labels_f =
   {

@@ -1766,7 +1766,7 @@ let tree_of_label l =
     | Mutable m ->
         let mut =
           let open Alloc.Comonadic.Const in
-          if Misc.Le_result.equal ~le m legacy then
+          if Misc_stdlib.Le_result.equal ~le m legacy then
             Om_mutable None
           else
             Om_mutable (Some "<non-legacy>")

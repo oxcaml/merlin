@@ -61,7 +61,7 @@ and core_type type_expr =
       @@ Mode.Alloc.(Const.diff (zap_to_legacy arg_alloc_mode) Const.legacy)
     in
     let ret_modes =
-      Typemode.untransl_mode_annots ~loc:Location.none
+      Typemode.untransl_mode_annots
       @@ Mode.Alloc.(Const.diff (zap_to_legacy ret_alloc_mode) Const.legacy)
     in
     Btype.backtrack snap;
@@ -133,6 +133,7 @@ and core_type type_expr =
         type_exprs
     in
     Typ.poly names @@ core_type type_expr
+  | Tof_kind _jkind -> (* CR modes: this is terrible *) Typ.any None
   | Tpackage (path, lids_type_exprs) ->
     let loc = mknoloc (Untypeast.lident_of_path path) in
     let args =
@@ -155,8 +156,8 @@ and extension_constructor id { ext_args; ext_ret_type; ext_attributes; _ } =
     ?res:(Option.map ~f:core_type ext_ret_type)
     (var_of_id id)
 
-and const_modalities ~attrs modalities =
-  Typemode.untransl_modalities Immutable attrs modalities
+and const_modalities modalities =
+  Typemode.untransl_modalities Immutable modalities
 
 and value_description id
     { val_type; val_kind = _; val_loc; val_attributes; val_modalities; _ } =
@@ -168,14 +169,14 @@ and value_description id
     pval_type = type_;
     pval_prim = [];
     pval_attributes = val_attributes;
-    pval_modalities = const_modalities ~attrs:val_attributes modalities;
+    pval_modalities = const_modalities modalities;
     pval_loc = val_loc
   }
 
 and constructor_argument { ca_type; ca_loc; ca_modalities; ca_sort = _ } =
   { Parsetree.pca_type = core_type ca_type;
     pca_loc = ca_loc;
-    pca_modalities = const_modalities ~attrs:[] ca_modalities
+    pca_modalities = const_modalities ca_modalities
   }
 
 and label_declaration
@@ -186,7 +187,7 @@ and label_declaration
       | Mutable _ -> Mutable
       | Immutable -> Immutable)
     ~modalities:
-      (Typemode.untransl_modalities ld_mutable ld_attributes ld_modalities)
+      (Typemode.untransl_modalities ld_mutable ld_modalities)
     (var_of_id ld_id) (core_type ld_type)
 
 and constructor_arguments = function

@@ -397,7 +397,7 @@ let rec of_expression_desc loc = function
   | Texp_lazy e
   | Texp_setinstvar (_, _, _, e) -> of_expression e
   | Texp_record { fields; extended_expression } ->
-    option_fold (fun (e, _) -> of_expression e) extended_expression
+    option_fold (fun (e, _, _) -> of_expression e) extended_expression
     **
     let fold_field = function
       | _, Typedtree.Kept _ -> id_fold
@@ -414,7 +414,7 @@ let rec of_expression_desc loc = function
         of_exp_record_field e lid_loc desc Unboxed_product ** of_expression e
     in
     array_fold fold_field fields
-  | Texp_field (e, lid_loc, lbl, _, _) ->
+  | Texp_field (e, _, lid_loc, lbl, _, _) ->
     of_expression e ** of_exp_record_field e lid_loc lbl Legacy
   | Texp_unboxed_field (e, _, lid_loc, lbl, _) ->
     of_expression e ** of_exp_record_field e lid_loc lbl Unboxed_product
@@ -586,7 +586,7 @@ and of_signature_item_desc = function
     id_fold
 
 and of_core_type_desc = function
-  | Ttyp_var _ | Ttyp_call_pos -> id_fold
+  | Ttyp_var _ | Ttyp_call_pos | Ttyp_of_kind _ -> id_fold
   | Ttyp_open (_, _, ct) -> of_core_type ct
   | Ttyp_arrow (_, ct1, ct2) -> of_core_type ct1 ** of_core_type ct2
   | Ttyp_tuple cts -> list_fold (fun (_, ty) -> of_core_type ty) cts

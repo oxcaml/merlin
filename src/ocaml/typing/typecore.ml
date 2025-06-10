@@ -317,7 +317,7 @@ let deep_copy () =
       TypeHash.add table ty ty';
       let desc =
         match get_desc ty with
-        | Tvar _ | Tnil | Tunivar _ as desc -> desc
+        | Tvar _ | Tnil | Tunivar _ | Tof_kind _ as desc -> desc
         | Tvariant _ as desc -> (* fixme *) desc
         | Tarrow (l,t1,t2,c) -> Tarrow (l, copy t1, copy t2, c)
         | Ttuple tl -> Ttuple (List.map (fun (l, t) -> l, copy t) tl)
@@ -6595,7 +6595,7 @@ and type_expect_
               if !Clflags.principal && get_level typ <> generic_level then
                 Location.prerr_warning loc
                   (Warnings.Not_principal "this use of a polymorphic method");
-              snd (instance_poly ~fixed:false tl ty)
+              instance_poly tl ty
           | Tvar _ ->
               let ty' = newvar (Jkind.Builtin.value ~why:Object_field) in
               unify env (instance typ) (newty(Tpoly(ty',[])));
@@ -6863,7 +6863,7 @@ and type_expect_
               with_local_level begin fun () ->
                 let vars, ty'' =
                   with_local_level_if_principal
-                    (fun () -> instance_poly ~fixed:true tl ty')
+                    (fun () -> instance_poly_fixed tl ty')
                     ~post:(fun (_,ty'') -> generalize_structure ty'')
                 in
                 let exp = type_expect env expected_mode sbody (mk_expected ty'') in
@@ -7986,7 +7986,7 @@ and type_label_access
         lbl_sort = Jkind.Sort.Const.value;
       }
     in
-    (record, Mode.Value.disallow_right mode,
+    (record, record_sort, Mode.Value.disallow_right mode,
      make_fake_label record_form, expected_type)
 
 (* Typing format strings for printing or reading.
