@@ -155,8 +155,32 @@
 
 FIXME: Not satisfying, expected core not more
   $ $MERLIN single type-enclosing -position 9:3 -verbosity 0 \
-  > -filename ./variants.ml < ./variants.ml | jq ".value[0:2]"
+  > -filename ./variants.ml < ./variants.ml | jq ".value"
   [
+    {
+      "start": {
+        "line": 9,
+        "col": 2
+      },
+      "end": {
+        "line": 9,
+        "col": 7
+      },
+      "type": "more",
+      "tail": "no"
+    },
+    {
+      "start": {
+        "line": 9,
+        "col": 2
+      },
+      "end": {
+        "line": 9,
+        "col": 7
+      },
+      "type": "more",
+      "tail": "no"
+    },
     {
       "start": {
         "line": 9,
@@ -184,8 +208,32 @@ FIXME: Not satisfying, expected core not more
   ]
 
   $ $MERLIN single type-enclosing -position 9:3 -verbosity 1 \
-  > -filename ./variants.ml < ./variants.ml | jq ".value[0:2]"
+  > -filename ./variants.ml < ./variants.ml | jq ".value"
   [
+    {
+      "start": {
+        "line": 9,
+        "col": 2
+      },
+      "end": {
+        "line": 9,
+        "col": 7
+      },
+      "type": "[ `A | `B | `C ]",
+      "tail": "no"
+    },
+    {
+      "start": {
+        "line": 9,
+        "col": 2
+      },
+      "end": {
+        "line": 9,
+        "col": 7
+      },
+      "type": "[ `A | `B | `C ]",
+      "tail": "no"
+    },
     {
       "start": {
         "line": 9,
