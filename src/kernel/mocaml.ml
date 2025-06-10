@@ -35,8 +35,12 @@ let setup_reader_config config =
   let open Mconfig in
   let open Clflags in
   let ocaml = config.ocaml in
-  let to_compilation_unit name = Some (Compilation_unit.of_string name) in
-  Env.set_unit_name (Mconfig.unitname config |> to_compilation_unit);
+  let to_unit_info name =
+    Some (name |>
+          Compilation_unit.of_string |>
+          Unit_info.make_dummy ~input_name:name)
+  in
+  Env.set_unit_name (Mconfig.unitname config |> to_unit_info);
   Location.input_name := config.query.filename;
   fast := ocaml.unsafe;
   classic := ocaml.classic;
@@ -54,7 +58,7 @@ let setup_reader_config config =
 
 let init_params params =
   List.iter params ~f:(fun s ->
-      Env.register_parameter (s |> Global_module.Name.create_no_args))
+      Env.register_parameter (s |> Global_module.Parameter_name.of_string))
 
 let setup_typer_config config =
   setup_reader_config config;
