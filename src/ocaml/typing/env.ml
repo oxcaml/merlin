@@ -140,9 +140,6 @@ let label_usage_complaint priv mut lu
 let stamped_used_labels = s_table local_stamped 32
 let used_labels_changelog, used_labels = !stamped_used_labels
 
-let stamped_used_unboxed_labels = s_table local_stamped 32
-let used_unboxed_labels_changelog, used_unboxed_labels = !stamped_used_unboxed_labels
-
 (** Map indexed by the name of module components. *)
 module NameMap = String.Map
 
@@ -761,7 +758,8 @@ and label_data = label_description
 and type_data =
   { tda_declaration : type_declaration;
     tda_descriptions : type_descriptions;
-    tda_shape : Shape.t; }
+    tda_shape : Shape.t;
+    tda_unboxed_version_descriptions : type_descriptions option }
 
 and module_data =
   { mda_declaration : Subst.Lazy.module_declaration;
@@ -834,7 +832,7 @@ type lookup_error =
   | Unbound_value of Longident.t * unbound_value_hint
   | Unbound_type of Longident.t
   | Unbound_constructor of Longident.t
-  | Unbound_label of (Longident.t * record_form_packed)
+  | Unbound_label of Longident.t * record_form_packed * label_usage
   | Unbound_module of Longident.t
   | Unbound_class of Longident.t
   | Unbound_modtype of Longident.t
@@ -857,14 +855,14 @@ type lookup_error =
       Mode.Value.Comonadic.error * closure_context
   | Local_value_used_in_exclave of lock_item * Longident.t
   | Non_value_used_in_object of Longident.t * type_expr * Jkind.Violation.t
-  | No_unboxed_version of Longident.t
+  | No_unboxed_version of Longident.t * type_declaration
   | Error_from_persistent_env of Persistent_env.error
 
 type error =
   | Missing_module of Location.t * Path.t * Path.t
   | Illegal_value_name of Location.t * string
   | Lookup_error of Location.t * t * lookup_error
-  | Incomplete_instantiation of { unset_param : Global_module.Name.t }
+  | Incomplete_instantiation of { unset_param : Global_module.Parameter_name.t }
 
 exception Error of error
 
@@ -882,14 +880,6 @@ let mode_default mode = {
   mode;
   context = None
 }
-
-let used_labels_by_form (type rep) (record_form : rep record_form) =
-  match record_form with
-  | Legacy -> used_labels
-  | Unboxed_product -> used_unboxed_labels
-
-let find_used_label_by_uid (type rep) (record_form : rep record_form) uid =
-  stamped_find (used_labels_by_form record_form) uid
 
 let env_labels (type rep) (record_form : rep record_form) env
     : rep gen_label_description TycompTbl.t  =
@@ -1076,18 +1066,22 @@ let rec address_head = function
 
 (* The name of the compilation unit currently compiled. *)
 module Current_unit_name : sig
-  val get : unit -> Compilation_unit.t option
-  val set : Compilation_unit.t option -> unit
+  val get : unit -> Unit_info.t option
+  val set : Unit_info.t option -> unit
   val is : string -> bool
   val is_ident : Ident.t -> bool
   val is_path : Path.t -> bool
 end = struct
+  let current_unit : Unit_info.t option ref =
+    ref None
   let get () =
-    Compilation_unit.get_current ()
-  let set comp_unit =
-    Compilation_unit.set_current comp_unit
+    !current_unit
+  let set unit_info =
+    current_unit := unit_info
+  let get_cu () =
+    Option.map Unit_info.modname (get ())
   let get_name () =
-    Option.map Compilation_unit.name (get ())
+    Option.map Compilation_unit.name (get_cu ())
   let is name =
     let current_name_string =
       Option.map Compilation_unit.Name.to_string (get_name ())
@@ -1259,11 +1253,10 @@ let reset_declaration_caches () =
   Stamped_hashtable.clear module_declarations;
   Stamped_hashtable.clear used_constructors;
   Stamped_hashtable.clear used_labels;
-  Stamped_hashtable.clear used_unboxed_labels;
   ()
 
 let reset_cache ~preserve_persistent_env =
-  Compilation_unit.set_current None;
+  Current_unit_name.set None;
   if not preserve_persistent_env then
     Persistent_env.clear !persistent_env;
   reset_declaration_caches ();
@@ -1439,6 +1432,7 @@ let type_of_cstr path = function
           tda_declaration = decl;
           tda_descriptions = Type_record (labels, repr, umc);
           tda_shape = Shape.leaf decl.type_uid;
+          tda_unboxed_version_descriptions = None;
         }
       | _ -> assert false
       end
@@ -1475,6 +1469,7 @@ let rec find_type_data path env seen =
       tda_declaration = decl;
       tda_descriptions = Type_abstract (Btype.type_origin decl);
       tda_shape = Shape.leaf decl.type_uid;
+      tda_unboxed_version_descriptions = None;
     }
   | exception Not_found -> begin
       match path with
@@ -1553,17 +1548,15 @@ and find_type_unboxed_version path env seen =
 and find_type_unboxed_version_data path env seen =
   let tda_declaration = find_type_unboxed_version path env seen in
   let descrs =
-    match tda_declaration.type_kind with
-    | Type_abstract r -> Type_abstract r
-    | Type_record_unboxed_product _
-    | Type_open | Type_record _ | Type_variant _ ->
-      Misc.fatal_error
-        "Env.find_type_data: unexpected unboxed version kind"
+    match (find_type_data path env seen).tda_unboxed_version_descriptions with
+    | Some descrs -> descrs
+    | None -> Type_abstract Definition (* path is an alias *)
   in
   {
     tda_declaration;
     tda_descriptions = descrs;
-    tda_shape = Shape.leaf tda_declaration.type_uid
+    tda_shape = Shape.leaf tda_declaration.type_uid;
+    tda_unboxed_version_descriptions = None
   }
 
 let find_modtype_lazy path env =
@@ -2282,14 +2275,16 @@ let rec components_of_module_maker
               | Type_open -> Type_open
             in
             let descrs = store_decl path final_decl in
-            ignore
-              (Option.map (store_decl (Path.unboxed_version path))
-                 final_decl.type_unboxed_version);
+            let unboxed_descrs =
+              Option.map (store_decl (Path.unboxed_version path))
+                final_decl.type_unboxed_version
+            in
             let shape = Shape.proj cm_shape (Shape.Item.type_ id) in
             let tda =
               { tda_declaration = final_decl;
                 tda_descriptions = descrs;
-                tda_shape = shape; }
+                tda_shape = shape;
+                tda_unboxed_version_descriptions = unboxed_descrs }
             in
             c.comp_types <- NameMap.add (Ident.name id) tda c.comp_types;
             env := store_type_infos ~tda_shape:shape id decl !env
@@ -2494,9 +2489,20 @@ and store_label
     let loc = lbl.lbl_loc in
     let mut = lbl.lbl_mut in
     let k = lbl.lbl_uid in
-    if not (stamped_mem (used_labels_by_form record_form) k) then
+    match k with
+    | Unboxed_version k_boxed ->
+      (* Never warn if an unboxed version of a label is unused, but its uses
+         count as uses of the boxed version. *)
+      begin match stamped_find_opt !used_labels k_boxed with
+      | Some boxed_usages ->
+        stamped_add !used_labels k boxed_usages
+      | None ->
+        ()
+      end
+    | _ ->
+    if not (Types.Uid.Tbl.mem !used_labels k) then
       let used = label_usages () in
-      stamped_uid_add (used_labels_by_form record_form) k
+      stamped_uid_add !used_labels k
         (add_label_usage used);
       if not (ty_name = "" || ty_name.[0] = '_' || name.[0] = '_')
       then !add_delayed_check_forward
@@ -2554,10 +2560,20 @@ and store_type ~check ~long_path ~predef id info shape env =
     | Type_open -> Type_open, env
   in
   let descrs, env = store_decl (Pident id) info env in
+  let unboxed_descrs, env =
+    match info.type_unboxed_version with
+    | Some uinfo ->
+      let unboxed_descrs, env =
+        store_decl (Path.unboxed_version (Pident id)) uinfo env
+      in
+      Some unboxed_descrs, env
+    | None -> None, env
+  in
   let tda =
     { tda_declaration = info;
       tda_descriptions = descrs;
-      tda_shape = shape }
+      tda_shape = shape;
+      tda_unboxed_version_descriptions = unboxed_descrs }
   in
   Builtin_attributes.mark_alerts_used info.type_attributes;
   { env with
@@ -2576,7 +2592,10 @@ and store_type_infos ~tda_shape id info env =
     {
       tda_declaration = info;
       tda_descriptions = Type_abstract (Btype.type_origin info);
-      tda_shape
+      tda_shape;
+      tda_unboxed_version_descriptions =
+        Option.map (fun uinfo -> Type_abstract (Btype.type_origin uinfo))
+          info.type_unboxed_version;
     }
   in
   { env with
@@ -3119,8 +3138,8 @@ let mark_extension_used usage ext =
   | mark -> mark usage
   | exception Not_found -> ()
 
-let mark_label_used record_form usage ld =
-  match find_used_label_by_uid record_form ld.ld_uid with
+let mark_label_used usage ld =
+  match Types.Uid.Tbl.find !used_labels ld.ld_uid with
   | mark -> mark usage
   | exception Not_found -> ()
 
@@ -3131,14 +3150,14 @@ let mark_constructor_description_used usage env cstr =
   | mark -> mark usage
   | exception Not_found -> ()
 
-let mark_label_description_used record_form usage env lbl =
+let mark_label_description_used usage env lbl =
   let ty_path =
     match get_desc lbl.lbl_res with
     | Tconstr(path, _, _) -> path
     | _ -> assert false
   in
   mark_type_path_used env ty_path;
-  match find_used_label_by_uid record_form lbl.lbl_uid with
+  match Types.Uid.Tbl.find !used_labels lbl.lbl_uid with
   | mark -> mark usage
   | exception Not_found -> ()
 
@@ -3247,9 +3266,9 @@ let use_cltype ~use ~loc path desc =
       (Path.name path)
   end
 
-let use_label ~record_form ~use ~loc usage env lbl =
+let use_label ~use ~loc usage env lbl =
   if use then begin
-    mark_label_description_used record_form usage env lbl;
+    mark_label_description_used usage env lbl;
     Builtin_attributes.check_alerts loc lbl.lbl_attributes lbl.lbl_name;
     if is_mutating_label_usage usage then
       Builtin_attributes.check_deprecated_mutable loc lbl.lbl_attributes
@@ -3339,7 +3358,7 @@ let share_mode ~errors ~env ~loc ~item ~lid vmode shared_context =
         (Once_value_used_in (item, lid, shared_context))
   | Ok () ->
     let mode =
-      Mode.Value.join_with (Monadic Uniqueness) Mode.Uniqueness.Const.Aliased
+      Mode.Value.join_with Uniqueness Mode.Uniqueness.Const.Aliased
         vmode.mode
     in
     {mode; context = Some shared_context}
@@ -3475,12 +3494,13 @@ let lookup_all_ident_labels (type rep) ~(record_form : rep record_form) ~errors
       ~use ~loc usage s env =
   match find_all_labels ~record_form ~mark:use s env with
   | [] ->
-    may_lookup_error errors loc env (Unbound_label (Lident s, P record_form))
+    may_lookup_error errors loc env
+      (Unbound_label (Lident s, P record_form, usage))
   | lbls -> begin
       List.map
         (fun (lbl, use_fn) ->
            let use_fn () =
-             use_label ~record_form ~use ~loc usage env lbl;
+             use_label ~use ~loc usage env lbl;
              use_fn ()
            in
            (lbl, use_fn))
@@ -3676,11 +3696,11 @@ let lookup_all_dot_labels ~record_form ~errors ~use ~loc usage l s env =
   match NameMap.find s (comp_labels record_form comps) with
   | [] | exception Not_found ->
       may_lookup_error errors loc env
-        (Unbound_label (Ldot(l, s), P record_form))
+        (Unbound_label (Ldot(l, s), P record_form, usage))
   | lbls ->
       List.map
         (fun lbl ->
-           let use_fun () = use_label ~record_form ~use ~loc usage env lbl in
+           let use_fun () = use_label ~use ~loc usage env lbl in
            (lbl, use_fun))
         lbls
 
@@ -3972,12 +3992,13 @@ let lookup_type ~errors ~use ~loc lid env =
   | Some lid ->
     (* To get the hash version, look up without the hash, then look for the
        unboxed version *)
-    let path, _ = lookup_type_full ~errors ~use ~loc lid env in
+    let path, data = lookup_type_full ~errors ~use ~loc lid env in
     match find_type_unboxed_version path env Path.Set.empty with
     | decl ->
       Path.unboxed_version path, decl
     | exception Not_found ->
-      may_lookup_error errors loc env (No_unboxed_version lid)
+      may_lookup_error errors loc env
+        (No_unboxed_version (lid, data.tda_declaration))
 
 let lookup_modtype_lazy ~errors ~use ~loc lid env =
   match lid with
@@ -4032,13 +4053,13 @@ let lookup_all_labels_from_type (type rep) ~use ~(record_form : rep record_form)
   | (Type_record (lbls, _, _), Legacy) ->
       List.map
         (fun lbl ->
-           let use_fun () = use_label ~record_form ~use ~loc usage env lbl in
+           let use_fun () = use_label ~use ~loc usage env lbl in
            (lbl, use_fun))
         lbls
   | (Type_record_unboxed_product (lbls, _, _), Unboxed_product) ->
       List.map
         (fun lbl ->
-           let use_fun () = use_label ~record_form ~use ~loc usage env lbl in
+           let use_fun () = use_label ~use ~loc usage env lbl in
            (lbl, use_fun))
         lbls
   | (Type_record (_, _, _), Unboxed_product) -> []
@@ -4609,7 +4630,7 @@ let report_lookup_error _loc env ppf = function
       fprintf ppf "Unbound constructor %a"
         (Style.as_inline_code !print_longident) lid;
       spellcheck ppf extract_constructors env lid;
-  | Unbound_label (lid, record_form) ->
+  | Unbound_label (lid, record_form, usage) ->
       let P record_form = record_form in
       fprintf ppf "Unbound %s field %a"
         (record_form_to_string record_form)
@@ -4628,7 +4649,25 @@ let report_lookup_error _loc env ppf = function
       (match label_of_other_form with
       | Some other_form ->
         Format.fprintf ppf
-          "@\n@{<hint>Hint@}: There is %s field with this name." other_form
+          "@\n@{<hint>Hint@}: @[There is %s field with this name." other_form;
+        (match record_form, usage with
+        | Unboxed_product, _ ->
+          (* If an unboxed field isn't in scope but a boxed field is, then
+             the boxed field must come from a record that didn't get an unboxed
+             version. *)
+          Format.fprintf ppf
+            "@ Note that float- and [%@%@unboxed]- records don't get unboxed \
+             versions."
+        | Legacy, Projection ->
+          let print_projection ppf (op, lid) =
+            fprintf ppf "%s%a" op !print_longident lid
+          in
+          fprintf ppf "@ To project an unboxed record field, use %a instead of \
+                       %a."
+            (Style.as_inline_code print_projection) (".#", lid)
+            (Style.as_inline_code print_projection) (".", lid)
+        | _ -> ());
+        Format.fprintf ppf "@]"
       | None -> ());
   | Unbound_class lid -> begin
       fprintf ppf "Unbound class %a"
@@ -4730,6 +4769,9 @@ let report_lookup_error _loc env ppf = function
         | Error (Linearity, _) -> "once", "is many"
         | Error (Portability, _) -> "nonportable", "is portable"
         | Error (Yielding, _) -> "yielding", "may not yield"
+        | Error (Statefulness, {left; right}) ->
+          asprintf "%a" Mode.Statefulness.Const.print left,
+          asprintf "is %a" Mode.Statefulness.Const.print right
       in
       let s, hint =
         match context with
@@ -4767,9 +4809,21 @@ let report_lookup_error _loc env ppf = function
         (Style.as_inline_code !print_longident) lid
         (fun v -> Jkind.Violation.report_with_offender
            ~offender:(fun ppf -> !print_type_expr ppf typ) v) err
-  | No_unboxed_version lid ->
+  | No_unboxed_version (lid, decl) ->
       fprintf ppf "@[The type %a has no unboxed version.@]"
-        (Style.as_inline_code !print_longident) lid
+        (Style.as_inline_code !print_longident) lid;
+      begin match decl.type_kind with
+      | Type_record (_, Record_unboxed, _) ->
+          fprintf ppf
+            "@.@[@{<hint>Hint@}: \
+             [%@%@unboxed] records don't get unboxed versions.@]"
+      | Type_record (_, (Record_float | Record_ufloat | Record_mixed _), _) ->
+          fprintf ppf
+            "@.@[@{<hint>Hint@}: Float records don't get unboxed versions.@]";
+      | Type_record_unboxed_product _ ->
+          fprintf ppf "@.@[@{<hint>Hint@}: It is already an unboxed record.@]";
+      | _ -> ()
+      end
   | Error_from_persistent_env err ->
       Persistent_env.report_error ppf err
 
@@ -4794,7 +4848,7 @@ let report_error ppf = function
   | Incomplete_instantiation { unset_param } ->
       fprintf ppf "@[<hov>Not enough instance arguments: the parameter@ %a@ is \
                    required.@]"
-        Global_module.Name.print unset_param
+        Global_module.Parameter_name.print unset_param
 
 let () =
   Location.register_error_of_exn
@@ -5135,3 +5189,9 @@ type 'acc fold_all_labels_f =
 let fold_all_labels f ident env init =
   let acc_after_legacy = fold_labels Legacy (f.fold_all_labels_f Legacy) ident env init in
   fold_labels Unboxed_product (f.fold_all_labels_f Unboxed_product) ident env acc_after_legacy
+
+let () =
+  let get_current_compilation_unit () =
+    Option.map Unit_info.modname (get_unit_name ())
+  in
+  Compilation_unit.Private.fwd_get_current := get_current_compilation_unit

@@ -1532,20 +1532,14 @@ end = struct
 
   let child proj t = List.map (UF.Path.child proj) t
 
-  let modal_child gf proj t =
+  let modal_child modalities proj t =
     (* CR zqian: Instead of just ignoring such children, we should add modality
        to [Projection.t] and add corresponding logic in [UsageTree]. *)
-    let gf = Modality.Value.Const.to_list gf in
-    let l =
-      List.filter
-        (function
-         | Atom (Monadic Uniqueness, Join_with Aliased) -> true
-         | Atom (Comonadic Linearity, Meet_with Many) -> true
-         | _ -> false
-          : Modality.t -> _)
-        gf
-    in
-    if List.length l = 2 then untracked else child proj t
+    let uni = Modality.Value.Const.proj (Monadic Uniqueness) modalities in
+    let lin = Modality.Value.Const.proj (Comonadic Linearity) modalities in
+    match uni, lin with
+    | Join_with Aliased, Meet_with Many -> untracked
+    | _ -> child proj t
 
   let tuple_field i t = child (Projection.Tuple_field i) t
 
@@ -1560,7 +1554,7 @@ end = struct
   let variant_field s t = child (Projection.Variant_field s) t
 
   let array_index mut i t =
-    let modality = Typemode.transl_modalities ~maturity:Stable mut [] [] in
+    let modality = Typemode.transl_modalities ~maturity:Stable mut [] in
     modal_child modality (Projection.Array_index i) t
 
   let memory_address t = child Projection.Memory_address t
@@ -2236,7 +2230,7 @@ let rec check_uniqueness_exp ~overwrite (ienv : Ienv.t) exp : UF.t =
     let value, uf_ext =
       match extended_expression with
       | None -> Value.fresh, UF.unused
-      | Some (exp, unique_barrier) ->
+      | Some (exp, _, unique_barrier) ->
         let value, uf_exp = check_uniqueness_exp_as_value ienv exp in
         Unique_barrier.enable unique_barrier;
         let uf_read =
@@ -2427,7 +2421,7 @@ and check_uniqueness_exp_as_value ienv exp : Value.t * UF.t =
       | Some value -> value
     in
     value, UF.unused
-  | Texp_field (e, _, l, float, unique_barrier) -> (
+  | Texp_field (e, _, _, l, float, unique_barrier) -> (
     let value, uf = check_uniqueness_exp_as_value ienv e in
     match Value.paths value with
     | None ->
