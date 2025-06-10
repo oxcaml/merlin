@@ -173,7 +173,7 @@ end = struct
     | Some param -> Parameter_name.Set.mem param set
     | None -> false
 
-  let to_string = print |> Misc.to_string_of_print
+  let to_string = print |> Misc_stdlib.to_string_of_print
 end
 
 module T0 : sig

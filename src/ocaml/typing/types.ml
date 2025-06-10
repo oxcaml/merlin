@@ -985,7 +985,7 @@ let rec equal_mixed_block_element e1 e2 =
   | Word, Word | Bits32, Bits32 | Bits64, Bits64 | Vec128, Vec128
     -> true
   | Product es1, Product es2
-    -> Misc.Stdlib.Array.equal equal_mixed_block_element es1 es2
+    -> Misc_stdlib.Array.equal equal_mixed_block_element es1 es2
   | ( Value | Float64 | Float32 | Float_boxed | Word | Bits32 | Bits64 | Vec128
     | Product _ ), _
     -> false
@@ -996,7 +996,7 @@ let rec compare_mixed_block_element e1 e2 =
   | Word, Word | Bits32, Bits32 | Bits64, Bits64 | Vec128, Vec128
     -> 0
   | Product es1, Product es2
-    -> Misc.Stdlib.Array.compare compare_mixed_block_element es1 es2
+    -> Misc_stdlib.Array.compare compare_mixed_block_element es1 es2
   | Value, _ -> -1
   | _, Value -> 1
   | Float_boxed, _ -> -1

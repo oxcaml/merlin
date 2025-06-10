@@ -3667,8 +3667,8 @@ type_constraint:
   | COLONGREATER core_type_with_optional_modes {
     let cty, mm = $2 in
     Pcoerce (None, cty), mm }
-  | COLON error                                 { syntax_error() }
-  | COLONGREATER error                          { syntax_error() }
+//  | COLON error                                 { syntax_error() }
+//  | COLONGREATER error                          { syntax_error() }
 ;
 
 %inline constraint_:

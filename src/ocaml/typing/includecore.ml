@@ -154,9 +154,9 @@ let value_descriptions ~loc env name
              let ty2, mode_l2, mode_y2, _ = Ctype.instance_prim p2 vd2.val_type in
              Option.iter (Mode.Locality.equate_exn loc) mode_l2;
              Option.iter (Mode.Yielding.equate_exn yield) mode_y2;
-             try 
+             try
                Ctype.moregeneral env true ty1 ty2
-             with Ctype.Moregen err -> 
+             with Ctype.Moregen err ->
                raise (Dont_match (Type err))
            ) yielding
          ) locality;
@@ -692,9 +692,9 @@ module Record_diffing = struct
           | Immutable, Mutable _ -> Some Second
           | Mutable m1, Mutable m2 ->
             let open Mode.Alloc.Comonadic.Const in
-            (if not (Misc.Le_result.equal ~le m1 legacy) then
+            (if not (Misc_stdlib.Le_result.equal ~le m1 legacy) then
               Misc.fatal_errorf "Unexpected mutable(%a)" print m1);
-            (if not (Misc.Le_result.equal ~le m2 legacy) then
+            (if not (Misc_stdlib.Le_result.equal ~le m2 legacy) then
               Misc.fatal_errorf "Unexpected mutable(%a)" print m2);
             None
         in

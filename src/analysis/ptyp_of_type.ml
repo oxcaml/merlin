@@ -57,7 +57,7 @@ and core_type type_expr =
     in
     let snap = Btype.snapshot () in
     let arg_modes =
-      Typemode.untransl_mode_annots ~loc:Location.none
+      Typemode.untransl_mode_annots
       @@ Mode.Alloc.(Const.diff (zap_to_legacy arg_alloc_mode) Const.legacy)
     in
     let ret_modes =
