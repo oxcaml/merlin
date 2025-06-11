@@ -90,7 +90,7 @@ the type)
           "line": 4,
           "col": 12
         },
-        "type": "sig type t = int val x : int @@ portable type s = Baz end",
+        "type": "sig type t = int val x : int @@ stateless type s = Baz end",
         "tail": "no"
       },
       {
