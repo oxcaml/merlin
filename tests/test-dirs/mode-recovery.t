@@ -23,7 +23,7 @@ We can locate the value that was used incorrectly
 Error from a share lock
   $ cat > share.ml <<EOF
   > let () =
-  >   let f : unit -> unit @@ once = fun () -> () in
+  >   let f : (unit -> unit) @ once = fun () -> () in
   >   for _ = 1 to 10 do
   >     let g = f in
   >     for _ = 1 to 10 do
