@@ -36,9 +36,9 @@ let setup_reader_config config =
   let open Clflags in
   let ocaml = config.ocaml in
   let to_unit_info name =
-    Some (name |>
-          Compilation_unit.of_string |>
-          Unit_info.make_dummy ~input_name:name)
+    Some
+      (name |> Compilation_unit.of_string
+      |> Unit_info.make_dummy ~input_name:name)
   in
   Env.set_unit_name (Mconfig.unitname config |> to_unit_info);
   Location.input_name := config.query.filename;

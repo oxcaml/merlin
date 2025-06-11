@@ -186,8 +186,7 @@ and label_declaration
       (match ld_mutable with
       | Mutable _ -> Mutable
       | Immutable -> Immutable)
-    ~modalities:
-      (Typemode.untransl_modalities ld_mutable ld_modalities)
+    ~modalities:(Typemode.untransl_modalities ld_mutable ld_modalities)
     (var_of_id ld_id) (core_type ld_type)
 
 and constructor_arguments = function
