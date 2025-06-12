@@ -948,7 +948,8 @@ let from_path ~config ~env ~local_defs ~namespace path =
   | None -> `Not_in_env (Path.name path)
   | Some decl -> from_path ~config ~env ~local_defs ~decl path
 
-let infer_namespace ?let_pun_behavior ?namespaces ~pos lid browse is_label =
+let infer_namespace ?let_pun_behavior ?record_pattern_pun_behavior ?namespaces
+    ~pos lid browse is_label =
   match namespaces with
   | Some nss ->
     if not is_label then `Ok (nss :> Env_lookup.Namespace.inferred list)
@@ -961,7 +962,8 @@ let infer_namespace ?let_pun_behavior ?namespaces ~pos lid browse is_label =
       `Error `Missing_labels_namespace)
   | None -> (
     match
-      ( Context.inspect_browse_tree ?let_pun_behavior ~cursor:pos lid [ browse ],
+      ( Context.inspect_browse_tree ?let_pun_behavior
+          ?record_pattern_pun_behavior ~cursor:pos lid [ browse ],
         is_label )
     with
     | None, _ ->
@@ -976,7 +978,8 @@ let infer_namespace ?let_pun_behavior ?namespaces ~pos lid browse is_label =
       `Ok [ `Labels ])
 
 let from_string ~config ~env ~local_defs ~pos ?let_pun_behavior
-    ?(namespaces = Namespace_resolution.Inferred) path =
+    ?record_pattern_pun_behavior ?(namespaces = Namespace_resolution.Inferred)
+    path =
   File_switching.reset ();
   let browse = Mbrowse.of_typedtree local_defs in
   let lid = Type_utils.parse_longident path in
@@ -989,10 +992,11 @@ let from_string ~config ~env ~local_defs ~pos ?let_pun_behavior
         log ~title:"from_string" "overrode context: %s" (Context.to_string ctxt);
         `Ok (Env_lookup.Namespace.from_context ctxt)
       | Explicit namespaces ->
-        infer_namespace ?let_pun_behavior ~namespaces ~pos lid browse is_label
+        infer_namespace ?let_pun_behavior ?record_pattern_pun_behavior
+          ~namespaces ~pos lid browse is_label
       | Inferred ->
-        infer_namespace ?let_pun_behavior ?namespaces:None ~pos lid browse
-          is_label
+        infer_namespace ?let_pun_behavior ?record_pattern_pun_behavior
+          ?namespaces:None ~pos lid browse is_label
     in
     match namespaces with
     | `Error e -> e

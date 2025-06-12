@@ -1136,4 +1136,6 @@ let get_tracing_probe_payload (payload : Parsetree.payload) =
 
 (* Merlin specific *)
 
-let merlin_let_punned = "merlin.let-punned"
+let merlin_punned_let = "merlin.punned-let"
+
+let merlin_punned_record_pattern = "merlin.punned-record-pattern"
