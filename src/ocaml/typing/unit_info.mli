@@ -187,3 +187,7 @@ val find_normalized_cmi: t -> Artifact.t
     [Unit_info.Artifact.t], using [dummy_source_file] as the filename if the
     artifact doesn't have one attached. *)
 val of_artifact : dummy_source_file:filename -> intf_or_impl -> Artifact.t -> t
+
+(* Merlin-only *)
+
+val modify_kind : t -> f:(intf_or_impl -> intf_or_impl) -> t

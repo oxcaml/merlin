@@ -152,3 +152,7 @@ let find_normalized_cmi f =
   let filename = (modname f |> Compilation_unit.name_as_string) ^ ".cmi" in
   let filename = Load_path.find_normalized filename in
   { Artifact.filename; modname = modname f; source_file = Some f.source_file  }
+
+(* Merlin-only *)
+
+let modify_kind t ~f = { t with kind = f t.kind }
