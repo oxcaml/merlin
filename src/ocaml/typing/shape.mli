@@ -67,7 +67,7 @@ module Uid : sig
   val restore_stamp : int -> unit
   val stamp_of_uid : t -> int option
 
-  val mk : current_unit:Compilation_unit.t option -> t
+  val mk : current_unit:Unit_info.t option -> t
   val of_compilation_unit_id : Compilation_unit.t -> t
   val of_compilation_unit_name : Compilation_unit.Name.t -> t
   val of_predef_id : Ident.t -> t

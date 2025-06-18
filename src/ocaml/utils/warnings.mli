@@ -136,6 +136,10 @@ type t =
   | Unchecked_zero_alloc_attribute          (* 199 *)
   | Unboxing_impossible                     (* 210 *)
   | Mod_by_top of string                    (* 211 *)
+  | Modal_axis_specified_twice of {
+      axis : string;
+      overriden_by : string;
+    }                                       (* 213 *)
 
 type alert = {kind:string; message:string; def:loc; use:loc}
 
@@ -188,6 +192,8 @@ type description =
     since : Sys.ocaml_release_info option; }
 
 val descriptions : description list
+
+val parsed_ocamlparam : string ref
 
 (* merlin *)
 val dump : ?verbose:bool -> unit -> Std.json

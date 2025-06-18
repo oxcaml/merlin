@@ -106,7 +106,7 @@ let from_nodes ~lsp_compat ~pos ~path =
         | None, Record_unboxed -> ret_no_alloc "unboxed record"
         | None, (Record_boxed _ | Record_float | Record_ufloat | Record_mixed _)
           -> ret Unexpected_no_alloc)
-      | Texp_field (_, _, _, boxed_or_unboxed, _) -> (
+      | Texp_field (_, _, _, _, boxed_or_unboxed, _) -> (
         match boxed_or_unboxed with
         | Boxing (alloc_mode, _) -> ret_alloc alloc_mode.mode
         | Non_boxing _ -> None)

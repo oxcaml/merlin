@@ -674,6 +674,16 @@ let free_non_row_variables_of_list tyl =
   List.iter unmark_type tyl;
   tl
 
+let free_variable_set_of_list env tys =
+  let add_one ty jkind _kind acc =
+    match jkind with
+    | None -> (* not a Tvar *) acc
+    | Some _jkind -> TypeSet.add ty acc
+  in
+  let ts = free_vars ~zero:TypeSet.empty ~add_one ~env tys in
+  List.iter unmark_type tys;
+  ts
+
 let exists_free_variable f ty =
   let exception Exists in
   let add_one ty jkind _kind _acc =
@@ -1323,7 +1333,7 @@ let rec copy ?partial ?keep_names copy_scope ty =
                   Tsubst (ty, None) -> ty
                   (* TODO: is this case possible?
                      possibly an interaction with (copy more) below? *)
-                | Tconstr _ | Tnil ->
+                | Tconstr _ | Tnil | Tof_kind _ ->
                     copy more
                 | Tvar _ | Tunivar _ ->
                     if keep then more else newty mored
@@ -1633,7 +1643,7 @@ let copy_sep ~copy_scope ~fixed ~(visited : type_expr TypeHash.t) sch =
             if keep then
               (add_delayed_copy t ty;
                Tvar { name = None;
-                      jkind = Jkind.Builtin.value ~why:Polymorphic_variant })
+                      jkind = Jkind.for_non_float ~why:Polymorphic_variant })
             else
             let more' = copy_rec ~may_share:false more in
             let fixed' = fixed && (is_Tvar more || is_Tunivar more) in
@@ -1669,9 +1679,14 @@ let instance_poly' copy_scope ~keep_names ~fixed univars sch =
   let ty = copy_sep ~copy_scope ~fixed ~visited sch in
   vars, ty
 
-let instance_poly ?(keep_names=false) ~fixed univars sch =
+let instance_poly_fixed ?(keep_names=false) univars sch =
   For_copy.with_scope (fun copy_scope ->
-    instance_poly' copy_scope ~keep_names ~fixed univars sch
+    instance_poly' copy_scope ~keep_names ~fixed:true univars sch
+  )
+
+let instance_poly ?(keep_names=false) univars sch =
+  For_copy.with_scope (fun copy_scope ->
+    snd (instance_poly' copy_scope ~keep_names ~fixed:false univars sch)
   )
 
 let instance_label ~fixed lbl =
@@ -1688,22 +1703,40 @@ let instance_label ~fixed lbl =
     (vars, ty_arg, ty_res)
   )
 
-let prim_mode mvar = function
-  | Primitive.Prim_global, _ -> Locality.allow_right Locality.global
-  | Primitive.Prim_local, _ -> Locality.allow_right Locality.local
+(* CR dkalinichenko: we must vary yieldingness together with locality to get
+   sane behavior around [@local_opt]. Remove once we have mode polymorphism. *)
+let prim_mode' mvars = function
+  | Primitive.Prim_global, _ ->
+    Locality.allow_right Locality.global, None
+  | Primitive.Prim_local, _ ->
+    Locality.allow_right Locality.local, None
   | Primitive.Prim_poly, _ ->
-    match mvar with
-    | Some mvar -> mvar
+    match mvars with
+    | Some (mvar_l, mvar_y) -> mvar_l, Some mvar_y
     | None -> assert false
 
-(** Returns a new mode variable whose locality is the given locality, while
-    all other axes are from the given [m]. This function is too specific to be
-    put in [mode.ml] *)
-let with_locality locality m =
+(* Exported version. *)
+let prim_mode mvar prim =
+  let mvars = Option.map (fun mvar_l -> mvar_l, Yielding.newvar ()) mvar in
+  fst (prim_mode' mvars prim)
+
+(** Returns a new mode variable whose locality is the given locality and
+    whose yieldingness is the given yieldingness, while all other axes are
+    from the given [m]. This function is too specific to be put in [mode.ml] *)
+let with_locality_and_yielding (locality, yielding) m =
   let m' = Alloc.newvar () in
   Locality.equate_exn (Alloc.proj (Comonadic Areality) m') locality;
-  Alloc.submode_exn m' (Alloc.join_with (Comonadic Areality) Locality.Const.max m);
-  Alloc.submode_exn (Alloc.meet_with (Comonadic Areality) Locality.Const.min m) m';
+  let yielding =
+    Option.value ~default:(Alloc.proj (Comonadic Yielding) m) yielding
+  in
+  Yielding.equate_exn (Alloc.proj (Comonadic Yielding) m') yielding;
+  let c =
+    { Alloc.Comonadic.Const.max with
+      areality = Locality.Const.min;
+      yielding = Yielding.Const.min}
+  in
+  Alloc.submode_exn (Alloc.meet_const c m') m;
+  Alloc.submode_exn (Alloc.meet_const c m) m';
   m'
 
 let curry_mode alloc arg : Alloc.Const.t =
@@ -1727,10 +1760,12 @@ let curry_mode alloc arg : Alloc.Const.t =
     of the return of a function). *)
   {acc with uniqueness=Uniqueness.Const.Aliased}
 
-let rec instance_prim_locals locals mvar macc finalret ty =
+let rec instance_prim_locals locals mvar_l mvar_y macc (loc, yld) ty =
   match locals, get_desc ty with
   | l :: locals, Tarrow ((lbl,marg,mret),arg,ret,commu) ->
-     let marg = with_locality  (prim_mode (Some mvar) l) marg in
+     let marg = with_locality_and_yielding
+      (prim_mode' (Some (mvar_l, mvar_y)) l) marg
+     in
      let macc =
        Alloc.join [
         Alloc.disallow_right mret;
@@ -1740,12 +1775,12 @@ let rec instance_prim_locals locals mvar macc finalret ty =
      in
      let mret =
        match locals with
-       | [] -> with_locality finalret mret
+       | [] -> with_locality_and_yielding (loc, yld) mret
        | _ :: _ ->
           let mret', _ = Alloc.newvar_above macc in (* curried arrow *)
           mret'
      in
-     let ret = instance_prim_locals locals mvar macc finalret ret in
+     let ret = instance_prim_locals locals mvar_l mvar_y macc (loc, yld) ret in
      newty2 ~level:(get_level ty) (Tarrow ((lbl,marg,mret),arg,ret, commu))
   | _ :: _, _ -> assert false
   | [], _ ->
@@ -1822,18 +1857,19 @@ let instance_prim_mode (desc : Primitive.description) ty =
   let is_poly = function Primitive.Prim_poly, _ -> true | _ -> false in
   if is_poly desc.prim_native_repr_res ||
        List.exists is_poly desc.prim_native_repr_args then
-    let mode = Locality.newvar () in
-    let finalret = prim_mode (Some mode) desc.prim_native_repr_res in
+    let mode_l = Locality.newvar () in
+    let mode_y = Yielding.newvar () in
+    let finalret = prim_mode' (Some (mode_l, mode_y)) desc.prim_native_repr_res in
     instance_prim_locals desc.prim_native_repr_args
-      mode (Alloc.disallow_right Alloc.legacy) finalret ty,
-    Some mode
+      mode_l mode_y (Alloc.disallow_right Alloc.legacy) finalret ty,
+    Some mode_l, Some mode_y
   else
-    ty, None
+    ty, None, None
 
 let instance_prim (desc : Primitive.description) ty =
   let ty, sort = instance_prim_layout desc ty in
-  let ty, mode = instance_prim_mode desc ty in
-  ty, mode, sort
+  let ty, mode_l, mode_y = instance_prim_mode desc ty in
+  ty, mode_l, mode_y, sort
 
 (**** Instantiation with parameter substitution ****)
 
@@ -2115,7 +2151,7 @@ let rec extract_concrete_typedecl env ty =
       end
   | Tpoly(ty, _) -> extract_concrete_typedecl env ty
   | Tarrow _ | Ttuple _ | Tunboxed_tuple _ | Tobject _ | Tfield _ | Tnil
-  | Tvariant _ | Tpackage _ -> Has_no_typedecl
+  | Tvariant _ | Tpackage _ | Tof_kind _ -> Has_no_typedecl
   | Tvar _ | Tunivar _ -> May_have_typedecl
   | Tlink _ | Tsubst _ -> assert false
 
@@ -2229,7 +2265,7 @@ let contained_without_boxing env ty =
     List.map snd labeled_tys
   | Tpoly (ty, _) -> [ty]
   | Tvar _ | Tarrow _ | Ttuple _ | Tobject _ | Tfield _ | Tnil | Tlink _
-  | Tsubst _ | Tvariant _ | Tunivar _ | Tpackage _ -> []
+  | Tsubst _ | Tvariant _ | Tunivar _ | Tpackage _ | Tof_kind _ -> []
 
 (* We use ty_prev to track the last type for which we found a definition,
    allowing us to return a type for which a definition was found even if
@@ -2262,16 +2298,6 @@ let get_unboxed_type_approximation env ty =
   match get_unboxed_type_representation env ty with
   | Ok ty | Error ty -> ty
 
-let tvariant_not_immediate row =
-  (* if all labels are devoid of arguments, not a pointer *)
-  (* CR layouts v5: Polymorphic variants with all void args can probably
-     be immediate, but we don't allow them to have void args right now. *)
-  not (row_closed row)
-  || List.exists
-    (fun (_,field) -> match row_field_repr field with
-      | Rpresent (Some _) | Reither (false, _, _) -> true
-      | _ -> false)
-    (row_fields row)
 
 (* forward declarations *)
 let type_equal' = ref (fun _ _ _ -> Misc.fatal_error "type_equal")
@@ -2330,9 +2356,7 @@ let rec estimate_type_jkind ~expand_component env ty =
   | Tnil -> Jkind.Builtin.value ~why:Tnil
   | Tlink _ | Tsubst _ -> assert false
   | Tvariant row ->
-     if tvariant_not_immediate row
-     then Jkind.Builtin.value ~why:Polymorphic_variant
-     else Jkind.Builtin.immediate ~why:Immediate_polymorphic_variant
+     Jkind.for_boxed_row row
   | Tunivar { jkind } -> Jkind.disallow_right jkind
   | Tpoly (ty, _) ->
     let jkind_of_type = !type_jkind_purely_if_principal' env in
@@ -2346,7 +2370,8 @@ let rec estimate_type_jkind ~expand_component env ty =
        down a test case that cares. *)
     Jkind.round_up ~jkind_of_type |>
     Jkind.disallow_right
-  | Tpackage _ -> Jkind.Builtin.value ~why:First_class_module
+  | Tof_kind jkind -> Jkind.mark_best jkind
+  | Tpackage _ -> Jkind.for_non_float ~why:First_class_module
 
 and close_open_jkind ~expand_component ~is_open env jkind =
   if is_open (* if the type has free variables, we can't let these leak into
@@ -2595,6 +2620,14 @@ let check_type_externality env ty ext =
 let check_type_nullability env ty null =
   let upper_bound =
     Jkind.set_nullability_upper_bound (Jkind.Builtin.any ~why:Dummy_jkind) null
+  in
+  match check_type_jkind env ty upper_bound with
+  | Ok () -> true
+  | Error _ -> false
+
+let check_type_separability env ty sep =
+  let upper_bound =
+    Jkind.set_separability_upper_bound (Jkind.Builtin.any ~why:Dummy_jkind) sep
   in
   match check_type_jkind env ty upper_bound with
   | Ok () -> true
@@ -5016,14 +5049,16 @@ let crossing_of_jkind env jkind =
   Jkind.get_mode_crossing ~jkind_of_type jkind
 
 let crossing_of_ty env ?modalities ty =
-  if not (is_principal ty)
-  then Crossing.top
-  else
-    let jkind = type_jkind_purely env ty in
-    let crossing = crossing_of_jkind env jkind in
-    match modalities with
-    | None -> crossing
-    | Some m -> Crossing.modality m crossing
+  let crossing =
+    if not (is_principal ty)
+      then Crossing.top
+    else
+      let jkind = type_jkind_purely env ty in
+      crossing_of_jkind env jkind
+  in
+  match modalities with
+  | None -> crossing
+  | Some m -> Crossing.modality m crossing
 
 let cross_left env ?modalities ty mode =
   let crossing = crossing_of_ty env ?modalities ty in
@@ -5557,6 +5592,9 @@ let rec eqtype rename type_pairs subst env ~do_jkind_check t1 t2 =
         eqtype_subst type_pairs subst t1 k1 t2 k2 ~do_jkind_check
     | (Tconstr (p1, [], _), Tconstr (p2, [], _)) when Path.same p1 p2 ->
         ()
+    | (Tof_kind k1, Tof_kind k2) ->
+      if not (Jkind.equal k1 k2)
+      then raise_for Equality (Unequal_tof_kind_jkinds (k1, k2))
     | _ ->
         let t1' = expand_head_rigid env t1 in
         let t2' = expand_head_rigid env t2 in
@@ -6329,8 +6367,7 @@ let rec build_subtype env (visited : transient_expr list)
       let (t1', c) = build_subtype env visited loops posi level t1 in
       if c > Unchanged then (newty (Tpoly(t1', tl)), c)
       else (t, Unchanged)
-  | Tunivar _ | Tpackage _ ->
-      (t, Unchanged)
+  | Tunivar _ | Tpackage _ | Tof_kind _ -> (t, Unchanged)
 
 and build_subtype_tuple env visited loops posi level t labeled_tlist
       constructor =
@@ -6473,7 +6510,7 @@ let rec subtype_rec env trace t1 t2 cstrs =
     | (Tpoly (u1, []), Tpoly (u2, [])) ->
         subtype_rec env trace u1 u2 cstrs
     | (Tpoly (u1, tl1), Tpoly (u2, [])) ->
-        let _, u1' = instance_poly ~fixed:false tl1 u1 in
+        let u1' = instance_poly tl1 u1 in
         subtype_rec env trace u1' u2 cstrs
     | (Tpoly (u1, tl1), Tpoly (u2,tl2)) ->
         begin try

@@ -35,8 +35,25 @@ let setup_reader_config config =
   let open Mconfig in
   let open Clflags in
   let ocaml = config.ocaml in
-  let to_compilation_unit name = Some (Compilation_unit.of_string name) in
-  Env.set_unit_name (Mconfig.unitname config |> to_compilation_unit);
+  let guessed_file_type : Unit_info.intf_or_impl =
+    (* We guess the file type based on the suffix of the file. This isn't very important
+       because we'll override the value that we use here later in Mpipeline, where we set
+       it based on the contents of the file.
+
+       At the moment, Merlin doesnt' actually use this value for anything, so it doesn't
+       matter what we set here. This is just a guard against future changes that might
+       start depending on this. *)
+    match String.split_on_char config.query.filename ~sep:'.' |> List.last with
+    | Some "ml" -> Impl
+    | Some "mli" -> Intf
+    | _ -> Impl
+  in
+  let compilation_unit = Compilation_unit.of_string (Mconfig.unitname config) in
+  let unit_info =
+    Unit_info.make_with_known_compilation_unit
+      ~source_file:config.query.filename guessed_file_type "" compilation_unit
+  in
+  Env.set_unit_name (Some unit_info);
   Location.input_name := config.query.filename;
   fast := ocaml.unsafe;
   classic := ocaml.classic;
@@ -54,7 +71,7 @@ let setup_reader_config config =
 
 let init_params params =
   List.iter params ~f:(fun s ->
-      Env.register_parameter (s |> Global_module.Name.create_no_args))
+      Env.register_parameter (s |> Global_module.Parameter_name.of_string))
 
 let setup_typer_config config =
   setup_reader_config config;

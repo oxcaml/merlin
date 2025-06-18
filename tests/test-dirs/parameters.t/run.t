@@ -283,6 +283,20 @@ we're correctly tracking parameters separately per file, even in server mode.
   [
     {
       "start": {
+        "line": 2,
+        "col": 18
+      },
+      "end": {
+        "line": 2,
+        "col": 19
+      },
+      "type": "warning",
+      "sub": [],
+      "valid": true,
+      "message": "Warning 49: no valid cmi file was found in path for module P. P is a parameter"
+    },
+    {
+      "start": {
         "line": 6,
         "col": 12
       },

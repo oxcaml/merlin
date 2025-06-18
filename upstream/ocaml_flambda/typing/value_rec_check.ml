@@ -743,7 +743,8 @@ let rec expression : Typedtree.expression -> term_judg =
             | Constructor_mixed mixed_shape ->
                 (match mixed_shape.(i) with
                  | Value | Float_boxed -> Guard
-                 | Float64 | Float32 | Bits32 | Bits64 | Vec128 | Word ->
+                 | Float64 | Float32 | Bits32 | Bits64 | Vec128 | Word
+                 | Product _ ->
                    Dereference))
       in
       let arg i e = expression e << arg_mode i in
@@ -769,7 +770,8 @@ let rec expression : Typedtree.expression -> term_judg =
           | Record_mixed mixed_shape ->
             (match mixed_shape.(i) with
              | Value | Float_boxed -> Guard
-             | Float64 | Float32 | Bits32 | Bits64 | Vec128 | Word ->
+             | Float64 | Float32 | Bits32 | Bits64 | Vec128 | Word
+             | Product _ ->
                Dereference)
         in
         let field (label, field_def) =
@@ -782,7 +784,7 @@ let rec expression : Typedtree.expression -> term_judg =
         in
         join [
           array field es;
-          option expression (Option.map fst eo) << Dereference
+          option expression (Option.map Misc.fst3 eo) << Dereference
         ]
     | Texp_record_unboxed_product { fields = es; extended_expression = eo;
                                     representation = rep } ->
@@ -865,7 +867,7 @@ let rec expression : Typedtree.expression -> term_judg =
       join [
         expression e1 << Dereference
       ]
-    | Texp_field (e, _, _, _, _) ->
+    | Texp_field (e, _, _, _, _, _) ->
       (*
         G |- e: m[Dereference]
         -----------------------

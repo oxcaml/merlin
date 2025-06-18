@@ -11,6 +11,8 @@ type profile_column = [ `Time | `Alloc | `Top_heap | `Abs_top_heap | `Counters ]
 val cmi_file             : string option ref
 val include_dirs         : string list ref
 val hidden_include_dirs  : string list ref
+val include_paths_files : string list ref
+val hidden_include_paths_files : string list ref
 val fast                 : bool ref
 val classic              : bool ref
 val all_ppx              : string list ref

@@ -443,6 +443,7 @@ let ocaml_ignored_flags =
     "-dflambda-verbose";
     "-dinstr";
     "-dlambda";
+    "-dblambda";
     "-dlinear";
     "-dparsetree";
     "-dshape";
@@ -610,7 +611,10 @@ let ocaml_ignored_flags =
     "-dsimplify";
     "-dreaper";
     "-instantiate";
-    "-dflambda-heavy-invariants"
+    "-dflambda-heavy-invariants";
+    "-cfg-eliminate-dead-trap-handlers";
+    "-no-cfg-eliminate-dead-trap-handlers";
+    "-module-entry-functions-section"
   ]
 
 let ocaml_ignored_parametrized_flags =
@@ -647,7 +651,8 @@ let ocaml_ignored_parametrized_flags =
     "-use-runtime";
     "-error-style";
     "-dump-dir";
-    "-libloc";
+    "-I-paths";
+    "-H-paths";
     (* flambda-backend specific *)
     "-extension";
     "-extension-universe";
@@ -671,7 +676,10 @@ let ocaml_ignored_parametrized_flags =
     "-flambda2-inline-prim-cost";
     "-flambda2-inline-small-function-size";
     "-flambda2-inline-threshold";
+    "-flambda2-join-algorithm";
+    "-flambda2-expert-cont-specialization-budget";
     "-regalloc";
+    "-regalloc-linscan-threshold";
     "-regalloc-param";
     "-cached-generic-functions-path";
     "-gdwarf-max-function-complexity";
@@ -681,7 +689,8 @@ let ocaml_ignored_parametrized_flags =
     "-zero-alloc-checker-join";
     "-dgranularity";
     "-flambda2-expert-cont-lifting-budget";
-    "-vectorize-max-block-size"
+    "-vectorize-max-block-size";
+    "-save-ir-before"
   ]
 
 let ocaml_warnings_spec ~error =

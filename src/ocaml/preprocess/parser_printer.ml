@@ -199,6 +199,7 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_str_exception_declaration) -> "str_exception_declaration"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_single_attr_id) -> "single_attr_id"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_simple_pattern_not_ident) -> "simple_pattern_not_ident"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_simple_pattern_extend_modes_or_poly) -> "simple_pattern_extend_modes_or_poly"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_simple_pattern) -> "simple_pattern"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_simple_expr) -> "simple_expr"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_simple_delimited_pattern) -> "simple_delimited_pattern"
@@ -247,6 +248,7 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_possibly_poly_core_type_no_attr_) -> "possibly_poly_core_type_no_attr_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_possibly_poly_core_type_) -> "possibly_poly_core_type_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_payload) -> "payload"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_pattern_with_modes_or_poly) -> "pattern_with_modes_or_poly"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_pattern_var) -> "pattern_var"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_pattern_no_exn) -> "pattern_no_exn"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_pattern_gen) -> "pattern_gen"
@@ -265,9 +267,9 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_parenthesized_type_parameter) -> "parenthesized_type_parameter"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_paren_module_expr) -> "paren_module_expr"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_optlabel) -> "optlabel"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_optional_poly_type_and_modes) -> "optional_poly_type_and_modes"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_optional_atomic_constraint_) -> "optional_atomic_constraint_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_optional_atat_modalities_expr) -> "optional_atat_modalities_expr"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_optional_at_modalities_expr) -> "optional_at_modalities_expr"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_option_type_constraint_) -> "option_type_constraint_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_option_preceded_EQUAL_seq_expr__) -> "option_preceded_EQUAL_seq_expr__"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_option_preceded_EQUAL_pattern__) -> "option_preceded_EQUAL_pattern__"
@@ -300,14 +302,15 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_mty_longident) -> "mty_longident"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_type_subst) -> "module_type_subst"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_type_declaration) -> "module_type_declaration"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_type_atomic) -> "module_type_atomic"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_type) -> "module_type"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_subst) -> "module_subst"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_atat_modalities_expr_) -> "module_name_modal_atat_modalities_expr_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_at_mode_expr_) -> "module_name_modal_at_mode_expr_"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_at_modalities_expr_) -> "module_name_modal_at_modalities_expr_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_name) -> "module_name"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_expr) -> "module_expr"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_optional_atat_mode_expr_) -> "module_declaration_body_optional_atat_mode_expr_"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_optional_atat_modalities_expr_) -> "module_declaration_body_optional_atat_modalities_expr_"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_module_type_with_optional_modes_) -> "module_declaration_body_module_type_with_optional_modes_"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body___anonymous_8_) -> "module_declaration_body___anonymous_8_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_module_binding_body) -> "module_binding_body"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_mod_longident) -> "mod_longident"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_mod_ext_longident) -> "mod_ext_longident"
@@ -341,8 +344,6 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_list_and_class_declaration_) -> "list_and_class_declaration_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_letop_bindings) -> "letop_bindings"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_letop_binding_body) -> "letop_binding_body"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_let_pattern_required_modes) -> "let_pattern_required_modes"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_let_pattern_no_modes) -> "let_pattern_no_modes"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_let_pattern) -> "let_pattern"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_let_bindings_no_ext_) -> "let_bindings_no_ext_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_let_bindings_ext_) -> "let_bindings_ext_"
@@ -419,9 +420,8 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_attr_payload) -> "attr_payload"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_attr_id) -> "attr_id"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_atomic_type) -> "atomic_type"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_atat_mode_expr) -> "atat_mode_expr"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_atat_modalities_expr) -> "atat_modalities_expr"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_at_mode_expr) -> "at_mode_expr"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_at_modalities_expr) -> "at_modalities_expr"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_any_longident) -> "any_longident"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_and_let_binding) -> "and_let_binding"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_alias_type) -> "alias_type"
@@ -609,6 +609,7 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_str_exception_declaration -> (fun _ -> "str_exception_declaration")
   | MenhirInterpreter.N MenhirInterpreter.N_single_attr_id -> (fun _ -> "single_attr_id")
   | MenhirInterpreter.N MenhirInterpreter.N_simple_pattern_not_ident -> (fun _ -> "simple_pattern_not_ident")
+  | MenhirInterpreter.N MenhirInterpreter.N_simple_pattern_extend_modes_or_poly -> (fun _ -> "simple_pattern_extend_modes_or_poly")
   | MenhirInterpreter.N MenhirInterpreter.N_simple_pattern -> (fun _ -> "simple_pattern")
   | MenhirInterpreter.N MenhirInterpreter.N_simple_expr -> (fun _ -> "simple_expr")
   | MenhirInterpreter.N MenhirInterpreter.N_simple_delimited_pattern -> (fun _ -> "simple_delimited_pattern")
@@ -657,6 +658,7 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_possibly_poly_core_type_no_attr_ -> (fun _ -> "possibly_poly_core_type_no_attr_")
   | MenhirInterpreter.N MenhirInterpreter.N_possibly_poly_core_type_ -> (fun _ -> "possibly_poly_core_type_")
   | MenhirInterpreter.N MenhirInterpreter.N_payload -> (fun _ -> "payload")
+  | MenhirInterpreter.N MenhirInterpreter.N_pattern_with_modes_or_poly -> (fun _ -> "pattern_with_modes_or_poly")
   | MenhirInterpreter.N MenhirInterpreter.N_pattern_var -> (fun _ -> "pattern_var")
   | MenhirInterpreter.N MenhirInterpreter.N_pattern_no_exn -> (fun _ -> "pattern_no_exn")
   | MenhirInterpreter.N MenhirInterpreter.N_pattern_gen -> (fun _ -> "pattern_gen")
@@ -675,9 +677,9 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_parenthesized_type_parameter -> (fun _ -> "parenthesized_type_parameter")
   | MenhirInterpreter.N MenhirInterpreter.N_paren_module_expr -> (fun _ -> "paren_module_expr")
   | MenhirInterpreter.N MenhirInterpreter.N_optlabel -> (fun _ -> "optlabel")
+  | MenhirInterpreter.N MenhirInterpreter.N_optional_poly_type_and_modes -> (fun _ -> "optional_poly_type_and_modes")
   | MenhirInterpreter.N MenhirInterpreter.N_optional_atomic_constraint_ -> (fun _ -> "optional_atomic_constraint_")
   | MenhirInterpreter.N MenhirInterpreter.N_optional_atat_modalities_expr -> (fun _ -> "optional_atat_modalities_expr")
-  | MenhirInterpreter.N MenhirInterpreter.N_optional_at_modalities_expr -> (fun _ -> "optional_at_modalities_expr")
   | MenhirInterpreter.N MenhirInterpreter.N_option_type_constraint_ -> (fun _ -> "option_type_constraint_")
   | MenhirInterpreter.N MenhirInterpreter.N_option_preceded_EQUAL_seq_expr__ -> (fun _ -> "option_preceded_EQUAL_seq_expr__")
   | MenhirInterpreter.N MenhirInterpreter.N_option_preceded_EQUAL_pattern__ -> (fun _ -> "option_preceded_EQUAL_pattern__")
@@ -710,14 +712,15 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_mty_longident -> (fun _ -> "mty_longident")
   | MenhirInterpreter.N MenhirInterpreter.N_module_type_subst -> (fun _ -> "module_type_subst")
   | MenhirInterpreter.N MenhirInterpreter.N_module_type_declaration -> (fun _ -> "module_type_declaration")
+  | MenhirInterpreter.N MenhirInterpreter.N_module_type_atomic -> (fun _ -> "module_type_atomic")
   | MenhirInterpreter.N MenhirInterpreter.N_module_type -> (fun _ -> "module_type")
   | MenhirInterpreter.N MenhirInterpreter.N_module_subst -> (fun _ -> "module_subst")
+  | MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_atat_modalities_expr_ -> (fun _ -> "module_name_modal_atat_modalities_expr_")
   | MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_at_mode_expr_ -> (fun _ -> "module_name_modal_at_mode_expr_")
-  | MenhirInterpreter.N MenhirInterpreter.N_module_name_modal_at_modalities_expr_ -> (fun _ -> "module_name_modal_at_modalities_expr_")
   | MenhirInterpreter.N MenhirInterpreter.N_module_name -> (fun _ -> "module_name")
   | MenhirInterpreter.N MenhirInterpreter.N_module_expr -> (fun _ -> "module_expr")
-  | MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_optional_atat_mode_expr_ -> (fun _ -> "module_declaration_body_optional_atat_mode_expr_")
-  | MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_optional_atat_modalities_expr_ -> (fun _ -> "module_declaration_body_optional_atat_modalities_expr_")
+  | MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body_module_type_with_optional_modes_ -> (fun _ -> "module_declaration_body_module_type_with_optional_modes_")
+  | MenhirInterpreter.N MenhirInterpreter.N_module_declaration_body___anonymous_8_ -> (fun _ -> "module_declaration_body___anonymous_8_")
   | MenhirInterpreter.N MenhirInterpreter.N_module_binding_body -> (fun _ -> "module_binding_body")
   | MenhirInterpreter.N MenhirInterpreter.N_mod_longident -> (fun _ -> "mod_longident")
   | MenhirInterpreter.N MenhirInterpreter.N_mod_ext_longident -> (fun _ -> "mod_ext_longident")
@@ -751,8 +754,6 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_list_and_class_declaration_ -> (fun _ -> "list_and_class_declaration_")
   | MenhirInterpreter.N MenhirInterpreter.N_letop_bindings -> (fun _ -> "letop_bindings")
   | MenhirInterpreter.N MenhirInterpreter.N_letop_binding_body -> (fun _ -> "letop_binding_body")
-  | MenhirInterpreter.N MenhirInterpreter.N_let_pattern_required_modes -> (fun _ -> "let_pattern_required_modes")
-  | MenhirInterpreter.N MenhirInterpreter.N_let_pattern_no_modes -> (fun _ -> "let_pattern_no_modes")
   | MenhirInterpreter.N MenhirInterpreter.N_let_pattern -> (fun _ -> "let_pattern")
   | MenhirInterpreter.N MenhirInterpreter.N_let_bindings_no_ext_ -> (fun _ -> "let_bindings_no_ext_")
   | MenhirInterpreter.N MenhirInterpreter.N_let_bindings_ext_ -> (fun _ -> "let_bindings_ext_")
@@ -829,9 +830,8 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_attr_payload -> (fun _ -> "attr_payload")
   | MenhirInterpreter.N MenhirInterpreter.N_attr_id -> (fun _ -> "attr_id")
   | MenhirInterpreter.N MenhirInterpreter.N_atomic_type -> (fun _ -> "atomic_type")
-  | MenhirInterpreter.N MenhirInterpreter.N_atat_mode_expr -> (fun _ -> "atat_mode_expr")
+  | MenhirInterpreter.N MenhirInterpreter.N_atat_modalities_expr -> (fun _ -> "atat_modalities_expr")
   | MenhirInterpreter.N MenhirInterpreter.N_at_mode_expr -> (fun _ -> "at_mode_expr")
-  | MenhirInterpreter.N MenhirInterpreter.N_at_modalities_expr -> (fun _ -> "at_modalities_expr")
   | MenhirInterpreter.N MenhirInterpreter.N_any_longident -> (fun _ -> "any_longident")
   | MenhirInterpreter.N MenhirInterpreter.N_and_let_binding -> (fun _ -> "and_let_binding")
   | MenhirInterpreter.N MenhirInterpreter.N_alias_type -> (fun _ -> "alias_type")

@@ -270,6 +270,17 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
          let cache_version =
            if Option.is_some cache_disabling then None else Some cache_version
          in
+         (* When we loaded the configuration in Mocaml, we guessed whether we're working
+            with an intf or impl file based on the suffix of the filename. But now we know
+            based on the contents of the file, so we update the value we wrote before. *)
+         Env.get_unit_name ()
+         |> Option.map
+              ~f:
+                (Unit_info.modify_kind ~f:(fun _ ->
+                     match result.parsetree with
+                     | `Interface _ -> Intf
+                     | `Implementation _ -> Impl))
+         |> Env.set_unit_name;
          { Reader.result; config; cache_version }))
   in
   let ppx =

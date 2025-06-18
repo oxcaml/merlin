@@ -649,7 +649,7 @@ module Conv = struct
           match mut with
           | Mutable mode ->
             assert (
-              Mode.Alloc.Comonadic.Const.eq mode
+              Mode.Alloc.Comonadic.Const.equal mode
                 Mode.Alloc.Comonadic.Const.legacy);
             Mutable
           | Immutable -> Immutable
