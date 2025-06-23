@@ -1,0 +1,11 @@
+type t =
+  | Expr [@rename "expr"]
+  | Module_path [@rename "module_path"]
+  | Module_type [@rename "module_type"]
+  | Patt [@rename "pattern"]
+  | Type [@rename "type"]
+  | Constant [@rename "constant"]
+  | Constructor [@rename "constructor"]
+  | Label [@rename "label"]
+  | Unknown [@rename "unknown"]
+[@@deriving string ~case_insensitive, enumerate]

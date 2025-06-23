@@ -480,9 +480,8 @@ let all_commands =
                 "<%s> Which context to search for the identifier in" contexts)
              (Marg.param (Format.sprintf "<%s>" contexts)
                 (fun ctx (prefix, pos, kind, _) ->
-                  match Query_protocol.Locate_context.of_string ctx with
-                  | Some ctx -> (prefix, pos, kind, Some ctx)
-                  | None -> failwithf "invalid context %s." ctx)))
+                  let ctx = Query_protocol.Locate_context.of_string ctx in
+                  (prefix, pos, kind, Some ctx))))
         ]
       ~doc:
         "Finds the declaration of entity at the specified position, Or \
