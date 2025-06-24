@@ -770,16 +770,8 @@ let wrap_printing_env_error env f =
   let wrap (loc : _ Location.loc) =
     { loc with txt =
         (fun fmt -> Env.without_cmis (fun () -> loc.txt fmt) ())
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-  (* CR nroberts: See https://github.com/ocaml-flambda/flambda-backend/pull/2529
-      for an explanation of why this has drifted from upstream. *)
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-  (* CR nroberts: See https://github.com/ocaml-flambda/flambda-backend/pull/2529
-     for an explanation of why this has drifted from upstream. *)
-=======
   (* CR nroberts: See https://github.com/oxcaml/oxcaml/pull/2529
      for an explanation of why this has drifted from upstream. *)
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
     }
   in
   let err : Location.error = wrap_printing_env ~error:true env f in

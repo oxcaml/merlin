@@ -134,6 +134,9 @@ val need_to_clear_env : bool
 
 *)
 
+val get_declaration_dependencies :
+  unit -> (dependency_kind * Uid.t * Uid.t) list
+
 val iter_on_declarations :
   f:(Types.Uid.t -> item_declaration -> unit)
   -> Tast_iterator.iterator
@@ -142,19 +145,6 @@ val iter_on_occurrences :
   f:(namespace:Shape.Sig_component_kind.t ->
     Env.t ->
     Path.t ->
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
     Longident.t Location.loc ->
     unit)
   -> Tast_iterator.iterator
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-  val read_signature : 'a -> string -> Types.signature * 'b list * 'c list
-
-*)
-=======
-  val read_signature : 'a -> string -> Types.signature * 'b list * 'c list
-
-*)
-
-val get_declaration_dependencies :
-  unit -> (dependency_kind * Uid.t * Uid.t) list
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214

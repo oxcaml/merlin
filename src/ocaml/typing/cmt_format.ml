@@ -477,21 +477,13 @@ let add_saved_type b = saved_types := b :: !saved_types
 let get_saved_types () = !saved_types
 let set_saved_types l = saved_types := l
 
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-(*let record_value_dependency vd1 vd2 =
-  if vd1.Types.val_loc <> vd2.Types.val_loc then
-    value_deps := (vd1, vd2) :: !value_deps*)
-
-let record_value_dependency _vd1 _vd2 = ()
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-let record_value_dependency vd1 vd2 =
-  if vd1.Types.val_loc <> vd2.Types.val_loc then
-    value_deps := (vd1, vd2) :: !value_deps
-=======
+(*
 let record_declaration_dependency (rk, uid1, uid2) =
   if not (Uid.equal uid1 uid2) then
     uids_deps := (rk, uid1, uid2) :: !uids_deps
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
+*)
+
+let record_declaration_dependency (_rk, _uid1, _uid2) = ()
 
 let save_cmt target cu binary_annots initial_env cmi shape =
   if !Clflags.binary_annotations && not !Clflags.print_types then begin
@@ -526,16 +518,8 @@ let save_cmt target cu binary_annots initial_env cmi shape =
          let cmt = {
            cmt_modname = cu;
            cmt_annots;
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-           cmt_value_dependencies = !value_deps;
-           cmt_comments = [];
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-           cmt_value_dependencies = !value_deps;
-           cmt_comments = Lexer.comments ();
-=======
            cmt_declaration_dependencies = !uids_deps;
-           cmt_comments = Lexer.comments ();
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
+           cmt_comments = [];
            cmt_args = Sys.argv;
            cmt_sourcefile = sourcefile;
            cmt_builddir = Location.rewrite_absolute_path (Sys.getcwd ());

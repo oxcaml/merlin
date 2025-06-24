@@ -20,27 +20,7 @@ open Types
 open Typedtree
 open Lambda
 
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
 (* Expand a type, looking through ordinary synonyms, private synonyms, links,
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-type error =
-    Non_value_layout of type_expr * Jkind.Violation.t option
-  | Non_value_sort of Jkind.Sort.t * type_expr
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Non_value_sort_unknown_ty of Jkind.Sort.t
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of type_expr * Jkind.Violation.t
-=======
-type error =
-    Non_value_layout of type_expr * Jkind.Violation.t option
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of type_expr * Jkind.Violation.t
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
    and [@@unboxed] types. The returned type will be therefore be none of these
    cases (except in case of missing cmis).
 
@@ -231,26 +211,7 @@ let array_kind_of_elt ~elt_sort env loc ty =
     | Some s -> s
     | None ->
       Jkind.Sort.default_for_transl_and_get
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
         (type_legacy_sort ~why:Array_element env loc ty)
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-     kinds. *)
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits32 | Bits64 | Word | Vec128) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void as c ->
-    raise (Error (loc, Unsupported_sort c))
-=======
-     kinds. *)
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits32 | Bits64 | Word |
-          Vec128 | Vec256 | Vec512) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void as c ->
-    raise (Error (loc, Unsupported_sort c))
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
   in
   let classify_product ty _sorts =
     if is_always_gc_ignorable env ty then
@@ -266,24 +227,7 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Unboxed_float f -> Punboxedfloatarray f
   | Unboxed_int i -> Punboxedintarray i
   | Unboxed_vector v -> Punboxedvectorarray v
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
   | Product c -> c
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
-  | Base Vec128 -> raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void as c -> raise (Error (loc, Unsupported_sort c))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-=======
-  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
-  | Base (Vec128 | Vec256 | Vec512) ->
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void as c -> raise (Error (loc, Unsupported_sort c))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
 
 let array_type_kind ~elt_sort env loc ty =
   match scrape_poly env ty with
@@ -1106,29 +1050,3 @@ let rec layout_union l1 l2 =
     _ ->
       Ptop
 *)
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-      end
-  | Non_value_sort (sort, ty) ->
-      fprintf ppf
-        "Non-value layout %a detected in [Typeopt.layout] as sort for type@ %a.@ \
-         Please report this error to the Jane Street compilers team."
-        Jkind.Sort.format sort Printtyp.type_expr ty
-  | Non_value_sort_unknown_ty sort ->
-      fprintf ppf
-        "Non-value layout %a detected in [layout_of_sort]@ Please report this \
-         error to the Jane Street compilers team."
-        Jkind.Sort.format sort
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
-      begin match ty with
-=======
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-      end
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
-      begin match ty with
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214

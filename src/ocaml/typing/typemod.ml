@@ -3895,15 +3895,7 @@ let type_implementation target modulename initial_env ast =
     Cmt_format.save_cmt (Unit_info.cmt target) modulename
       annots initial_env cmi shape;
     Cms_format.save_cms (Unit_info.cms target) modulename
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-      annots initial_env shape;
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-      annots initial_env shape;
-    gen_annot target annots;
-=======
       annots initial_env shape decl_deps;
-    gen_annot target annots;
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
   in
   Cmt_format.clear ();
   Cms_format.clear ();
@@ -3988,18 +3980,8 @@ let type_implementation target modulename initial_env ast =
                      { new_arg_type = arg_type; old_source_file = source_intf;
                        old_arg_type = arg_type_from_cmi });
           let coercion, shape =
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-            Includemod.compunit initial_env ~mark:Mark_positive
-              sourcefile sg compiled_intf_file_name dclsig shape
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-            Profile.record_call "check_sig" (fun () ->
-              Includemod.compunit initial_env ~mark:Mark_positive
-                sourcefile sg compiled_intf_file_name dclsig shape)
-=======
-            Profile.record_call "check_sig" (fun () ->
               Includemod.compunit initial_env ~mark:true
-                sourcefile sg compiled_intf_file_name dclsig shape)
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
+                sourcefile sg compiled_intf_file_name dclsig shape
           in
           (* Check the _mli_ against the argument type, since the mli determines
              the visible type of the module and that's what needs to conform to
@@ -4032,18 +4014,8 @@ let type_implementation target modulename initial_env ast =
             (Location.in_file (Unit_info.source_file target))
             Warnings.Missing_mli;
           let coercion, shape =
-<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
-            Includemod.compunit initial_env ~mark:Mark_positive
-              sourcefile sg "(inferred signature)" simple_sg shape
-||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
-            Profile.record_call "check_sig" (fun () ->
-              Includemod.compunit initial_env ~mark:Mark_positive
-                sourcefile sg "(inferred signature)" simple_sg shape)
-=======
-            Profile.record_call "check_sig" (fun () ->
               Includemod.compunit initial_env ~mark:true
-                sourcefile sg "(inferred signature)" simple_sg shape)
->>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
+                sourcefile sg "(inferred signature)" simple_sg shape
           in
           check_nongen_signature finalenv simple_sg;
           let simple_sg =
