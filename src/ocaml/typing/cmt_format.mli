@@ -48,11 +48,11 @@ and binary_part =
   | Partial_signature_item of signature_item
   | Partial_module_type of module_type
 
+type dependency_kind = Definition_to_declaration | Declaration_to_declaration
 type cmt_infos = {
   cmt_modname : Compilation_unit.t;
   cmt_annots : binary_annots;
-  cmt_value_dependencies :
-    (Types.value_description * Types.value_description) list;
+  cmt_declaration_dependencies : (dependency_kind * Uid.t * Uid.t) list;
   cmt_comments : (string * Location.t) list;
   cmt_args : string array;
   cmt_sourcefile : string option;
@@ -108,8 +108,7 @@ val add_saved_type : binary_part -> unit
 val get_saved_types : unit -> binary_part list
 val set_saved_types : binary_part list -> unit
 
-val record_value_dependency:
-  Types.value_description -> Types.value_description -> unit
+val record_declaration_dependency: dependency_kind * Uid.t * Uid.t -> unit
 
 val index_occurrences :
   binary_annots -> (Longident.t Location.loc * Shape_reduce.result) array
@@ -143,6 +142,19 @@ val iter_on_occurrences :
   f:(namespace:Shape.Sig_component_kind.t ->
     Env.t ->
     Path.t ->
+<<<<<<< janestreet/merlin-jst:merge-compiler-renaming-changes
     Longident.t Location.loc ->
     unit)
   -> Tast_iterator.iterator
+||||||| ocaml-flambda/flambda-backend:60158e06115c6fc6e30325bb720e65acf351dbce
+  val read_signature : 'a -> string -> Types.signature * 'b list * 'c list
+
+*)
+=======
+  val read_signature : 'a -> string -> Types.signature * 'b list * 'c list
+
+*)
+
+val get_declaration_dependencies :
+  unit -> (dependency_kind * Uid.t * Uid.t) list
+>>>>>>> ocaml-flambda/flambda-backend:87a4cecacc0e2f9afee93898f81f55b012c69214
