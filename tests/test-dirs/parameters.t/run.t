@@ -398,10 +398,10 @@ Check that we understand everything about [Basic[P:P_int].create]:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/basic.ml",
+    "file": "$TESTCASE_ROOT/basic.mli",
     "pos": {
-      "line": 3,
-      "col": 4
+      "line": 7,
+      "col": 0
     }
   }
 
@@ -426,10 +426,10 @@ syntax, so this output isn't ideal:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/fancy.ml",
+    "file": "$TESTCASE_ROOT/fancy.mli",
     "pos": {
-      "line": 3,
-      "col": 4
+      "line": 4,
+      "col": 0
     }
   }
 
@@ -455,10 +455,10 @@ implementing .mli.)
     }
   }
   {
-    "file": "$TESTCASE_ROOT/p_int.ml",
+    "file": "$TESTCASE_ROOT/p_int.mli",
     "pos": {
       "line": 3,
-      "col": 4
+      "col": 0
     }
   }
 
