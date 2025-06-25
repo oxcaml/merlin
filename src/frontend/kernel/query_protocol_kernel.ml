@@ -5,3 +5,4 @@
 module Completion_kind = Completion_kind
 module Locate_context = Locate_context
 module Locate_type_multi_result = Locate_type_multi_result
+module Outline_kind = Outline_kind
