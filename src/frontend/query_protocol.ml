@@ -29,18 +29,11 @@
 include Query_protocol_kernel
 
 module Compl = struct
+  module Out_kind = Completion_kind.Out
+
   type 'desc raw_entry =
     { name : string;
-      kind :
-        [ `Value
-        | `Constructor
-        | `Variant
-        | `Label
-        | `Module
-        | `Modtype
-        | `Type
-        | `MethodCall
-        | `Keyword ];
+      kind : Out_kind.t;
       desc : 'desc;
       info : 'desc;
       deprecated : bool
@@ -56,15 +49,8 @@ module Compl = struct
       context : [ `Unknown | `Application of application_context ]
     }
 
-  type kind =
-    [ `Constructor
-    | `Labels
-    | `Modules
-    | `Modules_type
-    | `Types
-    | `Values
-    | `Variants
-    | `Keywords ]
+  module In_kind = Completion_kind.In
+  type kind = In_kind.t
 end
 
 type completions = Compl.t
@@ -81,16 +67,7 @@ type 'a type_search_result =
 type outline = item list
 and item =
   { outline_name : string;
-    outline_kind :
-      [ `Value
-      | `Constructor
-      | `Label
-      | `Module
-      | `Modtype
-      | `Type
-      | `Exn
-      | `Class
-      | `Method ];
+    outline_kind : Outline_kind.t;
     outline_type : string option;
     deprecated : bool;
     location : Location_aux.t;
@@ -131,53 +108,7 @@ type _ _bool = bool
 type occurrences_status =
   [ `Not_requested | `Out_of_sync of string list | `No_def | `Included ]
 
-module Locate_context = struct
-  type t =
-    | Expr
-    | Module_path
-    | Module_type
-    | Patt
-    | Type
-    | Constant
-    | Constructor
-    | Label
-    | Unknown
-
-  let to_string = function
-    | Expr -> "expr"
-    | Module_path -> "module_path"
-    | Module_type -> "module_type"
-    | Patt -> "pattern"
-    | Type -> "type"
-    | Constant -> "constant"
-    | Constructor -> "constructor"
-    | Label -> "label"
-    | Unknown -> "unknown"
-
-  let of_string = function
-    | "expr" -> Some Expr
-    | "module_path" -> Some Module_path
-    | "module_type" -> Some Module_type
-    | "pattern" -> Some Patt
-    | "type" -> Some Type
-    | "constant" -> Some Constant
-    | "constructor" -> Some Constructor
-    | "label" -> Some Label
-    | "unknown" -> Some Unknown
-    | _ -> None
-
-  let all =
-    [ Expr;
-      Module_path;
-      Module_type;
-      Patt;
-      Type;
-      Constant;
-      Constructor;
-      Label;
-      Unknown
-    ]
-end
+module Locate_context = Locate_context
 
 type _ t =
   | Type_expr (* *) : string * Msource.position -> string t

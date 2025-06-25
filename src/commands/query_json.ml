@@ -40,17 +40,7 @@ let dump (type a) : a t -> json =
   in
   let kinds_to_json kind =
     `List
-      (List.map
-         ~f:(function
-           | `Constructor -> `String "constructor"
-           | `Keywords -> `String "keywords"
-           | `Labels -> `String "label"
-           | `Modules -> `String "module"
-           | `Modules_type -> `String "module-type"
-           | `Types -> `String "type"
-           | `Values -> `String "value"
-           | `Variants -> `String "variant")
-         kind)
+      (List.map ~f:(fun kind -> `String (Compl.In_kind.to_string kind)) kind)
   in
   function
   | Type_expr (expr, pos) ->
@@ -223,19 +213,12 @@ let dump (type a) : a t -> json =
     mk "signature-help" [ ("position", mk_position position) ]
   | Version -> mk "version" []
 
-let string_of_completion_kind = function
-  | `Value -> "Value"
-  | `Variant -> "Variant"
-  | `Constructor -> "Constructor"
-  | `Label -> "Label"
-  | `Module -> "Module"
-  | `Modtype -> "Signature"
-  | `Type -> "Type"
-  | `Method -> "Method"
-  | `MethodCall -> "#"
-  | `Exn -> "Exn"
-  | `Class -> "Class"
-  | `Keyword -> "Keyword"
+let string_of_completion_kind =
+  (* Merlin-jst: In upstream Merlin, the to_string logic lives here. But in Merlin-jst,
+     we've moved it to query_protocol_kernel so that it can be used in jsoo contexts *)
+  function
+  | #Compl.Out_kind.t as kind -> Compl.Out_kind.to_string kind
+  | #Outline_kind.t as kind -> Outline_kind.to_string kind
 
 let with_location ?(with_file = false) ?(skip_none = false) loc assoc =
   let with_file l =
