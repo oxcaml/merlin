@@ -132,6 +132,10 @@ module Layout = struct
 
       let vec128 = Base Sort.Vec128
 
+      let vec256 = Base Sort.Vec256
+
+      let vec512 = Base Sort.Vec512
+
       let of_base : Sort.base -> t = function
         | Value -> value
         | Void -> void
@@ -141,6 +145,8 @@ module Layout = struct
         | Bits32 -> bits32
         | Bits64 -> bits64
         | Vec128 -> vec128
+        | Vec256 -> vec256
+        | Vec512 -> vec512
     end
 
     include Static
@@ -1598,11 +1604,47 @@ module Const = struct
 
     (* CR layouts v3: change to [Maybe_null] when
        [or_null array]s are implemented. *)
+    let vec256 =
+      { jkind =
+          mk_jkind (Base Vec256) ~mode_crossing:false ~nullability:Non_null
+            ~separability:Non_float;
+        name = "vec256"
+      }
+
+    (* CR layouts v3: change to [Maybe_null] when
+       [or_null array]s are implemented. *)
+    let vec512 =
+      { jkind =
+          mk_jkind (Base Vec512) ~mode_crossing:false ~nullability:Non_null
+            ~separability:Non_float;
+        name = "vec512"
+      }
+
+    (* CR layouts v3: change to [Maybe_null] when
+       [or_null array]s are implemented. *)
     let kind_of_unboxed_128bit_vectors =
       { jkind =
           mk_jkind (Base Vec128) ~mode_crossing:true ~nullability:Non_null
             ~separability:Non_float;
         name = "vec128 mod everything"
+      }
+
+    (* CR layouts v3: change to [Maybe_null] when
+       [or_null array]s are implemented. *)
+    let kind_of_unboxed_256bit_vectors =
+      { jkind =
+          mk_jkind (Base Vec256) ~mode_crossing:true ~nullability:Non_null
+            ~separability:Non_float;
+        name = "vec256 mod everything"
+      }
+
+    (* CR layouts v3: change to [Maybe_null] when
+       [or_null array]s are implemented. *)
+    let kind_of_unboxed_512bit_vectors =
+      { jkind =
+          mk_jkind (Base Vec512) ~mode_crossing:true ~nullability:Non_null
+            ~separability:Non_float;
+        name = "vec512 mod everything"
       }
 
     let all =
@@ -1631,7 +1673,11 @@ module Const = struct
         bits64;
         kind_of_unboxed_int64;
         vec128;
-        kind_of_unboxed_128bit_vectors ]
+        kind_of_unboxed_128bit_vectors;
+        vec256;
+        kind_of_unboxed_256bit_vectors;
+        vec512;
+        kind_of_unboxed_512bit_vectors ]
 
     let of_attribute : Builtin_attributes.jkind_attribute -> t = function
       | Immediate -> immediate
@@ -1896,6 +1942,8 @@ module Const = struct
       | "bits32" -> Builtin.bits32.jkind
       | "bits64" -> Builtin.bits64.jkind
       | "vec128" -> Builtin.vec128.jkind
+      | "vec256" -> Builtin.vec256.jkind
+      | "vec512" -> Builtin.vec512.jkind
       | "immutable_data" -> Builtin.immutable_data.jkind
       | "sync_data" -> Builtin.sync_data.jkind
       | "mutable_data" -> Builtin.mutable_data.jkind
@@ -1940,7 +1988,11 @@ module Const = struct
       (jkind : 'd t) =
     let rec scan_layout (l : Layout.Const.t) : Language_extension.maturity =
       match l, Mod_bounds.nullability jkind.mod_bounds with
-      | (Base (Float64 | Float32 | Word | Bits32 | Bits64 | Vec128) | Any), _
+      | ( ( Base
+              ( Float64 | Float32 | Word | Bits32 | Bits64 | Vec128 | Vec256
+              | Vec512 )
+          | Any ),
+          _ )
       | Base Value, Non_null
       | Base Value, Maybe_null ->
         Stable
@@ -2377,6 +2429,20 @@ let for_non_float ~(why : History.value_creation_reason) =
   fresh_jkind
     { layout = Sort (Base Value); mod_bounds; with_bounds = No_with_bounds }
     ~annotation:None ~why:(Value_creation why)
+
+let for_abbreviation ~type_jkind_purely ty =
+  (* CR layouts v2.8: This should really use layout_of *)
+  let jkind = type_jkind_purely ty in
+  let with_bounds_types =
+    let relevant_axes = Jkind_axis.Axis_set.all in
+    With_bounds_types.singleton ty { relevant_axes }
+  in
+  fresh_jkind_poly
+    { layout = jkind.jkind.layout;
+      mod_bounds = Mod_bounds.min;
+      with_bounds = With_bounds with_bounds_types
+    }
+    ~annotation:None ~why:Abbreviation
 
 (* Note [With-bounds for GADTs]
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3202,6 +3268,7 @@ module Format_history = struct
       in
       fprintf ppf "of the definition%a at %a" format_id id
         Location.print_loc_in_lowercase loc
+    | Abbreviation -> fprintf ppf "it is the expansion of a type abbreviation"
 
   let format_interact_reason ppf : History.interact_reason -> _ = function
     | Gadt_equation name ->
@@ -3940,6 +4007,7 @@ module Debug_printers = struct
       fprintf ppf "Generalized (%s, %a)"
         (match id with Some id -> Ident.unique_name id | None -> "")
         Location.print_loc loc
+    | Abbreviation -> fprintf ppf "Abbreviation"
 
   let interact_reason ppf : History.interact_reason -> _ = function
     | Gadt_equation p -> fprintf ppf "Gadt_equation %a" Path.print p

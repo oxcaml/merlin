@@ -188,13 +188,13 @@ type locality_context =
 
 type closure_context =
   | Function of locality_context option
+  | Functor
   | Lazy
 
 type escaping_context =
   | Letop
   | Probe
   | Class
-  | Module
 
 type shared_context =
   | For_loop
@@ -203,7 +203,6 @@ type shared_context =
   | Closure
   | Comprehension
   | Class
-  | Module
   | Probe
 
 type locks
