@@ -17,6 +17,8 @@
 
 (** cms and cmsi files format. *)
 
+module Uid = Shape.Uid
+
 let read_magic_number ic =
   let len_magic_number = String.length Config.cms_magic_number in
   really_input_string ic len_magic_number
@@ -32,7 +34,9 @@ type cms_infos = {
   cms_uid_to_attributes : Parsetree.attributes Shape.Uid.Tbl.t;
   cms_impl_shape : Shape.t option; (* None for mli *)
   cms_ident_occurrences :
-    (Longident.t Location.loc * Shape_reduce.result) array
+    (Longident.t Location.loc * Shape_reduce.result) array;
+  cms_declaration_dependencies :
+    (Cmt_format.dependency_kind * Uid.t * Uid.t) list;
 }
 
 type error =
@@ -94,7 +98,8 @@ let uid_tables_of_binary_annots binary_annots =
     );
   cms_uid_to_loc, cms_uid_to_attributes
 
-let save_cms target modname binary_annots initial_env shape =
+let save_cms target modname binary_annots initial_env shape
+  cms_declaration_dependencies =
   if (!Clflags.binary_annotations_cms && not !Clflags.print_types) then begin
     Misc.output_to_file_via_temporary
        ~mode:[Open_binary] (Unit_info.Artifact.filename target)
@@ -116,20 +121,13 @@ let save_cms target modname binary_annots initial_env shape =
          in
          let cms = {
            cms_modname = modname;
-           cms_comments = [];
               (* XXX merlin: upstream does
-            cms_sourcefile = sourcefile;
-            cms_builddir = Location.rewrite_absolute_path (Sys.getcwd ());
-            cms_source_digest = source_digest;
-            cms_initial_env;
-            cms_uid_to_loc;
-            cms_uid_to_attributes;
-            cms_impl_shape = shape;
-                   `cms_comments = Lexer.comments ()`
+                 `cms_comments = Lexer.comments ()`
                  here.  But we don't seem to have the same lexer, so we can't
                  do that straightforwardly.  On the other hand, this function
                  should never be called by merlin, so it doesn't matter, right?
               *)
+           cms_comments = [];
            cms_sourcefile = sourcefile;
            cms_builddir = Location.rewrite_absolute_path (Sys.getcwd ());
            cms_source_digest = source_digest;
@@ -137,7 +135,8 @@ let save_cms target modname binary_annots initial_env shape =
            cms_uid_to_loc;
            cms_uid_to_attributes;
            cms_impl_shape = shape;
-           cms_ident_occurrences
+           cms_ident_occurrences;
+           cms_declaration_dependencies;
          } in
          output_cms oc cms)
   end

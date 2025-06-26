@@ -149,7 +149,7 @@ let extract_sig_functor_open funct_body env loc mty sig_acc =
       in
       let coercion =
         try
-          Includemod.include_functor_signatures ~mark:Mark_both env
+          Includemod.include_functor_signatures ~mark:true env
             sig_acc sg_param
         with Includemod.Error msg ->
           raise (Error(loc, env, Not_included_functor msg))
@@ -325,7 +325,7 @@ let check_type_decl env sg loc id row_id newdecl decl =
     | Some fresh_row_id -> Env.add_type ~check:false fresh_row_id newdecl env
   in
   let env = Env.add_signature sg env in
-  Includemod.type_declarations ~mark:Mark_both ~loc env fresh_id newdecl decl;
+  Includemod.type_declarations ~mark:true ~loc env fresh_id newdecl decl;
   ignore (Typedecl.check_coherence env loc path newdecl)
 
 let make_variance p n i =
@@ -843,7 +843,7 @@ let merge_constraint initial_env loc sg lid constr =
         in
         let md'' = { md' with md_type = mty } in
         let newmd = Mtype.strengthen_decl ~aliasable:false md'' path in
-        ignore(Includemod.modtypes  ~mark:Mark_both ~loc sig_env
+        ignore(Includemod.modtypes  ~mark:true ~loc sig_env
           ~modes:(Legacy None) newmd.md_type md.md_type);
         return
           ~replace_by:(Some(Sig_module(id, pres, newmd, rs, priv)))
@@ -853,7 +853,7 @@ let merge_constraint initial_env loc sg lid constr =
         let sig_env = Env.add_signature sg_for_env outer_sig_env in
         let aliasable = not (Env.is_functor_arg path sig_env) in
         ignore
-          (Includemod.strengthened_module_decl ~loc ~mark:Mark_both
+          (Includemod.strengthened_module_decl ~loc ~mark:true
              ~aliasable sig_env ~mmodes:(Legacy None) md' path md);
         real_ids := [Pident id];
         return ~replace_by:None
@@ -1742,7 +1742,7 @@ and transl_modtype_aux env smty =
       try
         ignore
           (Includemod.modtypes ~loc env ~modes:(Legacy None)
-            ~mark:Includemod.Mark_both md.md_type tmty.mty_type);
+            ~mark:true md.md_type tmty.mty_type);
         mkmty
           (Tmty_strengthen (tmty, path, mod_id))
           (Mty_strengthen
@@ -2449,8 +2449,8 @@ let check_recmodule_inclusion env bindings =
         and mty_actual' = subst_and_strengthen scope s id mty_actual in
         let coercion, shape =
           try
-            Includemod.modtypes_with_shape ~shape
-              ~loc:modl.mod_loc ~mark:Mark_both
+            Includemod.modtypes_constraint ~shape
+              ~loc:modl.mod_loc ~mark:true
               env ~modes:(Legacy None) mty_actual' mty_decl'
           with Includemod.Error msg ->
             Msupport.raise_error(Error(modl.mod_loc, env, Not_included msg));
@@ -2544,14 +2544,13 @@ let package_subtype env p1 fl1 p2 fl2 =
   | exception Error(_, _, Cannot_scrape_package_type _) -> false
   | mty1, mty2 ->
     let loc = Location.none in
-    match Includemod.modtypes ~loc ~mark:Mark_both env ~modes:All mty1 mty2 with
+    match Includemod.modtypes ~loc ~mark:true env ~modes:All mty1 mty2 with
     | Tcoerce_none -> true
     | _ | exception Includemod.Error _ -> false
 
 let () = Ctype.package_subtype := package_subtype
 
 let wrap_constraint_package env mark arg held_locks mty explicit =
-  let mark = if mark then Includemod.Mark_both else Includemod.Mark_neither in
   let mty1 = Subst.modtype Keep Subst.identity arg.mod_type in
   let mty2 = Subst.modtype Keep Subst.identity mty in
   let coercion =
@@ -2569,10 +2568,9 @@ let wrap_constraint_package env mark arg held_locks mty explicit =
 
 let wrap_constraint_with_shape env mark arg held_locks mty
   shape explicit =
-  let mark = if mark then Includemod.Mark_both else Includemod.Mark_neither in
   let coercion, shape =
     try
-      Includemod.modtypes_with_shape ~shape ~loc:arg.mod_loc env ~mark
+      Includemod.modtypes_constraint ~shape ~loc:arg.mod_loc env ~mark
         ~modes:(Legacy held_locks) arg.mod_type mty
     with Includemod.Error msg ->
       Msupport.raise_error(Error(arg.mod_loc, env, Not_included msg));
@@ -2704,8 +2702,6 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
       in
       md, shape, None
   | Pmod_functor(arg_opt, sbody) ->
-      let newenv = Env.add_escape_lock Module env in
-      let newenv = Env.add_share_lock Module newenv in
       let t_arg, ty_arg, newenv, funct_shape_param, funct_body =
         match arg_opt with
         | Unit ->
@@ -2729,12 +2725,15 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
               let id = Ident.create_scoped ~scope name in
               let shape = Shape.var md_uid id in
               let newenv = Env.add_module_declaration
-                ~shape ~arg:true ~check:true id Mp_present arg_md newenv
+                ~shape ~arg:true ~check:true id Mp_present arg_md env
               in
               Some id, newenv, id
           in
           Named (id, param, mty), Types.Named (id, mty.mty_type), newenv,
           var, true
+      in
+      let newenv =
+        Env.add_closure_lock Functor Mode.Value.Comonadic.legacy newenv
       in
       let body, body_shape = type_module true funct_body None newenv sbody in
       { mod_desc = Tmod_functor(t_arg, body);
@@ -2976,7 +2975,7 @@ and type_one_application ~ctx:(apply_loc,sfunct,md_f,args)
           arg = Some { shape = arg_shape; path = arg_path; arg; held_locks } } ->
       let coercion =
         try Includemod.modtypes
-              ~loc:arg.mod_loc ~mark:Mark_both env arg.mod_type mty_param
+              ~loc:arg.mod_loc ~mark:true env arg.mod_type mty_param
               ~modes:(Legacy held_locks)
         with Includemod.Error _ ->
           Msupport.raise_error (apply_error ());
@@ -3014,7 +3013,7 @@ and type_one_application ~ctx:(apply_loc,sfunct,md_f,args)
             (*
             begin match
               Includemod.modtypes
-                ~loc:app_loc ~mark:Mark_neither env mty_res nondep_mty
+                ~loc:app_loc ~mark:false env mty_res nondep_mty
                 ~modes:(Legacy None)
             with
             | Tcoerce_none -> ()
@@ -3887,10 +3886,14 @@ let type_implementation target modulename initial_env ast =
     raise (Error (Location.in_file sourcefile, initial_env, e))
   in
   let save_cmt_and_cms target annots initial_env cmi shape =
+      let decl_deps =
+        (* This is cleared after saving the cmt so we have to save is before *)
+        Cmt_format.get_declaration_dependencies ()
+      in
     Cmt_format.save_cmt (Unit_info.cmt target) modulename
       annots initial_env cmi shape;
     Cms_format.save_cms (Unit_info.cms target) modulename
-      annots initial_env shape;
+      annots initial_env shape decl_deps;
   in
   Cmt_format.clear ();
   Cms_format.clear ();
@@ -3975,8 +3978,8 @@ let type_implementation target modulename initial_env ast =
                      { new_arg_type = arg_type; old_source_file = source_intf;
                        old_arg_type = arg_type_from_cmi });
           let coercion, shape =
-            Includemod.compunit initial_env ~mark:Mark_positive
-              sourcefile sg compiled_intf_file_name dclsig shape
+              Includemod.compunit initial_env ~mark:true
+                sourcefile sg compiled_intf_file_name dclsig shape
           in
           (* Check the _mli_ against the argument type, since the mli determines
              the visible type of the module and that's what needs to conform to
@@ -4009,8 +4012,8 @@ let type_implementation target modulename initial_env ast =
             (Location.in_file (Unit_info.source_file target))
             Warnings.Missing_mli;
           let coercion, shape =
-            Includemod.compunit initial_env ~mark:Mark_positive
-              sourcefile sg "(inferred signature)" simple_sg shape
+              Includemod.compunit initial_env ~mark:true
+                sourcefile sg "(inferred signature)" simple_sg shape
           in
           check_nongen_signature finalenv simple_sg;
           let simple_sg =
@@ -4061,10 +4064,14 @@ let type_implementation target modulename initial_env ast =
       )
 
 let save_signature target modname tsg initial_env cmi =
+  let decl_deps =
+    (* This is cleared after saving the cmt so we have to save is before *)
+    Cmt_format.get_declaration_dependencies ()
+  in
   Cmt_format.save_cmt (Unit_info.cmti target) modname
     (Cmt_format.Interface tsg) initial_env (Some cmi) None;
   Cms_format.save_cms  (Unit_info.cmsi target) modname
-    (Cmt_format.Interface tsg) initial_env None
+    (Cmt_format.Interface tsg) initial_env None decl_deps
 
 let cms_register_toplevel_signature_attributes ~sourcefile ~uid ast =
   cms_register_toplevel_attributes ~sourcefile ~uid ast.psg_items
@@ -4173,13 +4180,17 @@ let package_units initial_env objfiles target_cmi modulename =
     let name = Compilation_unit.to_global_name_without_prefix modulename in
     let dclsig = Env.read_signature name target_cmi in
     let cc, _shape =
-      Includemod.compunit initial_env ~mark:Mark_both
+      Includemod.compunit initial_env ~mark:true
         "(obtained by packing)" sg mli dclsig shape
+    in
+    let decl_deps =
+      (* This is cleared after saving the cmt so we have to save is before *)
+      Cmt_format.get_declaration_dependencies ()
     in
     Cmt_format.save_cmt  (Unit_info.companion_cmt target_cmi) modulename
       (Cmt_format.Packed (sg, objfiles)) initial_env  None (Some shape);
     Cms_format.save_cms  (Unit_info.companion_cms target_cmi) modulename
-      (Cmt_format.Packed (sg, objfiles)) initial_env (Some shape);
+      (Cmt_format.Packed (sg, objfiles)) initial_env (Some shape) decl_deps;
     cc
   end else begin
     (* Determine imports *)
@@ -4202,10 +4213,14 @@ let package_units initial_env objfiles target_cmi modulename =
           sg name kind target_cmi (Array.of_list imports)
       in
       let sign = Subst.Lazy.force_signature cmi.Cmi_format.cmi_sign in
+      let decl_deps =
+        (* This is cleared after saving the cmt so we have to save is before *)
+        Cmt_format.get_declaration_dependencies ()
+      in
       Cmt_format.save_cmt (Unit_info.companion_cmt target_cmi)  modulename
         (Cmt_format.Packed (sign, objfiles)) initial_env (Some cmi) (Some shape);
       Cms_format.save_cms (Unit_info.companion_cms target_cmi)  modulename
-        (Cmt_format.Packed (sign, objfiles)) initial_env (Some shape);
+        (Cmt_format.Packed (sign, objfiles)) initial_env (Some shape) decl_deps;
     end;
     Tcoerce_none
   end

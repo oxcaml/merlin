@@ -371,7 +371,7 @@ We try several places in the identifier to check the result stability
       [
         <def>
           pattern (under.ml[1,0+4]..under.ml[1,0+6])
-            Tpat_var \"aa/280\"
+            Tpat_var \"aa/281\"
             value_mode meet(local,once,nonportable,yielding,stateful)(modevar#0[global,many,portable,unyielding,stateless .. global,many,nonportable,unyielding,stateful]);imply(unique,uncontended,read_write)(modevar#1[aliased,contended,immutable .. unique,uncontended,read_write])
           expression (under.ml[1,0+9]..under.ml[1,0+12])
             Texp_constant Const_float 4.2
@@ -381,7 +381,7 @@ We try several places in the identifier to check the result stability
       [
         <def>
           pattern (under.ml[2,13+4]..under.ml[2,13+5])
-            Tpat_var \"f/281\"
+            Tpat_var \"f/282\"
             value_mode meet(local,once,nonportable,yielding,stateful)(modevar#5[global,many,portable,unyielding,stateless .. global,many,nonportable,unyielding,stateful]);imply(unique,uncontended,read_write)(modevar#6[aliased,contended,immutable .. unique,uncontended,read_write])
           expression (under.ml[2,13+6]..under.ml[5,70+17]) ghost
             Texp_function
@@ -390,7 +390,7 @@ We try several places in the identifier to check the result stability
               Nolabel
               Param_pat
                 pattern (under.ml[2,13+6]..under.ml[2,13+9])
-                  Tpat_var \"x/283\"
+                  Tpat_var \"x/284\"
                   value_mode map_comonadic(local_to_regional)(modevar#9[global,many,portable,unyielding,stateless .. local,once,nonportable,yielding,stateful]);imply(unique,uncontended,read_write)(modevar#a[aliased,contended,immutable .. unique,uncontended,read_write])
             ]
             Tfunction_body
@@ -404,7 +404,7 @@ We try several places in the identifier to check the result stability
                       expression (_none_[0,0+-1]..[0,0+-1]) ghost
                         Pexp_constant PConst_int (1,None)
                   ]
-                Texp_ident \"*type-error*/286\"
+                Texp_ident \"*type-error*/287\"
       ]
   ]
   
