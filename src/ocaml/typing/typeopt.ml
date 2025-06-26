@@ -251,18 +251,21 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
            we compute an array kind (array matching, array comprehension),
            [elt_ty] is [None].
         *)
-        raise (Error(loc,
+        (*= raise (Error(loc,
           Opaque_array_non_value {
             array_type = ty;
             elt_kinding_failure = Some (elt_ty, e);
-          }))
+          })) *)
+        ignore e;
+        Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
       end
     | None ->
-      raise (Error(loc,
+      (*= raise (Error(loc,
         Opaque_array_non_value {
           array_type = ty;
           elt_kinding_failure = None;
-        }))
+        })) *)
+      Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
     end
 
 (*
