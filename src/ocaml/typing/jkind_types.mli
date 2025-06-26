@@ -54,8 +54,6 @@ module Sort : sig
     | Bits32
     | Bits64
     | Vec128
-    | Vec256
-    | Vec512
 
   val to_string_base : base -> string
 
