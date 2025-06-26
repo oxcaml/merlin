@@ -1734,8 +1734,7 @@ let solve_Ppat_construct ~refine tps penv loc constr no_existentials
             in
             let ty_args_ty, ty_args_gf =
               List.split
-                (List.map (fun ca ->
-                  ca.Types.ca_type, ca.Types.ca_modalities) ty_args)
+                (List.map (fun ca -> ca.Types.ca_type, ca.Types.ca_modalities) ty_args)
             in
             ty_args_ty, ty_args_gf, ty_res, unify_res ty_res expected_ty, None
         | Some (name_list, sty) ->
@@ -1753,8 +1752,7 @@ let solve_Ppat_construct ~refine tps penv loc constr no_existentials
             let equated_types = unify_res ty_res expected_ty in
             let ty_args_ty, ty_args_gf =
               List.split
-                (List.map (fun ca ->
-                  ca.Types.ca_type, ca.Types.ca_modalities) ty_args)
+                (List.map (fun ca -> ca.Types.ca_type, ca.Types.ca_modalities) ty_args)
             in
             let ty_args_ty, existential_ctyp =
               solve_constructor_annotation tps penv name_list sty ty_args_ty
@@ -6128,8 +6126,7 @@ and type_expect_
           | Record_mixed mixed -> begin
               match mixed.(label.lbl_num) with
               | Float_boxed -> true
-              | Float64 | Float32 | Value | Bits32 | Bits64
-              | Vec128 | Vec256 | Vec512 | Word
+              | Float64 | Float32 | Value | Bits32 | Bits64 | Vec128 | Word
               | Product _ ->
                 false
             end
