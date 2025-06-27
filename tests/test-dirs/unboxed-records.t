@@ -148,7 +148,8 @@ Get usages of a label in an unboxed record
       "end": {
         "line": 1,
         "col": 15
-      }
+      },
+      "stale": false
     },
     {
       "start": {
@@ -158,7 +159,8 @@ Get usages of a label in an unboxed record
       "end": {
         "line": 2,
         "col": 12
-      }
+      },
+      "stale": false
     },
     {
       "start": {
@@ -168,7 +170,8 @@ Get usages of a label in an unboxed record
       "end": {
         "line": 3,
         "col": 16
-      }
+      },
+      "stale": false
     },
     {
       "start": {
@@ -178,7 +181,8 @@ Get usages of a label in an unboxed record
       "end": {
         "line": 4,
         "col": 8
-      }
+      },
+      "stale": false
     }
   ]
 

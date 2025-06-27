@@ -129,6 +129,8 @@ type _ _bool = bool
 type occurrences_status =
   [ `Not_requested | `Out_of_sync of string list | `No_def | `Included ]
 
+type occurrence = { loc : Location.t; is_stale : bool }
+
 module Locate_context = struct
   type t =
     | Expr
@@ -267,7 +269,7 @@ type _ t =
   | Path_list : [ `Build | `Source ] -> string list t
   | Occurrences (* *) :
       [ `Ident_at of Msource.position ] * [ `Project | `Buffer ]
-      -> (Location.t list * occurrences_status) t
+      -> (occurrence list * occurrences_status) t
   | Signature_help : signature_help -> signature_help_result option t
       (** In current version, Merlin only uses the parameter [position] to answer
         signature_help queries. The additionnal parameters are described in the

@@ -34,7 +34,8 @@
       "end": {
         "line": 3,
         "col": 5
-      }
+      },
+      "stale": false
     },
     {
       "file": "$TESTCASE_ROOT/main.ml",
@@ -45,7 +46,8 @@
       "end": {
         "line": 1,
         "col": 14
-      }
+      },
+      "stale": false
     }
   ]
 
@@ -81,7 +83,8 @@ We are not missing the occurrence in main.ml
       "end": {
         "line": 3,
         "col": 5
-      }
+      },
+      "stale": false
     },
     {
       "file": "$TESTCASE_ROOT/main.ml",
@@ -92,7 +95,8 @@ We are not missing the occurrence in main.ml
       "end": {
         "line": 1,
         "col": 14
-      }
+      },
+      "stale": false
     }
   ]
 
@@ -126,7 +130,8 @@ We are not missing the occurrence in main.ml
       "end": {
         "line": 3,
         "col": 5
-      }
+      },
+      "stale": false
     },
     {
       "file": "$TESTCASE_ROOT/main.ml",
@@ -137,7 +142,8 @@ We are not missing the occurrence in main.ml
       "end": {
         "line": 1,
         "col": 14
-      }
+      },
+      "stale": false
     }
   ]
 

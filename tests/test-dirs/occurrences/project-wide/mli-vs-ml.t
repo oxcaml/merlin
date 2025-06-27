@@ -35,7 +35,8 @@ Merlin should not mixup uids from mli and ml files:
         "end": {
           "line": 1,
           "col": 6
-        }
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/main.mli",
@@ -46,7 +47,8 @@ Merlin should not mixup uids from mli and ml files:
         "end": {
           "line": 2,
           "col": 9
-        }
+        },
+        "stale": false
       }
     ],
     "notifications": []
@@ -68,7 +70,8 @@ Same when the cursor is at the origin:
         "end": {
           "line": 1,
           "col": 6
-        }
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/main.mli",
@@ -79,7 +82,8 @@ Same when the cursor is at the origin:
         "end": {
           "line": 2,
           "col": 9
-        }
+        },
+        "stale": false
       }
     ],
     "notifications": []
