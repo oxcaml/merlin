@@ -35,6 +35,7 @@ Create an index
      "+": File "a.ml", line 2, characters 14-15;
      "+": File "b.ml", line 2, characters 10-11
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 Merlin fails to find occurrences outside of file because of the module prefixes
 
@@ -95,6 +96,18 @@ Merlin successfully finds occurrences outside file when UNIT_NAME directive is u
         }
       },
       {
+        "file": "$TESTCASE_ROOT/b.ml",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
+      },
+      {
         "file": "$TESTCASE_ROOT/a.ml",
         "start": {
           "line": 1,
@@ -152,6 +165,18 @@ Merlin successfully finds occurrences outside file when WRAPPING_PREFIX directiv
           "line": 1,
           "col": 5
         }
+      },
+      {
+        "file": "$TESTCASE_ROOT/b.ml",
+        "start": {
+          "line": 2,
+          "col": 8
+        },
+        "end": {
+          "line": 2,
+          "col": 9
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/a.ml",

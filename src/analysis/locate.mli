@@ -37,7 +37,13 @@ end
 val log : 'a Logger.printf
 
 type config =
-  { mconfig : Mconfig.t; ml_or_mli : [ `ML | `MLI ]; traverse_aliases : bool }
+  { mconfig : Mconfig.t;
+    ml_or_mli : [ `ML | `Smart | `MLI ];
+        (** When [ml_or_mli] is [`Smart], if locate blocks on an interface uid,
+            it will use the [cmt_declaration_dependencies] to try finding a
+            unique corresponding definition in the implementation. *)
+    traverse_aliases : bool
+  }
 
 type result =
   { uid : Shape.Uid.t;
@@ -60,6 +66,19 @@ end
 val uid_of_result :
   traverse_aliases:bool -> Shape_reduce.result -> Shape.Uid.t option * bool
 
+(* val lookup_uid_decl :
+   config:Mconfig.t -> Shape.Uid.t -> Typedtree.item_declaration option *)
+
+(** Lookup the declaration of the given Uid in the appropriate cmt file *)
+val lookup_uid_loc_of_decl :
+  config:Mconfig.t -> Shape.Uid.t -> string Location.loc option
+
+(** [get_linked_uids] queries the [cmt_declaration_dependencies] table and
+  returns udis related to the one passed as argument. TODO right now this
+  function only returns simple links tagged with [Definition_to_declaration] *)
+val get_linked_uids :
+  config:config -> comp_unit:string -> Shape.Uid.t -> Shape.Uid.t list
+
 val find_source :
   config:Mconfig.t ->
   Warnings.loc ->
@@ -72,7 +91,7 @@ val from_path :
   local_defs:Mtyper.typedtree ->
   namespace:Env_lookup.Namespace.t ->
   Path.t ->
-  [> `File_not_found of string
+  [> `File_not_found of result
   | `Found of result
   | `Builtin of Shape.Uid.t * string
   | `Not_in_env of string
@@ -86,7 +105,7 @@ val from_string :
   ?let_pun_behavior:Mbrowse.Let_pun_behavior.t ->
   ?namespaces:Namespace_resolution.t ->
   string ->
-  [> `File_not_found of string
+  [> `File_not_found of result
   | `Found of result
   | `Builtin of Shape.Uid.t * string
   | `Missing_labels_namespace
@@ -102,8 +121,7 @@ val get_doc :
   pos:Lexing.position ->
   [ `User_input of string
   | `Completion_entry of Env_lookup.Namespace.t * Path.t * Location.t ] ->
-  [> `File_not_found of string
-  | `Found of string
+  [> `Found of string
   | `Builtin of string
   | `Not_found of string * string option
   | `Not_in_env of string

@@ -37,6 +37,7 @@ files include the load-path in them:
   {uid: Bar.0; locs: "Foo.Bar.x": File "main.ml", line 1, characters 14-23
    uid: Main.0; locs: "x": File "main.ml", line 1, characters 4-5 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 If we use cms files and don't include dependencies, ocaml-index will fail to index
 identifiers from dependencies:
@@ -44,6 +45,7 @@ identifiers from dependencies:
   $ ocaml-index dump main.uideps
   1 uids: {uid: Main.0; locs: "x": File "main.ml", line 1, characters 4-5 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 If we pass a hidden dependency as a visible one, we can run into trouble. Note that
 ocaml-index believes that "Foo.Bar.x" comes from Foo rather than Bar:
@@ -53,6 +55,7 @@ ocaml-index believes that "Foo.Bar.x" comes from Foo rather than Bar:
   {uid: Foo.0; locs: "Foo.Bar.x": File "main.ml", line 1, characters 14-23
    uid: Main.0; locs: "x": File "main.ml", line 1, characters 4-5 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 If we pass dependencies, we get the correct results:
   $ ocaml-index aggregate -o main.uideps main.cms -H hidden_lib -I visible_lib
@@ -61,6 +64,7 @@ If we pass dependencies, we get the correct results:
   {uid: Bar.0; locs: "Foo.Bar.x": File "main.ml", line 1, characters 14-23
    uid: Main.0; locs: "x": File "main.ml", line 1, characters 4-5 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 Lastly, check that ocaml-index disambiguates based on order the same as the compiler.
 Since visible_lib comes first, "Foo" in main.ml corresponds to visible_lib/foo.ml:
@@ -71,3 +75,4 @@ Since visible_lib comes first, "Foo" in main.ml corresponds to visible_lib/foo.m
   {uid: Bar.0; locs: "Foo.Bar.x": File "main.ml", line 1, characters 14-23
    uid: Main.0; locs: "x": File "main.ml", line 1, characters 4-5 },
   0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}

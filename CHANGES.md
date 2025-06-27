@@ -1,3 +1,18 @@
+unreleased
+==========
+
+  + merlin binary
+    - Fix occurrences not working when the definition comes from a hidden source
+      file (#1865)
+    - Use new 5.3 features to improve locate behavior in some cases. Merlin no
+      longer confuses uids from interfaces and implementations. (#1857)
+    - Perform less merges in the indexer (#1881)
+    - Add initial support for project-wide renaming: occurrences can now return
+      all usages of all related definitions. (#1877)
+    - Fix issues with ident validation and Lid comparison for occurrences (#1924)
+  + ocaml-index
+    - Bump magic number after index file format change. Index can now be read lazilly (#1886)
+
 merlin 5.2
 ==========
 Thu Sep 26 18:48:42 CEST 2024
