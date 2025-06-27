@@ -26,6 +26,8 @@
 
    )* }}} *)
 
+include Query_protocol_kernel
+
 module Compl = struct
   type 'desc raw_entry =
     { name : string;
@@ -231,6 +233,7 @@ type _ t =
          | `Not_found of string * string option
          | `At_origin ]
          t
+  | Locate_type_multi : Msource.position -> Locate_type_multi_result.t t
   | Locate (* *) :
       string option
       * [ `ML | `MLI ]
