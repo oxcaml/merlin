@@ -451,10 +451,7 @@ module Utils = struct
     let title = "find_file_with_path" in
     let filename = File.name file in
     log ~title "Try find %S" filename;
-    if
-      File.is_source file
-      && filename = Mconfig.unitname config
-    then
+    if File.is_source file && filename = Mconfig.unitname config then
       (* No need to search when looking for the source of the current buffer's
          compilation unit *)
       Some Mconfig.(config.query.filename)
