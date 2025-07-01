@@ -50,17 +50,18 @@
         "end": {
           "line": 2,
           "col": 7
-        }
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/main.ml",
         "start": {
-          "line": 5,
-          "col": 25
+          "line": 4,
+          "col": 11
         },
         "end": {
-          "line": 5,
-          "col": 26
+          "line": 4,
+          "col": 12
         },
         "stale": false
       },
@@ -73,7 +74,8 @@
         "end": {
           "line": 2,
           "col": 7
-        }
+        },
+        "stale": false
       },
       {
         "file": "$TESTCASE_ROOT/lib.mli",
@@ -84,18 +86,8 @@
         "end": {
           "line": 2,
           "col": 7
-        }
-      },
-      {
-        "file": "$TESTCASE_ROOT/main.ml",
-        "start": {
-          "line": 4,
-          "col": 11
         },
-        "end": {
-          "line": 4,
-          "col": 12
-        }
+        "stale": false
       }
     ],
     "notifications": []
