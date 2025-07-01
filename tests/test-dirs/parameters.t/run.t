@@ -1,6 +1,14 @@
 The server might already be running, we kill it to make sure we start from a
 clean slate:
   $ $MERLIN server stop-server
+  abnormal termination
+  merlin path: /usr/local/home/mdelvecchio/merlin/_build/default/src/frontend/ocamlmerlin/ocamlmerlin_server.exe
+  socket path: /tmp/build_7e6957_dune/ocamlmerlin_22490_64773_3489677321.socket
+  {
+    "class": "failure",
+    "value": "abnormal termination",
+    "notifications": []
+  }
 
 Check that merlin understands the `-parameter` flag.
 
@@ -398,10 +406,10 @@ Check that we understand everything about [Basic[P:P_int].create]:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/basic.mli",
+    "file": "$TESTCASE_ROOT/basic.ml",
     "pos": {
-      "line": 7,
-      "col": 0
+      "line": 3,
+      "col": 4
     }
   }
 
@@ -426,10 +434,10 @@ syntax, so this output isn't ideal:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/fancy.mli",
+    "file": "$TESTCASE_ROOT/fancy.ml",
     "pos": {
-      "line": 4,
-      "col": 0
+      "line": 3,
+      "col": 4
     }
   }
 
@@ -455,10 +463,10 @@ implementing .mli.)
     }
   }
   {
-    "file": "$TESTCASE_ROOT/p_int.mli",
+    "file": "$TESTCASE_ROOT/p_int.ml",
     "pos": {
       "line": 3,
-      "col": 0
+      "col": 4
     }
   }
 

@@ -2378,20 +2378,6 @@ let for_non_float ~(why : History.value_creation_reason) =
     { layout = Sort (Base Value); mod_bounds; with_bounds = No_with_bounds }
     ~annotation:None ~why:(Value_creation why)
 
-let for_abbreviation ~type_jkind_purely ty =
-  (* CR layouts v2.8: This should really use layout_of *)
-  let jkind = type_jkind_purely ty in
-  let with_bounds_types =
-    let relevant_axes = Jkind_axis.Axis_set.all in
-    With_bounds_types.singleton ty { relevant_axes }
-  in
-  fresh_jkind_poly
-    { layout = jkind.jkind.layout;
-      mod_bounds = Mod_bounds.min;
-      with_bounds = With_bounds with_bounds_types
-    }
-    ~annotation:None ~why:Abbreviation
-
 (* Note [With-bounds for GADTs]
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3172,10 +3158,6 @@ module Format_history = struct
       fprintf ppf
         "unknown @[(please alert the Jane Street@;\
          compilers team with this message: %s)@]" s
-    | Array_type_kind ->
-      fprintf ppf
-        "it's the element type for an array operation with an opaque@ array \
-         type"
 
   let format_product_creation_reason ppf : History.product_creation_reason -> _
       = function
@@ -3220,7 +3202,6 @@ module Format_history = struct
       in
       fprintf ppf "of the definition%a at %a" format_id id
         Location.print_loc_in_lowercase loc
-    | Abbreviation -> fprintf ppf "it is the expansion of a type abbreviation"
 
   let format_interact_reason ppf : History.interact_reason -> _ = function
     | Gadt_equation name ->
@@ -3919,7 +3900,6 @@ module Debug_printers = struct
     | Debug_printer_argument -> fprintf ppf "Debug_printer_argument"
     | Recmod_fun_arg -> fprintf ppf "Recmod_fun_arg"
     | Unknown s -> fprintf ppf "Unknown %s" s
-    | Array_type_kind -> fprintf ppf "Array_type_kind"
 
   let product_creation_reason ppf : History.product_creation_reason -> _ =
     function
@@ -3960,7 +3940,6 @@ module Debug_printers = struct
       fprintf ppf "Generalized (%s, %a)"
         (match id with Some id -> Ident.unique_name id | None -> "")
         Location.print_loc loc
-    | Abbreviation -> fprintf ppf "Abbreviation"
 
   let interact_reason ppf : History.interact_reason -> _ = function
     | Gadt_equation p -> fprintf ppf "Gadt_equation %a" Path.print p

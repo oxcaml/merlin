@@ -323,13 +323,13 @@ type locality_context =
 
 type closure_context =
   | Function of locality_context option
-  | Functor
   | Lazy
 
 type escaping_context =
   | Letop
   | Probe
   | Class
+  | Module
 
 type shared_context =
   | For_loop
@@ -338,6 +338,7 @@ type shared_context =
   | Closure
   | Comprehension
   | Class
+  | Module
   | Probe
 
 type lock =
@@ -4537,6 +4538,7 @@ let string_of_escaping_context : escaping_context -> string =
   | Letop -> "a letop"
   | Probe -> "a probe"
   | Class -> "a class"
+  | Module -> "a module"
 
 let string_of_shared_context : shared_context -> string =
   function
@@ -4546,6 +4548,7 @@ let string_of_shared_context : shared_context -> string =
   | Closure -> "a closure that is not once"
   | Comprehension -> "a comprehension"
   | Class -> "a class"
+  | Module -> "a module"
   | Probe -> "a probe"
 
 let sharedness_hint ppf : shared_context -> _ = function
@@ -4574,6 +4577,10 @@ let sharedness_hint ppf : shared_context -> _ = function
         "@[Hint: This identifier was defined outside of the current closure.@ \
           Either this closure has to be once, or the identifier can be used only@ \
           as aliased.@]"
+  | Module ->
+    Format.fprintf ppf
+        "@[Hint: This identifier cannot be used uniquely,@ \
+          because it is defined in a module.@]"
   | Probe ->
     Format.fprintf ppf
         "@[Hint: This identifier cannot be used uniquely,@ \
@@ -4783,13 +4790,6 @@ let report_lookup_error _loc env ppf = function
               | _ -> fun _ppf -> ()
             in
             "function that " ^ e1, hint
-        | Functor ->
-            let s =
-              match error with
-              | Error (Areality, _) -> "functor"
-              | _ -> "functor that " ^ e1
-            in
-            s, fun _ppf -> ()
         | Lazy ->
             let s =
               match error with
