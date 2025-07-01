@@ -44,5 +44,5 @@ Get occurrences, with the cursor pointing at a punned record field expression.
 Merlin finds occurrences of the value being placed into the record rather than the record
 field
   $ occurrences usages.ml 10:12
-  $TESTCASE_ROOT/definitions.ml 4:4-9
   $TESTCASE_ROOT/usages.ml 10:10-15
+  $TESTCASE_ROOT/definitions.ml 4:4-9
