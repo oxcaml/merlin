@@ -19,6 +19,7 @@
      "z": File "lib.ml", line 3, characters 4-5;
      "Lib.z": File "main.ml", line 1, characters 9-14
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 
   $ $MERLIN server occurrences -identifier-at 3:4 \
@@ -68,6 +69,7 @@ Now we insert a def before z:
      "z": File "lib.ml", line 3, characters 4-5;
      "Lib.z": File "main.ml", line 1, characters 9-14
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 We are not missing the occurrence in main.ml
   $ $MERLIN server occurrences -identifier-at 3:4 \
@@ -115,6 +117,7 @@ We are not missing the occurrence in main.ml
      "z": File "lib.ml", line 3, characters 4-5;
      "Lib.z": File "main.ml", line 1, characters 9-14
    }, 0 approx shapes: {}, and shapes for CUS .
+  and related uids:{}
 
 We are not missing the occurrence in main.ml 
   $ $MERLIN server occurrences -identifier-at 3:4 \

@@ -426,7 +426,7 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
         | `Not_in_env _ as s -> s
         | `Not_found _ as s -> s
         | `Found { file; location; _ } -> `Found (Some file, location.loc_start)
-        | `File_not_found _ as s -> s)
+        | `File_not_found { file = reason; _ } -> `File_not_found reason)
     end
   | Complete_prefix (prefix, pos, kinds, with_doc, with_types) ->
     let pipeline, typer = for_completion pipeline pos in
@@ -586,6 +586,11 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
     in
     if path = "" then `Invalid_context
     else
+      let ml_or_mli =
+        match ml_or_mli with
+        | `ML -> `Smart
+        | `MLI -> `MLI
+      in
       let config =
         Locate.
           { mconfig = Mpipeline.final_config pipeline;
@@ -611,8 +616,8 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
         | `Builtin (_, s) ->
           Locate.log ~title:"result" "found builtin %s" s;
           `Builtin s
-        | (`Not_found _ | `At_origin | `Not_in_env _ | `File_not_found _) as
-          otherwise ->
+        | `File_not_found { file = reason; _ } -> `File_not_found reason
+        | (`Not_found _ | `At_origin | `Not_in_env _) as otherwise ->
           Locate.log ~title:"result" "not found";
           otherwise
       end
