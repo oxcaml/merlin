@@ -120,93 +120,21 @@ module Error = struct
 
 end
 
-module Directionality = struct
-
-
-  type mark =
+type mark =
   | Mark_both
   | Mark_positive
+  | Mark_negative
   | Mark_neither
 
-  type pos =
-    | Strictly_positive
-      (** Strictly positive positions are notable for tools since they are the
-          the case where we match a implementation definition with an interface
-          declaration. Oherwise in the positive case we are matching
-          declatations inside functor arguments at even level of nesting.*)
-    | Positive
-    | Negative
+let negate_mark = function
+  | Mark_both -> Mark_both
+  | Mark_positive -> Mark_negative
+  | Mark_negative -> Mark_positive
+  | Mark_neither -> Mark_neither
 
-
-(**
-   When checking inclusion, the [Directionality.t] type tracks the
-   subtyping direction at the syntactic level.
-
-   The [posivity] field is used in the [cmt_declaration_dependencies] to
-   distinguish between directed and undirected edges, and to avoid recording
-   matched declarations twice.
-
-   The [mark_as_used] field describes if we should record only positive use,
-   any use (because there is no clear implementation side), or none (because we
-   are inside an auxiliary check function.)
-
-   The [in_eq] field is [true] when we are checking both directions inside of
-   module types which allows optimizing module type equality checks. The module
-   subtyping relation [A <: B] checks that [A.T = B.T] when [A] and [B] define a
-   module type [T]. The relation [A.T = B.T] is equivalent to [(A.T <: B.T) and
-   (B.T <: A.T)], but checking both recursively would lead to an exponential
-   slowdown (see #10598 and #10616). To avoid this issue, when [in_eq] is
-   [true], we compute a coarser relation [A << B] which is the same as [A <: B]
-   except that module types [T] are checked only for [A.T << B.T] and not the
-   reverse. Thus, we can implement a cheap module type equality check [A.T =
-   B.T] by computing [(A.T << B.T) and (B.T << A.T)], avoiding the exponential
-   slowdown described above.
-*)
-  type t = {
-      in_eq:bool;
-      mark_as_used:mark;
-      pos:pos;
-    }
-
-  let strictly_positive ~mark ~both =
-    let mark_as_used =
-      match mark, both with
-      | true, true -> Mark_both
-      | true, false -> Mark_positive
-      | false, _ -> Mark_neither
-    in
-    { in_eq=false; pos=Strictly_positive; mark_as_used }
-
-  let unknown ~mark =
-    let mark_as_used = if mark then Mark_both else Mark_neither in
-    { in_eq=false; pos=Positive; mark_as_used }
-
-  let negate_pos = function
-    | Positive | Strictly_positive -> Negative
-    | Negative -> Positive
-
-  let negate d = { d with pos = negate_pos d.pos }
-
-  let at_most_positive = function
-    | Strictly_positive -> Positive
-    | Positive | Negative as non_strict -> non_strict
-
-  let enter_eq d =
-    {
-      in_eq = true;
-      pos = at_most_positive d.pos;
-      mark_as_used = d.mark_as_used
-    }
-
-  let mark_as_used d = match d.mark_as_used with
-    | Mark_neither -> false
-    | Mark_both -> true
-    | Mark_positive ->
-       match d.pos with
-       | Positive | Strictly_positive -> true
-       | Negative -> false
-
-end
+let mark_positive = function
+  | Mark_both | Mark_positive -> true
+  | Mark_negative | Mark_neither -> false
 
 (* All functions "blah env x1 x2" check that x1 is included in x2,
    i.e. that x1 is the type of an implementation that fulfills the
@@ -225,8 +153,9 @@ let append_ldot s = function
 
 (* Inclusion between value descriptions *)
 
-let value_descriptions ~loc env ~direction subst id ~mmodes vd1 vd2 =
-  if Directionality.mark_as_used direction then
+let value_descriptions ~loc env ~mark subst id ~mmodes vd1 vd2 =
+  Cmt_format.record_value_dependency vd1 vd2;
+  if mark_positive mark then
     Env.mark_value_used vd1.val_uid;
   let vd2 = Subst.value_description subst vd2 in
   try
@@ -236,8 +165,8 @@ let value_descriptions ~loc env ~direction subst id ~mmodes vd1 vd2 =
 
 (* Inclusion between type declarations *)
 
-let type_declarations ~loc env ~direction subst id decl1 decl2 =
-  let mark = Directionality.mark_as_used direction in
+let type_declarations ~loc env ~mark subst id decl1 decl2 =
+  let mark = mark_positive mark in
   if mark then
     Env.mark_type_used decl1.type_uid;
   let decl2 = Subst.type_declaration subst decl2 in
@@ -251,8 +180,8 @@ let type_declarations ~loc env ~direction subst id decl1 decl2 =
 
 (* Inclusion between extension constructors *)
 
-let extension_constructors ~loc env ~direction subst id ext1 ext2 =
-  let mark = Directionality.mark_as_used direction in
+let extension_constructors ~loc env ~mark  subst id ext1 ext2 =
+  let mark = mark_positive mark in
   let ext2 = Subst.extension_constructor subst ext2 in
   match Includecore.extension_constructors ~loc env ~mark id ext1 ext2 with
   | None -> Ok Tcoerce_none
@@ -576,8 +505,24 @@ and shallow_module_paths env subst p1 mty2 p2 =
     | Mty_alias _ | Mty_ident _ | Mty_signature _ | Mty_functor _
     | exception Not_found -> false
 
-let rec modtypes ~direction ~loc env subst ~modes mty1 mty2 shape =
-  match try_modtypes ~direction ~loc env subst ~modes mty1 mty2 shape with
+(**
+   In the group of mutual functions below, the [~in_eq] argument is [true] when
+   we are in fact checking equality of module types.
+
+   The module subtyping relation [A <: B] checks that [A.T = B.T] when [A]
+   and [B] define a module type [T]. The relation [A.T = B.T] is equivalent
+   to [(A.T <: B.T) and (B.T <: A.T)], but checking both recursively would lead
+   to an exponential slowdown (see #10598 and #10616).
+   To avoid this issue, when [~in_eq] is [true], we compute a coarser relation
+   [A << B] which is the same as [A <: B] except that module types [T] are
+   checked only for [A.T << B.T] and not the reverse.
+   Thus, we can implement a cheap module type equality check [A.T = B.T] by
+   computing [(A.T << B.T) and (B.T << A.T)], avoiding the exponential slowdown
+   described above.
+*)
+
+let rec modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 shape =
+  match try_modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 shape with
   | Ok _ as ok -> ok
   | Error reason ->
     let mty1 = Subst.Lazy.force_modtype mty1 in
@@ -586,7 +531,7 @@ let rec modtypes ~direction ~loc env subst ~modes mty1 mty2 shape =
     in
     Error Error.(diff mty1 mty2 reason)
 
-and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
+and try_modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 orig_shape =
   let open Subst.Lazy in
   (* Do a quick nominal comparison for simple types and if that fails, try to
       unfold one of them. For structured types, do a deep comparison. *)
@@ -608,7 +553,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
     | p1 ->
         begin match Env.find_module_lazy p1 env with
         | md -> begin
-            match strengthened_modtypes ~direction ~loc ~aliasable:true env
+            match strengthened_modtypes ~in_eq ~loc ~aliasable:true env ~mark
                     subst ~modes md.md_type p1 mty2 orig_shape
             with
             | Ok _ as x -> x
@@ -620,7 +565,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
     end
   | (Mty_signature sig1, Mty_signature sig2) ->
       begin match
-        signatures ~direction ~loc env subst ~modes sig1 sig2 orig_shape
+        signatures ~in_eq ~loc env ~mark subst ~modes sig1 sig2 orig_shape
       with
       | Ok _ as ok -> ok
       | Error e -> Error (Error.Signature e)
@@ -629,8 +574,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
   | Mty_functor (param1, res1), Mty_functor (param2, res2) ->
       walk_locks ~env ~item:Module modes;
       let cc_arg, env, subst =
-        let direction = Directionality.negate direction in
-        functor_param ~direction ~loc env
+        functor_param ~in_eq ~loc env ~mark:(negate_mark mark)
           subst param1 param2
       in
       let var, res_shape =
@@ -648,7 +592,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
             var, Shape.app orig_shape ~arg:shape_var
       in
       let cc_res =
-        modtypes ~direction ~loc env subst res1 res2 res_shape
+        modtypes ~in_eq ~loc env ~mark subst res1 res2 res_shape
           ~modes:(Legacy None)
       in
       begin match cc_arg, cc_res with
@@ -706,7 +650,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
     in
     match red with
     | Some (mty1,mty2) ->
-        try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape
+        try_modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 orig_shape
     | None ->
         (* Report error *)
         match mty1, mty2 with
@@ -738,7 +682,7 @@ and try_modtypes ~direction ~loc env subst ~modes mty1 mty2 orig_shape =
 
 (* Functor parameters *)
 
-and functor_param ~direction ~loc env subst param1 param2 =
+and functor_param ~in_eq ~loc env ~mark subst param1 param2 =
   let open Subst.Lazy in
   match param1, param2 with
   | Unit, Unit ->
@@ -747,7 +691,7 @@ and functor_param ~direction ~loc env subst param1 param2 =
       let arg2' = Subst.Lazy.modtype Keep subst arg2 in
       let cc_arg =
         match
-          modtypes ~direction ~loc env Subst.identity arg2' arg1
+          modtypes ~in_eq ~loc env ~mark Subst.identity arg2' arg1
                 Shape.dummy_mod ~modes:(Legacy None)
         with
         | Ok (cc, _) -> Ok cc
@@ -777,22 +721,22 @@ and equate_one_functor_param subst env arg2' name1 name2  =
   | None, None ->
       env, subst
 
-and strengthened_modtypes ~direction ~loc ~aliasable env
+and strengthened_modtypes ~in_eq ~loc ~aliasable env ~mark
     subst ~modes mty1 path1 mty2 shape =
   let mty1 = Mtype.strengthen_lazy ~aliasable mty1 path1 in
-  modtypes ~direction ~loc env subst ~modes mty1 mty2 shape
+  modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 shape
 
-and strengthened_module_decl ~loc ~aliasable ~direction env
+and strengthened_module_decl ~loc ~aliasable env ~mark
     subst ~mmodes  md1 path1 md2 shape =
   let md1 = Subst.Lazy.of_module_decl md1 in
   let md1 = Mtype.strengthen_lazy_decl ~aliasable md1 path1 in
   let mty2 = Subst.Lazy.of_modtype md2.md_type in
   let modes = mmodes in
-  modtypes ~direction ~loc env subst ~modes md1.md_type mty2 shape
+  modtypes ~in_eq:false ~loc env ~mark subst ~modes md1.md_type mty2 shape
 
 (* Inclusion between signatures *)
 
-and signatures ~direction ~loc env subst ~modes sig1 sig2 mod_shape =
+and signatures ~in_eq ~loc env ~mark subst ~modes sig1 sig2 mod_shape =
   let open Subst.Lazy in
   (* Environment used to check inclusion of components *)
   let sig1 = force_signature_once sig1 in
@@ -820,7 +764,7 @@ and signatures ~direction ~loc env subst ~modes sig1 sig2 mod_shape =
   (* Do the pairing and checking, and return the final coercion *)
   let paired, unpaired, subst = pair_components subst comps1 sig2 in
   let d =
-    signature_components ~direction ~loc new_env subst mod_shape
+    signature_components ~in_eq ~loc ~mark new_env subst mod_shape
       Shape.Map.empty ~mmodes:modes
       (List.rev paired)
   in
@@ -845,19 +789,19 @@ and signatures ~direction ~loc env subst ~modes sig1 sig2 mod_shape =
 
 (* Inclusion between signature components *)
 and signature_components :
-  'a. direction:_ -> loc:_ -> _ -> _ -> _ -> _ -> mmodes:_ -> (_ * _ * 'a) list -> 'a Sign_diff.t =
-  fun ~direction ~loc env subst orig_shape shape_map ~mmodes paired ->
+  'a. in_eq:_ -> loc:_ -> mark:_ -> _ -> _ -> _ -> _ -> mmodes:_ -> (_ * _ * 'a) list -> 'a Sign_diff.t =
+  fun ~in_eq ~loc ~mark env subst orig_shape shape_map ~mmodes paired ->
   let open Subst.Lazy in
   match paired with
   | [] -> Sign_diff.{ empty with shape_map }
   | (sigi1, sigi2, pos) :: rem ->
       let shape_modified = ref false in
-      let id, item, paired_uids, shape_map, present_at_runtime =
+      let id, item, shape_map, present_at_runtime =
         match sigi1, sigi2 with
         | Sig_value(id1, valdecl1, _) ,Sig_value(_id2, valdecl2, _) ->
             let mmodes = append_ldot (Ident.name id1) mmodes in
             let item =
-              value_descriptions ~loc ~direction env subst id1 ~mmodes
+              value_descriptions ~loc env ~mark subst id1 ~mmodes
                 (Subst.Lazy.force_value_description valdecl1)
                 (Subst.Lazy.force_value_description valdecl2)
             in
@@ -867,26 +811,25 @@ and signature_components :
               | _ -> true
             in
             let shape_map = Shape.Map.add_value_proj shape_map id1 orig_shape in
-            let paired_uids = (valdecl1.val_uid, valdecl2.val_uid) in
-            id1, item, paired_uids, shape_map, present_at_runtime
+            id1, item, shape_map, present_at_runtime
         | Sig_type(id1, tydec1, _, _), Sig_type(_id2, tydec2, _, _) ->
             let item =
-              type_declarations ~loc ~direction env subst id1 tydec1 tydec2
+              type_declarations ~loc env ~mark subst id1 tydec1 tydec2
             in
             let item = mark_error_as_unrecoverable item in
             (* Right now we don't filter hidden constructors / labels from the
             shape. *)
             let shape_map = Shape.Map.add_type_proj shape_map id1 orig_shape in
-            id1, item, (tydec1.type_uid, tydec2.type_uid), shape_map, false
+            id1, item, shape_map, false
         | Sig_typext(id1, ext1, _, _), Sig_typext(_id2, ext2, _, _) ->
             let item =
-              extension_constructors ~loc ~direction env subst id1 ext1 ext2
+              extension_constructors ~loc env ~mark  subst id1 ext1 ext2
             in
             let item = mark_error_as_unrecoverable item in
             let shape_map =
               Shape.Map.add_extcons_proj shape_map id1 orig_shape
             in
-            id1, item, (ext1.ext_uid, ext2.ext_uid), shape_map, true
+            id1, item, shape_map, true
         | Sig_module(id1, pres1, mty1, _, _), Sig_module(_, pres2, mty2, _, _)
           -> begin
               let mmodes = append_ldot (Ident.name id1) mmodes in
@@ -894,7 +837,7 @@ and signature_components :
                 Shape.(proj orig_shape (Item.module_ id1))
               in
               let item =
-                module_declarations ~direction ~loc env subst id1 mty1 mty2
+                module_declarations ~in_eq ~loc env ~mark subst id1 mty1 mty2
                   ~mmodes orig_shape
               in
               let item, shape_map =
@@ -919,18 +862,17 @@ and signature_components :
                 | Mp_absent, Mp_present, _ -> assert false
               in
               let item = mark_error_as_unrecoverable item in
-              let paired_uids = (mty1.md_uid, mty2.md_uid) in
-              id1, item, paired_uids, shape_map, present_at_runtime
+              id1, item, shape_map, present_at_runtime
             end
         | Sig_modtype(id1, info1, _), Sig_modtype(_id2, info2, _) ->
             let item =
-              modtype_infos ~direction ~loc env  subst id1 info1 info2
+              modtype_infos ~in_eq ~loc env ~mark  subst id1 info1 info2
             in
             let shape_map =
               Shape.Map.add_module_type_proj shape_map id1 orig_shape
             in
             let item = mark_error_as_unrecoverable item in
-            id1, item, (info1.mtd_uid, info2.mtd_uid), shape_map, false
+            id1, item, shape_map, false
         | Sig_class(id1, decl1, _, _), Sig_class(_id2, decl2, _, _) ->
             walk_locks ~env ~item:Class (append_ldot (Ident.name id1) mmodes);
             let item =
@@ -940,7 +882,7 @@ and signature_components :
               Shape.Map.add_class_proj shape_map id1 orig_shape
             in
             let item = mark_error_as_unrecoverable item in
-            id1, item, (decl1.cty_uid, decl2.cty_uid), shape_map, true
+            id1, item, shape_map, true
         | Sig_class_type(id1, info1, _, _), Sig_class_type(_id2, info2, _, _) ->
             let item =
               class_type_declarations ~loc env subst info1 info2
@@ -949,7 +891,7 @@ and signature_components :
             let shape_map =
               Shape.Map.add_class_type_proj shape_map id1 orig_shape
             in
-            id1, item, (info1.clty_uid, info2.clty_uid), shape_map, false
+            id1, item, shape_map, false
         | _ ->
             assert false
       in
@@ -957,25 +899,6 @@ and signature_components :
       let first =
         match item with
         | Ok x ->
-            begin match direction with
-            | { Directionality.in_eq = true; pos = Negative }
-            | { Directionality.mark_as_used = Mark_neither; _ } ->
-              (* We do not store paired uids when checking for reverse
-                module-type inclusion as it would introduce duplicates. *)
-                ()
-            | { Directionality.pos; _} ->
-              let paired_uids =
-                let elt1, elt2 = paired_uids in
-                match pos with
-                | Negative ->
-                    (Cmt_format.Declaration_to_declaration, elt2, elt1)
-                | Positive ->
-                    (Cmt_format.Declaration_to_declaration, elt1, elt2)
-                | Strictly_positive ->
-                    (Cmt_format. Definition_to_declaration, elt1, elt2)
-              in
-              Cmt_format.record_declaration_dependency paired_uids
-            end;
             let runtime_coercions =
               if present_at_runtime then [pos,x] else []
             in
@@ -989,7 +912,7 @@ and signature_components :
       in
       let rest =
         if continue then
-          signature_components ~direction ~loc env subst
+          signature_components ~in_eq ~loc ~mark env subst
             orig_shape shape_map ~mmodes rem
         else
           let rem = List.map
@@ -1003,7 +926,7 @@ and signature_components :
        in
        Sign_diff.merge first rest
 
-and module_declarations ~direction ~loc env subst id1 ~mmodes md1 md2 orig_shape =
+and module_declarations  ~in_eq ~loc env ~mark  subst id1 ~mmodes md1 md2 orig_shape =
   let open Subst.Lazy in
   Builtin_attributes.check_alerts_inclusion
     ~def:md1.md_loc
@@ -1012,15 +935,15 @@ and module_declarations ~direction ~loc env subst id1 ~mmodes md1 md2 orig_shape
     md1.md_attributes md2.md_attributes
     (Ident.name id1);
   let p1 = Path.Pident id1 in
-  if Directionality.mark_as_used direction then
+  if mark_positive mark then
     Env.mark_module_used md1.md_uid;
   let modes = mmodes in
-  strengthened_modtypes ~direction ~loc ~aliasable:true env subst ~modes
+  strengthened_modtypes  ~in_eq ~loc ~aliasable:true env ~mark subst ~modes
     md1.md_type p1 md2.md_type orig_shape
 
 (* Inclusion between module type specifications *)
 
-and modtype_infos ~direction ~loc env subst id info1 info2 =
+and modtype_infos ~in_eq ~loc env ~mark subst id info1 info2 =
   let open Subst.Lazy in
   Builtin_attributes.check_alerts_inclusion
     ~def:info1.mtd_loc
@@ -1034,10 +957,10 @@ and modtype_infos ~direction ~loc env subst id info1 info2 =
       (None, None) -> Ok Tcoerce_none
     | (Some _, None) -> Ok Tcoerce_none
     | (Some mty1, Some mty2) ->
-        check_modtype_equiv ~direction ~loc env mty1 mty2
+        check_modtype_equiv ~in_eq ~loc env ~mark mty1 mty2
     | (None, Some mty2) ->
         let mty1 = Mty_ident(Path.Pident id) in
-        check_modtype_equiv ~direction ~loc env mty1 mty2 in
+        check_modtype_equiv ~in_eq ~loc env ~mark mty1 mty2 in
   match r with
   | Ok _ as ok -> ok
   | Error e ->
@@ -1045,11 +968,9 @@ and modtype_infos ~direction ~loc env subst id info1 info2 =
       let info2 = Subst.Lazy.force_modtype_decl info2 in
       Error Error.(Module_type_declaration (diff info1 info2 e))
 
-and check_modtype_equiv ~direction ~loc env mty1 mty2 =
-  let nested_eq = direction.Directionality.in_eq in
-  let direction = Directionality.enter_eq direction in
+and check_modtype_equiv ~in_eq ~loc env ~mark mty1 mty2 =
   let c1 =
-    modtypes ~direction ~loc env Subst.identity mty1 mty2 Shape.dummy_mod
+    modtypes ~in_eq:true ~loc env ~mark Subst.identity mty1 mty2 Shape.dummy_mod
       ~modes:All
   in
   let c2 =
@@ -1057,11 +978,11 @@ and check_modtype_equiv ~direction ~loc env mty1 mty2 =
        the outer module type is the one responsible for checking the other side
        of the equivalence.
      *)
-    if nested_eq then None
+    if in_eq then None
     else
-      let direction = Directionality.negate direction in
+      let mark = negate_mark mark in
       Some (
-        modtypes ~direction ~loc env Subst.identity ~modes:All
+        modtypes ~in_eq:true ~loc env ~mark Subst.identity ~modes:All
           mty2 mty1 Shape.dummy_mod
       )
   in
@@ -1076,10 +997,10 @@ and check_modtype_equiv ~direction ~loc env mty1 mty2 =
   | Error less_than, Some Error greater_than ->
       Error Error.(Incomparable {less_than; greater_than})
 
-let include_functor_signatures ~direction ~loc env subst sig1 sig2 mod_shape =
+let include_functor_signatures ~loc env ~mark subst sig1 sig2 mod_shape =
   let _, _, comps1 = build_component_table (fun _pos name -> name) sig1 in
   let paired, unpaired, subst = pair_components subst comps1 sig2 in
-  let d = signature_components ~direction ~loc env subst mod_shape
+  let d = signature_components ~in_eq:false ~loc ~mark env subst mod_shape
             Shape.Map.empty ~mmodes:(Legacy None)
             (List.rev paired)
   in
@@ -1100,21 +1021,21 @@ let can_alias env path =
   no_apply path && not (Env.is_functor_arg path env)
 
 
-let signatures ~direction ~loc env subst sig1 sig2 mod_shape =
+let signatures ~in_eq ~loc env ~mark subst sig1 sig2 mod_shape =
   let sig1 = Subst.Lazy.of_signature sig1 in
   let sig2 = Subst.Lazy.of_signature sig2 in
-  signatures ~direction ~loc env subst sig1 sig2 mod_shape
+  signatures ~in_eq ~loc env ~mark subst sig1 sig2 mod_shape
 
-let modtypes ~direction ~loc env subst ~modes mty1 mty2 shape =
+let modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 shape =
   let mty1 = Subst.Lazy.of_modtype mty1 in
   let mty2 = Subst.Lazy.of_modtype mty2 in
-  modtypes ~direction ~loc env subst ~modes mty1 mty2 shape
+  modtypes ~in_eq ~loc env ~mark subst ~modes mty1 mty2 shape
 
-let strengthened_modtypes ~direction ~loc ~aliasable env
+let strengthened_modtypes ~in_eq ~loc ~aliasable env ~mark
   subst mty1 path1 mty2 shape =
   let mty1 = Subst.Lazy.of_modtype mty1 in
   let mty2 = Subst.Lazy.of_modtype mty2 in
-  strengthened_modtypes ~direction ~loc ~aliasable env subst mty1
+  strengthened_modtypes ~in_eq ~loc ~aliasable env ~mark subst mty1
     path1 mty2 shape
 
 type explanation = Env.t * Error.all
@@ -1134,8 +1055,7 @@ exception Apply_error of {
 
 let check_modtype_inclusion_raw ~loc env mty1 path1 mty2 =
   let aliasable = can_alias env path1 in
-  let direction = Directionality.unknown ~mark:true in
-  strengthened_modtypes ~direction ~loc ~aliasable env
+  strengthened_modtypes ~in_eq:false ~loc ~aliasable env ~mark:Mark_both
     Subst.identity ~modes:(Legacy None) mty1 path1 mty2 Shape.dummy_mod
   |> Result.map fst
 
@@ -1172,9 +1092,8 @@ let () =
 
 let compunit0
     ~comparison env ~mark impl_name impl_sig intf_name intf_sig unit_shape =
-  let direction = Directionality.strictly_positive ~mark ~both:false in
   match
-    signatures ~direction ~loc:(Location.in_file impl_name) env
+    signatures ~in_eq:false ~loc:(Location.in_file impl_name) env ~mark
       Subst.identity ~modes:(Legacy None) impl_sig intf_sig unit_shape
   with Result.Error reasons ->
     let diff = Error.diff impl_name intf_name reasons in
@@ -1191,7 +1110,7 @@ let compunit = compunit0 ~comparison:Implementation_vs_interface
 let compunit_as_argument env arg_name arg_sig param_name param_sig =
   let cc, _shape =
     compunit0 env arg_name arg_sig param_name param_sig Shape.dummy_mod
-      ~comparison:Argument_vs_parameter ~mark:true
+      ~comparison:Argument_vs_parameter ~mark:Mark_positive
   in
   cc
 
@@ -1295,8 +1214,7 @@ module Functor_inclusion_diff = struct
           let res, _, _ =
             let mty1 = Subst.Lazy.of_functor_parameter mty1 in
             let mty2 = Subst.Lazy.of_functor_parameter mty2 in
-            let direction = Directionality.unknown ~mark:false in
-            functor_param ~direction ~loc st.env
+            functor_param ~in_eq:false ~loc st.env ~mark:Mark_neither
               st.subst mty1 mty2
           in
           res
@@ -1390,9 +1308,8 @@ module Functor_app_diff = struct
             | Unit, Named _ | (Anonymous | Named _), Unit ->
                 Result.Error (Error.Incompatible_params(arg,param))
             | ( Anonymous | Named _ | Empty_struct ), Named (_, param) ->
-               let direction = Directionality.unknown ~mark:false in
                 match
-                  modtypes ~direction ~loc state.env
+                  modtypes ~in_eq:false ~loc state.env ~mark:Mark_neither
                     state.subst ~modes:(Legacy None) arg_mty param
                     Shape.dummy_mod
                 with
@@ -1414,61 +1331,45 @@ end
 
 (* Hide the context and substitution parameters to the outside world *)
 
-let modtypes_constraint ~shape ~loc env ~mark ~modes mty1 mty2 =
-  (* modtypes with shape is used when typing module expressions in [Typemod] *)
-  let direction = Directionality.strictly_positive ~mark ~both:true in
-  match modtypes ~direction ~loc env
+let modtypes_with_shape ~shape ~loc env ~mark ~modes mty1 mty2 =
+  match modtypes ~in_eq:false ~loc env ~mark
           Subst.identity ~modes mty1 mty2 shape
   with
   | Ok (cc, shape) -> cc, shape
   | Error reason -> raise (Error (env, Error.(In_Module_type reason)))
 
 let modtypes ~loc env ~mark ~modes mty1 mty2 =
-  let direction = Directionality.unknown ~mark in
-  match modtypes ~direction ~loc env
+  match modtypes ~in_eq:false ~loc env ~mark
           Subst.identity ~modes mty1 mty2 Shape.dummy_mod
   with
   | Ok (cc, _) -> cc
   | Error reason -> raise (Error (env, Error.(In_Module_type reason)))
 
-let gen_signatures env ~direction ~modes sig1 sig2 =
-  match signatures ~direction ~loc:Location.none env
+let signatures env ~mark ~modes  sig1 sig2 =
+  match signatures ~in_eq:false ~loc:Location.none env ~mark
           Subst.identity ~modes sig1 sig2 Shape.dummy_mod
   with
   | Ok (cc, _) -> cc
   | Error reason -> raise (Error(env,Error.(In_Signature reason)))
 
-let signatures env ~mark ~modes sig1 sig2 =
-  let direction = Directionality.unknown ~mark in
-  gen_signatures env ~direction ~modes sig1 sig2
-
-let check_implementation env ~modes impl intf =
-  let direction =
-    Directionality.strictly_positive ~mark:true ~both:false
-  in
-  ignore (gen_signatures env ~direction ~modes impl intf)
-
 let include_functor_signatures env ~mark sig1 sig2 =
   let sig1 = List.map Subst.Lazy.of_signature_item sig1 in
   let sig2 = List.map Subst.Lazy.of_signature_item sig2 in
-  let direction = Directionality.unknown ~mark in
-  match include_functor_signatures ~direction ~loc:Location.none env
+  match include_functor_signatures ~loc:Location.none env ~mark
           Subst.identity sig1 sig2 Shape.dummy_mod
   with
   | Ok cc -> cc
   | Error reason -> raise (Error(env,Error.(In_Include_functor_signature reason)))
 
 let type_declarations ~loc env ~mark id decl1 decl2 =
-  let direction = Directionality.unknown ~mark in
-  match type_declarations ~loc env ~direction Subst.identity id decl1 decl2 with
+  match type_declarations ~loc env ~mark Subst.identity id decl1 decl2 with
   | Ok _ -> ()
   | Error (Error.Core reason) ->
       raise (Error(env,Error.(In_Type_declaration(id,reason))))
   | Error _ -> assert false
 
 let strengthened_module_decl ~loc ~aliasable env ~mark ~mmodes md1 path1 md2 =
-  let direction = Directionality.unknown ~mark in
-  match strengthened_module_decl ~loc ~aliasable ~direction env Subst.identity
+  match strengthened_module_decl ~loc ~aliasable env ~mark Subst.identity
     ~mmodes md1 path1 md2 Shape.dummy_mod with
   | Ok (x, _shape) -> x
   | Error mdiff ->
@@ -1483,8 +1384,7 @@ let expand_module_alias ~strengthen env path =
 let check_modtype_equiv ~loc env id mty1 mty2 =
   let mty1' = Subst.Lazy.of_modtype mty1 in
   let mty2' = Subst.Lazy.of_modtype mty2 in
-  let direction = Directionality.unknown ~mark:true in
-  match check_modtype_equiv ~direction ~loc env mty1' mty2' with
+  match check_modtype_equiv ~in_eq:false ~loc env ~mark:Mark_both mty1' mty2' with
   | Ok _ -> ()
   | Error e ->
       raise (Error(env,
