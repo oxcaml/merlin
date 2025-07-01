@@ -398,10 +398,10 @@ Check that we understand everything about [Basic[P:P_int].create]:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/basic.mli",
+    "file": "$TESTCASE_ROOT/basic.ml",
     "pos": {
-      "line": 7,
-      "col": 0
+      "line": 3,
+      "col": 4
     }
   }
 
@@ -426,10 +426,10 @@ syntax, so this output isn't ideal:
     }
   }
   {
-    "file": "$TESTCASE_ROOT/fancy.mli",
+    "file": "$TESTCASE_ROOT/fancy.ml",
     "pos": {
-      "line": 4,
-      "col": 0
+      "line": 3,
+      "col": 4
     }
   }
 
@@ -442,7 +442,8 @@ Now let's see how instances work with aliases and includes:
 
 Do we see where [Reexport_int.As_alias.create] comes from? (Note: It would be
 nice to delegate to [p.mli] here when there's no documentation for the
-implementing .mli.)
+implementing .mli.) (FIXME: Currently no. It should go to [p_int.ml]
+rather than [p.mli].)
 
   $ multi_query_impl use_reexported_int.ml 3:37 $instance_warnings
   "unit -> Reexport_int.As_alias.t"
@@ -458,7 +459,7 @@ implementing .mli.)
     "file": "$TESTCASE_ROOT/p_int.mli",
     "pos": {
       "line": 3,
-      "col": 0
+      "col": 4
     }
   }
 
