@@ -186,52 +186,57 @@ let get_buffer_locs result uid =
 
 let get_external_locs ~(config : Mconfig.t) ~current_buffer_path uid =
   let title = "get_external_locs" in
-  List.filter_map config.merlin.index_files ~f:(fun file ->
+  List.filter_map config.merlin.index_files ~f:(fun index_file ->
       log ~title "Lookin for occurrences of %a in index %s" Logger.fmt
         (Fun.flip Shape.Uid.print uid)
-        file;
+        index_file;
       let external_locs =
         try
-          let external_index = Index_cache.read file in
+          let external_index = Index_cache.read index_file in
           Index_format.Uid_map.find_opt uid external_index.defs
           |> Option.map ~f:(fun uid_locs -> (external_index, uid_locs))
         with Index_format.Not_an_index _ | Sys_error _ ->
-          log ~title:"external_index" "Could not load index %s" file;
+          log ~title:"external_index" "Could not load index %s" index_file;
           None
       in
       Option.map external_locs ~f:(fun (index, locs) ->
           let stats = Stat_check.create ~cache_size:128 index in
-          ( Lid_set.filter
-              (fun lid ->
+          ( Occurrence_set.of_filtered_lid_set locs ~f:(fun lid ->
                 let ({ Location.loc; _ } as lid) =
                   Index_format.Lid.to_lid lid
                 in
-                let is_current_buffer =
-                  (* We filter external results that concern the current buffer *)
-                  let file = loc.Location.loc_start.Lexing.pos_fname in
-                  let file, buf =
-                    match config.merlin.source_root with
-                    | Some root ->
-                      (Filename.concat root file, current_buffer_path)
-                    | None -> (file, config.query.filename)
-                  in
-                  let file = Misc.canonicalize_filename file in
-                  let buf = Misc.canonicalize_filename buf in
-                  String.equal file buf
+                (* We filter external results that concern the current buffer *)
+                let file_rel_to_root =
+                  loc.Location.loc_start.Lexing.pos_fname
                 in
+                let file_uncanon, buf_uncanon =
+                  match config.merlin.source_root with
+                  | Some root ->
+                    (Filename.concat root file_rel_to_root, current_buffer_path)
+                  | None -> (file_rel_to_root, config.query.filename)
+                in
+                let file = Misc.canonicalize_filename file_uncanon in
+                let buf = Misc.canonicalize_filename buf_uncanon in
+                let is_current_buffer = String.equal file buf in
                 let should_be_ignored =
                   (* We ignore results that don't have a location *)
                   Index_occurrences.should_ignore_lid lid
                 in
-                if is_current_buffer || should_be_ignored then false
+                if is_current_buffer || should_be_ignored then None
                 else begin
                   (* We ignore external results if their source was modified *)
-                  let check = Stat_check.check stats ~file in
-                  if not check then
+                  let is_fresh =
+                    Stat_check.check stats ~file:file_rel_to_root
+                  in
+                  if not is_fresh then
                     log ~title:"locs_of" "File %s might be out-of-sync." file;
-                  check
-                end)
-              locs,
+                  let staleness : Staleness.t =
+                    match is_fresh with
+                    | true -> Fresh
+                    | false -> Stale
+                  in
+                  Some staleness
+                end),
             Stat_check.get_outdated_files stats )))
 
 let lookup_related_uids_in_indexes ~(config : Mconfig.t) uid =
@@ -351,45 +356,48 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
           (Occurrence_set.union acc_locs locs, String.Set.union acc_files files))
         external_occurrences
     in
-    let locs = Lid_set.union buffer_locs external_locs in
-    (* Some of the paths may have redundant `.`s or `..`s in them. Although canonicalizing
-       is not necessary for correctness, it makes the output a bit nicer. *)
-    let canonicalize_file_in_loc lid =
-      let ({ txt; loc } : 'a Location.loc) = Index_format.Lid.to_lid lid in
-      let file =
-        Misc.canonicalize_filename ?cwd:config.merlin.source_root
-          loc.loc_start.pos_fname
-      in
-      Index_format.Lid.of_lid { txt; loc = set_fname ~file loc }
+    let occurrences =
+      Occurrence_set.union buffer_occurrences external_occurrences
     in
-    let locs = Lid_set.map canonicalize_file_in_loc locs in
-    let locs =
-      log ~title:"occurrences" "Found %i locs" (Lid_set.cardinal locs);
-      Lid_set.elements locs
-      |> List.filter_map ~f:(fun lid ->
-             let { Location.txt; loc } = Index_format.Lid.to_lid lid in
-             let lid = try Longident.head txt with _ -> "not flat lid" in
-             log ~title:"occurrences" "Found occ: %s %a" lid Logger.fmt
-               (Fun.flip Location.print_loc loc);
-             let loc =
-               if scope = `Renaming then last_loc_for_renaming loc txt
-               else Some loc
-             in
-             Option.bind loc ~f:(fun loc ->
-                 let fname = loc.Location.loc_start.Lexing.pos_fname in
-                 if not (Filename.is_relative fname) then Some loc
-                 else
-                   match config.merlin.source_root with
-                   | Some path ->
-                     let file = Filename.concat path loc.loc_start.pos_fname in
-                     Some (set_fname ~file loc)
-                   | None -> begin
-                     match Locate.find_source ~config loc fname with
-                     | `Found (file, _) -> Some (set_fname ~file loc)
-                     | `File_not_found msg ->
-                       log ~title:"occurrences" "%s" msg;
-                       None
-                   end))
+    let occurrences = Occurrence_set.to_list occurrences in
+    log ~title:"occurrences" "Found %i locs" (List.length occurrences);
+    let occurrences =
+      List.filter_map occurrences ~f:(fun (lid, staleness) ->
+          let { Location.txt; loc } = Index_format.Lid.to_lid lid in
+          (* Canonoicalize filenames. Some of the paths may have redundant `.`s or `..`s in
+             them. Although canonicalizing is not necessary for correctness, it makes the
+             output a bit nicer. *)
+          let file =
+            Misc.canonicalize_filename ?cwd:config.merlin.source_root
+              loc.loc_start.pos_fname
+          in
+          let loc = set_fname ~file loc in
+          let lid = try Longident.head txt with _ -> "not flat lid" in
+          log ~title:"occurrences" "Found occ: %s %a" lid Logger.fmt
+            (Fun.flip Location.print_loc loc);
+          let loc =
+            if scope = `Renaming then last_loc_for_renaming loc txt
+            else Some loc
+          in
+          Option.bind loc ~f:(fun loc ->
+              let fname = loc.Location.loc_start.Lexing.pos_fname in
+              let loc =
+                if not (Filename.is_relative fname) then Some loc
+                else
+                  match config.merlin.source_root with
+                  | Some path ->
+                    let file = Filename.concat path loc.loc_start.pos_fname in
+                    Some (set_fname ~file loc)
+                  | None -> begin
+                    match Locate.find_source ~config loc fname with
+                    | `Found (file, _) -> Some (set_fname ~file loc)
+                    | `File_not_found msg ->
+                      log ~title:"occurrences" "%s" msg;
+                      None
+                  end
+              in
+              Option.map loc ~f:(fun loc : Query_protocol.occurrence ->
+                  { loc; is_stale = Staleness.is_stale staleness })))
     in
     let def_uid_is_in_current_unit =
       let uid_comp_unit = comp_unit_of_uid def_uid in
