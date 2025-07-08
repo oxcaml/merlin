@@ -492,7 +492,7 @@ let gen_values = `Group [ `Values; `Constructor ]
 let default_kinds = [ `Variants; gen_values; `Types; `Modules; `Modules_type ]
 
 let completion_order = function
-  | `Expression -> [ `Variants; gen_values; `Types; `Modules; `Modules_type ]
+  | `Expression -> [ gen_values; `Variants; `Modules; `Types; `Modules_type ]
   | `Structure -> [ gen_values; `Types; `Modules; `Modules_type ]
   | `Pattern ->
     [ `Variants;
