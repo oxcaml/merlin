@@ -500,9 +500,9 @@ let move_to filename artifact =
     match
       sourcefile_in_builddir |> String.split_on_char ~sep:'.' |> List.rev
     with
-    | ext :: "pp" :: rev_path -> (
-      (* If the source file was a post-processed file (.pp.mli?), use the
-         regular .mli? file for locate. *)
+    | ext :: "pp" :: rev_path | "preprocess" :: "_" :: ext :: rev_path -> (
+      (* If the source file was a post-processed file (.pp.mli? or .mli?._.preprocess),
+         use the regular .mli? file for locate. *)
       let sourcefile_in_builddir =
         ext :: rev_path |> List.rev |> String.concat ~sep:"."
       in
