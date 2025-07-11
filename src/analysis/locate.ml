@@ -778,19 +778,17 @@ let find_source ~config loc path =
           doesn't know which is the right one: %s"
          matches)
 
-(* CR: Is there something better to do to avoid the assertions? *)
-let rec unbox_uid = function
-  | Shape.Uid.Unboxed_version uid -> unbox_uid uid
-  | uid -> uid
-
 let lookup_uid_loc_of_decl ~config:mconfig uid =
   let title = "lookup_uid_decl" in
   let item =
-    match unbox_uid uid with
-    | Shape.Uid.Unboxed_version _ -> assert false
-    | Internal | Predef _ | Compilation_unit _ -> None
-    | Item { from = Intf; comp_unit; _ } -> Some (`MLI, comp_unit)
-    | Item { from = _; comp_unit; _ } -> Some (`ML, comp_unit)
+    let rec item_of_uid uid =
+      match uid with
+      | Shape.Uid.Unboxed_version uid -> item_of_uid uid
+      | Internal | Predef _ | Compilation_unit _ -> None
+      | Item { from = Intf; comp_unit; _ } -> Some (`MLI, comp_unit)
+      | Item { from = _; comp_unit; _ } -> Some (`ML, comp_unit)
+    in
+    item_of_uid uid
   in
   Option.bind item ~f:(fun (ml_or_mli, comp_unit) ->
       let config = { mconfig; ml_or_mli; traverse_aliases = false } in
@@ -850,12 +848,15 @@ let find_loc_of_uid ~config ~local_defs ?ident ?fallback (uid : Shape.Uid.t) =
       |> Option.map ~f:(fun { Location.loc; _ } -> (fallback, loc))
     | _ -> None
   in
-  match unbox_uid uid with
-  | Unboxed_version _ -> assert false
-  | Predef s -> `Builtin (uid, s)
-  | Internal -> `Builtin (uid, "<internal>")
-  | Item { comp_unit; _ } -> `Opt (find_loc_of_item ~comp_unit)
-  | Compilation_unit comp_unit -> find_loc_of_comp_unit ~config uid comp_unit
+  let rec extract_from_uid (uid : Shape.Uid.t) =
+    match uid with
+    | Unboxed_version uid -> extract_from_uid uid
+    | Predef s -> `Builtin (uid, s)
+    | Internal -> `Builtin (uid, "<internal>")
+    | Item { comp_unit; _ } -> `Opt (find_loc_of_item ~comp_unit)
+    | Compilation_unit comp_unit -> find_loc_of_comp_unit ~config uid comp_unit
+  in
+  extract_from_uid uid
 
 let get_linked_uids ~config ~comp_unit decl_uid =
   let title = "linked_uids" in
