@@ -1,7 +1,9 @@
 
-  $ $DUNE build @ocaml-index
+  $ $OCAMLC -bin-annot-cms -bin-annot-occurrences -c func.mli func.ml
+  $ $OCAMLC -bin-annot-cms -bin-annot-occurrences -o main.exe func.cmo main.ml
+  $ ocaml-index aggregate func.cms func.cmsi main.cms -o index.merlin-index
 
-  $ $DUNE exec ./main.exe
+  $ ./main.exe
   Hello world!
 
 We expect 2 occurrences in func.ml, 1 in func.mli and 2 in main.ml
