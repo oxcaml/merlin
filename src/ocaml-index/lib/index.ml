@@ -102,9 +102,9 @@ let init_load_path_once ~do_not_use_cmt_loadpath =
       loaded := true)
 
 let index_of_artifact ~into ~root ~rewrite_root ~build_path
-    ~do_not_use_cmt_loadpath ~shapes ~cmt_loadpath ~cmt_impl_shape ~cmt_modname
-    ~uid_to_loc ~cmt_ident_occurrences ~cmt_initial_env ~cmt_sourcefile
-    ~cmt_source_digest ~cmt_declaration_dependencies =
+    ~do_not_use_cmt_loadpath ~shapes ~store_shapes ~cmt_loadpath ~cmt_impl_shape
+    ~cmt_modname ~uid_to_loc ~cmt_ident_occurrences ~cmt_initial_env
+    ~cmt_sourcefile ~cmt_source_digest ~cmt_declaration_dependencies =
   init_load_path_once ~do_not_use_cmt_loadpath ~dirs:build_path cmt_loadpath;
   let module Reduce = Shape_reduce.Make (Reduce_conf (struct
     let shapes = shapes
@@ -131,7 +131,8 @@ let index_of_artifact ~into ~root ~rewrite_root ~build_path
       (defs, into.approximated) cmt_ident_occurrences
   in
   let cu_shape = into.cu_shape in
-  Option.iter (Hashtbl.add cu_shape cmt_modname) cmt_impl_shape;
+  if store_shapes then
+    Option.iter (Hashtbl.add cu_shape cmt_modname) cmt_impl_shape;
   let stats =
     match cmt_sourcefile with
     | None -> into.stats
@@ -185,7 +186,7 @@ let shape_of_cmt { Cmt_format.cmt_impl_shape; cmt_modname; _ } =
 let shape_of_cms { Cms_format.cms_impl_shape; cms_modname; _ } =
   shape_of_artifact ~impl_shape:cms_impl_shape ~modname:cms_modname
 
-let index_of_cmt ~root ~build_path ~shapes cmt_infos =
+let index_of_cmt ~root ~build_path ~shapes ~store_shapes cmt_infos =
   let { Cmt_format.cmt_loadpath;
         cmt_impl_shape;
         cmt_modname;
@@ -205,11 +206,12 @@ let index_of_cmt ~root ~build_path ~shapes cmt_infos =
            (uid, Typedtree_utils.location_of_declaration ~uid fragment))
     |> Shape.Uid.Tbl.of_list
   in
-  index_of_artifact ~root ~build_path ~shapes ~cmt_loadpath ~cmt_impl_shape
-    ~cmt_modname ~uid_to_loc ~cmt_ident_occurrences ~cmt_initial_env
-    ~cmt_sourcefile ~cmt_source_digest ~cmt_declaration_dependencies
+  index_of_artifact ~root ~build_path ~shapes ~store_shapes ~cmt_loadpath
+    ~cmt_impl_shape ~cmt_modname ~uid_to_loc ~cmt_ident_occurrences
+    ~cmt_initial_env ~cmt_sourcefile ~cmt_source_digest
+    ~cmt_declaration_dependencies
 
-let index_of_cms ~root ~build_path ~shapes cms_infos =
+let index_of_cms ~root ~build_path ~shapes ~store_shapes cms_infos =
   let { Cms_format.cms_impl_shape;
         cms_modname;
         cms_uid_to_loc;
@@ -227,7 +229,7 @@ let index_of_cms ~root ~build_path ~shapes cms_infos =
     |> List.map (fun (uid, l) -> (uid, Some l))
     |> Shape.Uid.Tbl.of_list
   in
-  index_of_artifact ~root ~build_path ~shapes
+  index_of_artifact ~root ~build_path ~shapes ~store_shapes
     ~cmt_loadpath:{ visible = []; hidden = [] }
     ~cmt_impl_shape:cms_impl_shape ~cmt_modname:cms_modname ~uid_to_loc
     ~cmt_ident_occurrences:cms_ident_occurrences
@@ -265,23 +267,30 @@ let from_files ~store_shapes ~output_file ~root ~rewrite_root ~build_path
     @@ fun () ->
     List.fold_left
       (fun into file ->
+        let store_shapes =
+          (* Merlin-jst: We add the shapes into `into` because we need to collect them so
+             we can use them for shape reduction, regardless of whether store_shapes is
+             true. So we shadow the [store_shapes] that's passed into [from_files].
+
+             Q: Why don't we just explicitly pass [true] in the usages below rather than
+                doing this shadowing?
+             A: So that when we merge changes from upstream, we're more likely to do the
+                right thing. *)
+          true
+        in
         Log.debug "Indexing from file: %s" file;
         match Cms_cache.read file with
         | cms_item ->
-          index_of_cms ~into ~root ~rewrite_root ~build_path
+          index_of_cms ~into ~root ~rewrite_root ~build_path ~store_shapes
             ~do_not_use_cmt_loadpath ~shapes:into.cu_shape cms_item.cms_infos
         | exception _ -> (
           match Cmt_cache.read file with
           | cmt_item ->
-            index_of_cmt ~into ~root ~rewrite_root ~build_path
+            index_of_cmt ~into ~root ~rewrite_root ~build_path ~store_shapes
               ~do_not_use_cmt_loadpath ~shapes:into.cu_shape cmt_item.cmt_infos
           | exception _ -> (
             match read ~file with
-            | Index index ->
-              (* We add the shapes into `into` because we need to collect them so we can use
-                 them for shape reduction, regardless of whether store_shapes
-                 is true *)
-              merge_index ~store_shapes:true index ~into
+            | Index index -> merge_index ~store_shapes index ~into
             | _ ->
               Log.error "Unknown file type: %s" file;
               exit 1)))
