@@ -449,6 +449,7 @@ module Utils = struct
 
   let find_file_with_path ~config ?(with_fallback = false) file path =
     let title = "find_file_with_path" in
+
     let filename = File.name file in
     log ~title "Try find %S" filename;
     if File.is_source file && filename = Mconfig.unitname config then
@@ -464,6 +465,7 @@ module Utils = struct
             else None
           in
           let fname = File.with_ext ~src_suffix_pair file in
+          log ~title "Trying %S" fname;
           try Some (Misc.find_in_path_normalized ?fallback path fname)
           with Not_found -> None
         in
@@ -776,6 +778,7 @@ let find_source ~config loc path =
           doesn't know which is the right one: %s"
          matches)
 
+(* CR: Is there something better to do to avoid the assertions? *)
 let rec unbox_uid = function
   | Shape.Uid.Unboxed_version uid -> unbox_uid uid
   | uid -> uid
@@ -861,13 +864,14 @@ let get_linked_uids ~config ~comp_unit decl_uid =
   | Ok (_pos_fname, artifact) ->
     log ~title "Cmt successfully loaded, looking for %a" Logger.fmt (fun fmt ->
         Shape.Uid.print fmt decl_uid);
-    List.filter_map ~f:(function
-      | Cmt_format.Definition_to_declaration, def, decl when decl = decl_uid ->
-        Some def
-      | Cmt_format.Definition_to_declaration, def, decl when def = decl_uid ->
-        Some decl
-      | _ -> None)
-    @@ Artifact.declaration_dependencies artifact
+    List.filter_map
+      ~f:(function
+        | Cmt_format.Definition_to_declaration, def, decl when decl = decl_uid
+          -> Some def
+        | Cmt_format.Definition_to_declaration, def, decl when def = decl_uid ->
+          Some decl
+        | _ -> None)
+      (Artifact.declaration_dependencies artifact)
   | _ ->
     log ~title "Failed to load the cmt file";
     []

@@ -66,9 +66,6 @@ end
 val uid_of_result :
   traverse_aliases:bool -> Shape_reduce.result -> Shape.Uid.t option * bool
 
-(* val lookup_uid_decl :
-   config:Mconfig.t -> Shape.Uid.t -> Typedtree.item_declaration option *)
-
 (** Lookup the declaration of the given Uid in the appropriate cmt file *)
 val lookup_uid_loc_of_decl :
   config:Mconfig.t -> Shape.Uid.t -> string Location.loc option
