@@ -477,6 +477,8 @@ let add_saved_type b = saved_types := b :: !saved_types
 let get_saved_types () = !saved_types
 let set_saved_types l = saved_types := l
 
+let get_declaration_dependencies () = !uids_deps
+
 let record_declaration_dependency (rk, uid1, uid2) =
   if not (Uid.equal uid1 uid2) then
     uids_deps := (rk, uid1, uid2) :: !uids_deps
@@ -533,5 +535,3 @@ let save_cmt target cu binary_annots initial_env cmi shape =
          output_cmt oc cmt)
   end;
   clear ()
-
-let get_declaration_dependencies () = !uids_deps

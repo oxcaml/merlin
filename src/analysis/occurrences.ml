@@ -184,7 +184,8 @@ let get_buffer_locs result uid =
       else acc)
     (Mtyper.get_index result) Lid_set.empty
 
-let get_external_locs ~(config : Mconfig.t) ~current_buffer_path uid =
+let get_external_locs ~(config : Mconfig.t) ~current_buffer_path uid :
+    (Occurrence_set.t * Std.String.Set.t) list =
   let title = "get_external_locs" in
   List.filter_map config.merlin.index_files ~f:(fun index_file ->
       log ~title "Lookin for occurrences of %a in index %s" Logger.fmt
@@ -196,7 +197,7 @@ let get_external_locs ~(config : Mconfig.t) ~current_buffer_path uid =
           Index_format.Uid_map.find_opt uid external_index.defs
           |> Option.map ~f:(fun uid_locs -> (external_index, uid_locs))
         with Index_format.Not_an_index _ | Sys_error _ ->
-          log ~title:"external_index" "Could not load index %s" index_file;
+          log ~title "Could not load index %s" index_file;
           None
       in
       Option.map external_locs ~f:(fun (index, locs) ->

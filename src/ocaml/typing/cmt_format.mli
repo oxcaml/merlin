@@ -108,6 +108,7 @@ val add_saved_type : binary_part -> unit
 val get_saved_types : unit -> binary_part list
 val set_saved_types : binary_part list -> unit
 
+val get_declaration_dependencies : unit -> (dependency_kind * Uid.t * Uid.t) list
 val record_declaration_dependency: dependency_kind * Uid.t * Uid.t -> unit
 
 val index_occurrences :
@@ -133,9 +134,6 @@ val need_to_clear_env : bool
   val read_signature : 'a -> string -> Types.signature * 'b list * 'c list
 
 *)
-
-val get_declaration_dependencies :
-  unit -> (dependency_kind * Uid.t * Uid.t) list
 
 val iter_on_declarations :
   f:(Types.Uid.t -> item_declaration -> unit)
