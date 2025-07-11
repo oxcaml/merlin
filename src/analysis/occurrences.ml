@@ -70,7 +70,11 @@ let set_fname ~file (loc : Location.t) =
       buffer is text corresponding to the identifier. (For example, the location may
       correspond to a ppx extension node.) In such a case, attempting to modify the
       location to only include the last segment of the identifier is nonsensical. Since we
-      don't have a way to detect such a case, it forces us to not try. *)
+      don't have a way to detect such a case, it forces us to not try.
+
+   But in the case of renaming, we need to get the location of just the "bar".
+   Fortunately, the ppx case is irrelevant to renaming, as it's pointless to try to rename
+   a variable in ppx-generated code. *)
 
 (* A longident can have the form: A.B.x Right now we are only interested in
    values, but we will eventually want to index all occurrences of modules in
@@ -84,11 +88,16 @@ let set_fname ~file (loc : Location.t) =
    from the name size in a way that depends on the concrete syntax which is
    lost. *)
 let last_loc_for_renaming (loc : Location.t) lid =
-  (* Merlin-jst: we do want to keep some of these ghost locs in cases like
-     punning, but not in the case of ppxes, the disctinction is not obvious to
-     make. *)
-  if loc.loc_ghost then None
-  else
+  match loc.loc_ghost with
+  | true ->
+    (* The occurrence either corresponds to ppx-generated code or something punned (record
+       field, let binding, etc). In the ppx case we can just return None. *)
+    (* CR-someday: Punning is incorrectly handled. If the thing being renamed is used in a
+       pun, the names will no longer match and the pun needs to get expanded.
+       ex: If we rename the expr [foo] to [bar], we must translate [{ foo }] to
+           [{ foo = bar }]. *)
+    None
+  | false ->
     Some
       (match lid with
       | Longident.Lident _ -> loc
@@ -364,7 +373,7 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
     log ~title:"occurrences" "Found %i locs" (List.length occurrences);
     let occurrences =
       List.filter_map occurrences ~f:(fun (lid, staleness) ->
-          let { Location.txt; loc } = Index_format.Lid.to_lid lid in
+          let ({ txt; loc } : 'a Location.loc) = Index_format.Lid.to_lid lid in
           (* Canonoicalize filenames. Some of the paths may have redundant `.`s or `..`s in
              them. Although canonicalizing is not necessary for correctness, it makes the
              output a bit nicer. *)
@@ -377,8 +386,9 @@ let locs_of ~config ~env ~typer_result ~pos ~scope path =
           log ~title:"occurrences" "Found occ: %s %a" lid Logger.fmt
             (Fun.flip Location.print_loc loc);
           let loc =
-            if scope = `Renaming then last_loc_for_renaming loc txt
-            else Some loc
+            match scope with
+            | `Renaming -> last_loc_for_renaming loc txt
+            | `Buffer | `Project -> Some loc
           in
           Option.bind loc ~f:(fun loc ->
               let fname = loc.Location.loc_start.Lexing.pos_fname in
