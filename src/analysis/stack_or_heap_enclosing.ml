@@ -1,6 +1,6 @@
 open Std
 
-let log_section = "stack-or-heap-enclosing"
+# let log_section = "stack-or-heap-enclosing"
 let { Logger.log = _ } = Logger.for_section log_section
 
 type stack_or_heap =
