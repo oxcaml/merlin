@@ -6,6 +6,14 @@
   $ ./main.exe
   Hello world!
 
+  $ echo "$MERLIN_TEST_OCAML_PATH"
+
+  $ ls "$MERLIN_TEST_OCAML_PATH"
+
+  $ $OCAMLC -version
+
+  $ which $MERLIN
+
 We expect 2 occurrences in func.ml, 1 in func.mli and 2 in main.ml
   $ $MERLIN single occurrences -scope renaming -identifier-at 4:18 \
   > -filename main.ml <main.ml | jq '.value[] | .file,.start'
