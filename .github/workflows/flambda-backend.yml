@@ -1,6 +1,7 @@
 name: Run Tests
 on:
   push:
+  workflow_dispatch:
 
 # Overall approach to running the tests:
 #  - Install OCaml 5.2, as this is the version of dependencies our merlin expects.
