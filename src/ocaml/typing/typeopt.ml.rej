@@ -1,0 +1,21 @@
+--- typeopt.ml
++++ typeopt.ml
+@@ -396,6 +415,8 @@ let array_kind_of_elt ~elt_sort env loc ty =
+   | Unboxed_int i -> Punboxedintarray i
+   | Unboxed_vector v -> Punboxedvectorarray v
+   | Product c -> c
++  | Void ->
++    raise (Error (loc, Unsupported_void_in_array))
+ 
+ let array_type_kind ~elt_sort ~elt_ty env loc ty =
+   match scrape_poly env ty with
+@@ -521,7 +542,8 @@ let value_kind_of_value_jkind env jkind =
+   | Base Value, Internal -> Pgenval
+   | Any, _
+   | Product _, _
+-  | Base (Void | Float64 | Float32 | Word | Bits32 | Bits64 | Vec128) , _ ->
++  | Base (Void | Float64 | Float32 | Word | Bits8 | Bits16 | Bits32 | Bits64 |
++          Vec128 | Vec256 | Vec512) , _ ->
+     Misc.fatal_error "expected a layout of value"
+ 
+ (* [value_kind] has a pre-condition that it is only called on values.  With the

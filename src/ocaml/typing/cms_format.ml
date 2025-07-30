@@ -37,6 +37,7 @@ type cms_infos = {
     (Longident.t Location.loc * Shape_reduce.result) array;
   cms_declaration_dependencies :
     (Cmt_format.dependency_kind * Uid.t * Uid.t) list;
+  cms_externals: Vicuna_value_shapes.extfun array;
 }
 
 type error =
@@ -98,6 +99,12 @@ let uid_tables_of_binary_annots binary_annots =
     );
   cms_uid_to_loc, cms_uid_to_attributes
 
+let externals_of_binary_annots binary_annots =
+  match binary_annots with
+  | Cmt_format.Implementation str ->
+    Vicuna_traverse_typed_tree.extract_from_typed_tree str |> Array.of_list
+  | _ -> [| |]
+
 let save_cms target modname binary_annots initial_env shape
   cms_declaration_dependencies =
   if (!Clflags.binary_annotations_cms && not !Clflags.print_types) then begin
@@ -116,6 +123,23 @@ let save_cms target modname binary_annots initial_env shape
           else
             [| |], None
          in
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
+||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
+        let cms_uid_to_loc, cms_uid_to_attributes =
+          uid_tables_of_binary_annots binary_annots
+        in
+        let cms =
+          {
+            cms_modname = modname;
+=======
+        let cms_uid_to_loc, cms_uid_to_attributes =
+          uid_tables_of_binary_annots binary_annots
+        in
+        let cms_externals = externals_of_binary_annots binary_annots in
+        let cms =
+          {
+            cms_modname = modname;
+>>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
          let cms_uid_to_loc, cms_uid_to_attributes =
            uid_tables_of_binary_annots binary_annots
          in
@@ -129,6 +153,23 @@ let save_cms target modname binary_annots initial_env shape
               *)
            cms_comments = [];
            cms_sourcefile = sourcefile;
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
+||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
+            cms_impl_shape = shape;
+            cms_ident_occurrences;
+            cms_declaration_dependencies;
+          }
+        in
+        output_cms oc cms)
+=======
+            cms_impl_shape = shape;
+            cms_ident_occurrences;
+            cms_declaration_dependencies;
+            cms_externals;
+          }
+        in
+        output_cms oc cms)
+>>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
            cms_builddir = Location.rewrite_absolute_path (Sys.getcwd ());
            cms_source_digest = source_digest;
            cms_initial_env;
