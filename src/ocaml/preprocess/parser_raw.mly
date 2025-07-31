@@ -1023,23 +1023,6 @@ let merloc startpos ?endpos x =
     | _, _, s, _, Some s' -> Printf.sprintf "QUOTED_STRING(%S,%S)" s s'
     | _, _, s, _, None -> Printf.sprintf "QUOTED_STRING(%S)" s
 ]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-%token COMMA                  ","
-%token CONSTRAINT             "constraint"
-%token DO                     "do"
-%token DONE                   "done"
-%token DOT                    "."
-%token DOTDOT                 ".."
-=======
-%token COMMA                  ","
-%token CONSTRAINT             "constraint"
-%token DO                     "do"
-%token DOLLAR                 "$"
-%token DONE                   "done"
-%token DOT                    "."
-%token DOTDOT                 ".."
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 
 %[@recovery.header
   open Parsetree
@@ -1096,25 +1079,9 @@ let merloc startpos ?endpos x =
 %token COLONGREATER [@symbol ":>"]
 %token COLONRBRACKET [@symbol ":]"]
 %token COMMA [@symbol ","]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-%token LBRACKETPERCENT        "[%"
-%token LBRACKETPERCENTPERCENT "[%%"
-%token LESS                   "<"
-%token LESSMINUS              "<-"
-%token LET                    "let"
-%token <string> LIDENT        "lident" (* just an example *)
-=======
-%token LBRACKETPERCENT        "[%"
-%token LBRACKETPERCENTPERCENT "[%%"
-%token LESS                   "<"
-%token LESSLBRACKET           "<["
-%token LESSMINUS              "<-"
-%token LET                    "let"
-%token <string> LIDENT        "lident" (* just an example *)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 %token CONSTRAINT [@symbol "constraint"]
 %token DO [@symbol "do"]
+%token DOLLAR [@symbol "$"]
 %token DONE [@symbol "done"]
 %token DOT [@symbol "."]
 %token DOTDOT [@symbol ".."]
@@ -1149,23 +1116,6 @@ let merloc startpos ?endpos x =
 %token <string> INFIXOP1 [@cost 2] [@recovery "_"][@printer Printf.sprintf "INFIXOP1(%S)"]
 %token <string> INFIXOP2 [@cost 2] [@recovery "_"][@printer Printf.sprintf "INFIXOP2(%S)"]
 %token <string> INFIXOP3 [@cost 2] [@recovery "_"][@printer Printf.sprintf "INFIXOP3(%S)"]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-%token QUOTE                  "'"
-%token RBRACE                 "}"
-%token RBRACKET               "]"
-%token REC                    "rec"
-%token RPAREN                 ")"
-%token SEMI                   ";"
-=======
-%token QUOTE                  "'"
-%token RBRACE                 "}"
-%token RBRACKET               "]"
-%token RBRACKETGREATER        "]>"
-%token REC                    "rec"
-%token RPAREN                 ")"
-%token SEMI                   ";"
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 %token <string> INFIXOP4 [@cost 2] [@recovery "_"][@printer Printf.sprintf "INFIXOP4(%S)"]
 %token <string> DOTOP
 %token <string> LETOP /* TODO: recovery & printing */
@@ -1188,6 +1138,7 @@ let merloc startpos ?endpos x =
 %token LBRACKETPERCENT [@symbol "[%"]
 %token LBRACKETPERCENTPERCENT [@symbol "[%%"]
 %token LESS [@symbol "<"]
+%token LESSLBRACKET [@symbol "<["]
 %token LESSMINUS [@symbol "<-"] [@cost 2]
 %token LET [@symbol "let"]
 %token <string> LIDENT [@cost 2] [@recovery "_"][@printer Printf.sprintf "LIDENT(%S)"]
@@ -1224,6 +1175,7 @@ let merloc startpos ?endpos x =
 %token QUOTE [@symbol "'"]
 %token RBRACE [@symbol "}"]
 %token RBRACKET [@symbol "]"]
+%token RBRACKETGREATER [@symbol "]>"]
 %token REC [@symbol "rec"]
 %token RPAREN [@symbol ")"]
 %token SEMI [@symbol ";"]
@@ -1331,13 +1283,7 @@ The precedences must be listed from low to high.
 /* Finally, the first tokens of simple_expr are above everything else. */
 %nonassoc BACKQUOTE BANG BEGIN CHAR FALSE FLOAT HASH_FLOAT INT HASH_INT OBJECT
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LBRACKETCOLON LIDENT LPAREN
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-          NEW PREFIXOP STRING TRUE UIDENT UNDERSCORE
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-          NEW PREFIXOP STRING TRUE UIDENT
-=======
-          NEW PREFIXOP STRING TRUE UIDENT LESSLBRACKET DOLLAR
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+          NEW PREFIXOP STRING TRUE UIDENT LESSLBRACKET DOLLAR UNDERSCORE
           LBRACKETPERCENT QUOTED_STRING_EXPR HASHLBRACE HASHLPAREN
           DOTLESS DOTTILDE GREATERDOT
 
@@ -3368,17 +3314,18 @@ comprehension_clause:
           mkexp_attrs ~loc:($startpos($3), $endpos)
             (Pexp_constraint (ghexp ~loc:$sloc (Pexp_pack $6), Some $8, [])) $5 in
         Pexp_open(od, modexp) }
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-  (*
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-=======
   | LESSLBRACKET expr_semi_list RBRACKETGREATER
       { quotation_reserved "<[" $loc($1) }
+  (*
   | LESSLBRACKET expr_semi_list error
       { unclosed "<[" $loc($1) "]>" $loc($3) }
+  *)
+  (*
+  (* Merlin: comment this back in once DOLLAR is parsed for real *)
   | DOLLAR error
       { quotation_reserved "$" $loc($1) }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+  *)
+  (*
   | mod_longident DOT
     LPAREN MODULE ext_attributes module_expr COLON error
       { unclosed "(" $loc($3) ")" $loc($8) }

@@ -1325,14 +1325,6 @@ val function_arity : function_param list -> function_body -> int
 
 (** Given a declaration, return the location of the bound identifier *)
 val loc_of_decl : uid:Shape.Uid.t -> item_declaration -> string Location.loc
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-
-(* Merlin specific *)
-
-val unpack_functor_me : module_expr -> functor_parameter * module_expr
-val unpack_functor_mty : module_type -> functor_parameter * module_type
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-=======
 
 (** When type checking F(M).t, which does not involve modes, we say F(M) is of
     the strongest mode, to avoid modes in error messages. *)
@@ -1340,4 +1332,8 @@ val min_mode_with_locks : mode_with_locks
 
 (** Get the mode, asserting no held locks. *)
 val mode_without_locks_exn : mode_with_locks -> Mode.Value.l
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+
+(* Merlin specific *)
+
+val unpack_functor_me : module_expr -> functor_parameter * module_expr
+val unpack_functor_mty : module_type -> functor_parameter * module_type

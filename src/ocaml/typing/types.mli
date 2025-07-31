@@ -1246,6 +1246,9 @@ val link_kind: inside:field_kind -> field_kind -> unit
 val link_commu: inside:commutable -> commutable -> unit
 val set_commu_ok: commutable -> unit
 
+val functor_param_mode : Mode.Alloc.lr
+val functor_res_mode : Mode.Alloc.lr
+
 (* Merlin specific *)
 
 (** check if a snapshot has been invalidated *)
@@ -1256,19 +1259,6 @@ val on_backtrack: (unit -> unit) -> unit
 
 (** Number of unification variables that have been linked so far.
    Used to estimate the "cost" of unification. *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
 val linked_variables: unit -> int
 
 val unpack_functor : module_type -> functor_parameter * module_type
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-val link_kind: inside:field_kind -> field_kind -> unit
-val link_commu: inside:commutable -> commutable -> unit
-val set_commu_ok: commutable -> unit
-=======
-val link_kind: inside:field_kind -> field_kind -> unit
-val link_commu: inside:commutable -> commutable -> unit
-val set_commu_ok: commutable -> unit
-
-val functor_param_mode : Mode.Alloc.lr
-val functor_res_mode : Mode.Alloc.lr
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30

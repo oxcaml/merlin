@@ -48,14 +48,8 @@ type s =
     additional_action: additional_action;
 
     loc: Location.t option;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-    mutable last_compose: (t * t) option;  (* Memoized composition *)
+    mutable last_compose: (s * s) option;  (* Memoized composition *)
     make_loc_ghost: bool
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-    mutable last_compose: (t * t) option  (* Memoized composition *)
-=======
-    mutable last_compose: (s * s) option  (* Memoized composition *)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   }
 
 type 'a subst = s
@@ -260,17 +254,9 @@ let rec module_path s path =
 let modtype_path s path =
       match Path.Map.find path s.modtypes with
       | Mty_ident p -> p
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-      | Mty_alias _ | Mty_signature _ | Mty_functor _| Mty_strengthen _ | Mty_for_hole ->
-         fatal_error "Subst.modtype_path"
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      | Mty_alias _ | Mty_signature _ | Mty_functor _| Mty_strengthen _ ->
-         fatal_error "Subst.modtype_path"
-=======
-      | Mty_alias _ | Mty_signature _ | Mty_functor _
+      | Mty_alias _ | Mty_signature _ | Mty_functor _ | Mty_for_hole
       | Mty_strengthen _ as mty ->
          raise (Module_type_path_substituted_away (path,mty))
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       | exception Not_found ->
          match path with
          | Pdot(p, n) ->

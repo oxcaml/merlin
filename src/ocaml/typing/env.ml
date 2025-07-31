@@ -1287,23 +1287,9 @@ let reset_declaration_caches () =
   Stamped_hashtable.clear value_declarations;
   Stamped_hashtable.clear type_declarations;
   Stamped_hashtable.clear module_declarations;
+  Stamped_hashtable.clear mutated_mutable_values;
   Stamped_hashtable.clear used_constructors;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
   Stamped_hashtable.clear used_labels;
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  Types.Uid.Tbl.clear !value_declarations;
-  Types.Uid.Tbl.clear !type_declarations;
-  Types.Uid.Tbl.clear !module_declarations;
-  Types.Uid.Tbl.clear !used_constructors;
-  Types.Uid.Tbl.clear !used_labels;
-=======
-  Types.Uid.Tbl.clear !value_declarations;
-  Types.Uid.Tbl.clear !type_declarations;
-  Types.Uid.Tbl.clear !module_declarations;
-  Types.Uid.Tbl.clear !mutated_mutable_values;
-  Types.Uid.Tbl.clear !used_constructors;
-  Types.Uid.Tbl.clear !used_labels;
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   ()
 
 let reset_cache ~preserve_persistent_env =
@@ -2486,18 +2472,12 @@ and store_value ?check ~mode id addr decl shape env =
   check_value_name (Ident.name id) decl.val_loc;
   Builtin_attributes.mark_alerts_used decl.val_attributes;
   Option.iter
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-    (fun f -> check_usage decl.val_loc id decl.val_uid f value_declarations)
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-    (fun f -> check_usage decl.val_loc id decl.val_uid f !value_declarations)
-=======
     (fun f ->
-      check_usage decl.val_loc id decl.val_uid f !value_declarations;
+      check_usage decl.val_loc id decl.val_uid f value_declarations;
       match decl.val_kind with
       | Val_mut _ ->
         check_usage decl.val_loc id decl.val_uid f !mutated_mutable_values
       | _ -> ())
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
     check;
   let vda =
     { vda_description = decl;
@@ -3149,23 +3129,12 @@ let save_signature_with_imports ~alerts sg modname cu cmi imports =
 
 (* Make the initial environment, without language extensions *)
 let initial =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-  Predef.build_initial_env
-    (add_type ~check:false ~predef:true ~long_path:false)
-    (add_extension ~check:false ~rebind:false)
-    empty
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  Predef.build_initial_env
-    (add_type ~check:false)
-    (add_extension ~check:false ~rebind:false)
-    empty
-=======
   (* We collect all the type declarations that are added to the initial
      environment in a table. *)
   let added_types = Ident.Tbl.create 16 in
   let add_type_and_remember_decl (type_ident : Ident.t) decl env =
     Ident.Tbl.add added_types type_ident decl;
-    add_type type_ident decl env ~check:false
+    add_type type_ident decl env ~check:false ~predef:true ~long_path:false
   in
   let initial_env =
     Predef.build_initial_env add_type_and_remember_decl
@@ -3177,7 +3146,6 @@ let initial =
       (find_uid_of_path initial_env)
   ) added_types;
   initial_env
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 
 let add_type_long_path ~check ?shape id info env =
   add_type ~check ?shape ~predef:false ~long_path:true id info env

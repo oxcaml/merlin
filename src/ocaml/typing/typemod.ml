@@ -253,32 +253,17 @@ let initial_env ~loc ~initially_opened_module
     let open Asttypes in
     let lid = {loc; txt = Longident.parse m } in
     try
-      snd (type_open_ Override env lid.loc lid)
+      let _ , _, env = type_open_ Override env lid.loc lid in
+      env
     with
     | (Typetexp.Error _ | Env.Error _ | Magic_numbers.Cmi.Error _ | Persistent_env.Error _) as exn ->
       Msupport.raise_error exn;
       env
     | exn ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
       Printf.ksprintf failwith
         "Uncaught exception %s in initial_env.open_module: %s"
         Obj.Extension_constructor.(name (of_val exn))
         (Printexc.to_string exn)
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-    let lexbuf = Lexing.from_string m in
-    let txt =
-      Location.init lexbuf (Printf.sprintf "command line argument: -open %S" m);
-      Parse.simple_module_path lexbuf in
-        snd (type_open_ Override env loc {txt;loc})
-=======
-    let lexbuf = Lexing.from_string m in
-    let txt =
-      Location.init lexbuf (Printf.sprintf "command line argument: -open %S" m);
-      Parse.simple_module_path lexbuf
-    in
-    let _, _, env = type_open_ Override env loc {txt;loc} in
-    env
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   in
   let add_units env units =
     String.Set.fold
@@ -2925,34 +2910,28 @@ let rec type_module ?alias sttn funct_body anchor env ?expected_mode smod =
   in
   md, shape
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-and  type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body anchor env smod =
-  Builtin_attributes.warning_scope smod.pmod_attributes
-    (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod)
-
-and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
-  match smod.pmod_desc with
-    Pmod_ident lid ->
-      let path, locks =
-        Env.lookup_module_path ~load:(not alias) ~loc:smod.pmod_loc lid.txt env
-      in
-      type_module_path_aux ~alias ~hold_locks sttn env path locks lid smod
-  | Pmod_structure sstr ->
-      let (str, sg, names, shape, _finalenv) =
-        type_structure funct_body anchor env sstr in
-      let md =
-        { mod_desc = Tmod_structure str;
-          mod_type = Mty_signature sg;
-          mod_env = env;
-          mod_attributes = smod.pmod_attributes;
-          mod_loc = smod.pmod_loc }
-=======
-and  type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
+and type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
   anchor env ?expected_mode smod =
-  Builtin_attributes.warning_scope smod.pmod_attributes
-    (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-      ?expected_mode smod)
+  (* Merlin: when we start typing a module we don't want to include potential
+    saved_items from its parent. We backup them before starting and restore them
+    when finished. *)
+  Msupport.with_saved_types @@ fun () ->
+  try
+    Builtin_attributes.warning_scope smod.pmod_attributes
+      (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env
+        ?expected_mode smod)
+  with exn ->
+    Msupport.raise_error exn;
+    { mod_desc = Tmod_structure {
+        str_items = [];
+        str_type = [];
+        str_final_env = env;
+      };
+      mod_type = Mty_signature [];
+      mod_env = env;
+      mod_attributes = Msupport.flush_saved_types () @ smod.pmod_attributes;
+      mod_loc = smod.pmod_loc },
+      Shape.dummy_mod, None
 
 and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
   ?expected_mode smod =
@@ -2971,49 +2950,11 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
         smod
   | Pmod_structure sstr ->
       let (str, sg, mode, names, shape, _finalenv) =
-        type_structure funct_body anchor env ?expected_mode sstr in
+        type_structure funct_body anchor env [] ?expected_mode sstr in
       let md =
         { mod_desc = Tmod_structure str;
           mod_type = Mty_signature sg;
           mod_mode = Value.disallow_right mode, None;
-          mod_env = env;
-          mod_attributes = smod.pmod_attributes;
-          mod_loc = smod.pmod_loc }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
-and type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body anchor env smod =
-  (* Merlin: when we start typing a module we don't want to include potential
-    saved_items from its parent. We backup them before starting and restore them
-    when finished. *)
-  Msupport.with_saved_types @@ fun () ->
-  try
-    Builtin_attributes.warning_scope smod.pmod_attributes
-      (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod)
-  with exn ->
-    Msupport.raise_error exn;
-    { mod_desc = Tmod_structure {
-        str_items = [];
-        str_type = [];
-        str_final_env = env;
-      };
-      mod_type = Mty_signature [];
-      mod_env = env;
-      mod_attributes = Msupport.flush_saved_types () @ smod.pmod_attributes;
-      mod_loc = smod.pmod_loc },
-      Shape.dummy_mod, None
-
-and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
-  match smod.pmod_desc with
-    Pmod_ident lid ->
-      let path, locks =
-        Env.lookup_module_path ~load:(not alias) ~loc:smod.pmod_loc lid.txt env
-      in
-      type_module_path_aux ~alias ~hold_locks sttn env path locks lid smod
-  | Pmod_structure sstr ->
-      let (str, sg, names, shape, _finalenv) =
-        type_structure funct_body anchor env [] sstr in
-      let md =
-        { mod_desc = Tmod_structure str;
-          mod_type = Mty_signature sg;
           mod_env = env;
           mod_attributes = smod.pmod_attributes;
           mod_loc = smod.pmod_loc }
@@ -3093,69 +3034,29 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
         type_module_maybe_hold_locks ~alias ~hold_locks true funct_body
           anchor env ~expected_mode:(mode |> Value.disallow_left) sarg
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      let mty = transl_modtype env smty in
-      let md, final_shape =
-        wrap_constraint_with_shape env true arg held_locks mty.mty_type arg_shape
-          (Tmodtype_explicit mty)
-      in
-      { md with
-        mod_loc = smod.pmod_loc;
-        mod_attributes = smod.pmod_attributes;
-      },
-      final_shape, None
-  | Pmod_unpack sexp ->
-      let exp =
-        Ctype.with_local_level_if_principal
-          (fun () -> Typecore.type_exp env sexp)
-          ~post:Typecore.generalize_structure_exp
-      in
-      let mty =
-=======
-      let md, final_shape =
-        match smty with
-        | None ->
-            (* CR zqian: Ideally, we want to call [wrap_constraint_with_shape]
-            even when [smty] is [None], to get a mode error messsage that
-            specifies the bad item (instead of the whole module). This is
-            currently impossible because inferred modalities can't be on the
-            RHS. *)
-            let arg_mode = Typedtree.mode_without_locks_exn arg.mod_mode in
-            submode ~loc:sarg.pmod_loc ~env arg_mode mode;
-            { arg with mod_mode = (Mode.Value.disallow_right mode, None)},
-            arg_shape
-        | Some smty ->
-            let mty = transl_modtype env smty in
-            wrap_constraint_with_shape env true arg mty.mty_type mode
-              arg_shape (Tmodtype_explicit mty)
-      in
-      { md with
-        mod_loc = smod.pmod_loc;
-        mod_attributes = smod.pmod_attributes;
-      },
-      final_shape
-  | Pmod_unpack sexp ->
-      let mode = Value.newvar () in
-      let exp =
-        Ctype.with_local_level_if_principal
-          (fun () -> Typecore.type_exp env sexp
-            ~mode:(Value.disallow_left mode))
-          ~post:Typecore.generalize_structure_exp
-      in
-      let mty =
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       begin try
-        let mty = transl_modtype env smty in
         let md, final_shape =
-          wrap_constraint_with_shape env true arg held_locks mty.mty_type arg_shape
-            (Tmodtype_explicit mty)
+          match smty with
+          | None ->
+              (* CR zqian: Ideally, we want to call [wrap_constraint_with_shape]
+              even when [smty] is [None], to get a mode error messsage that
+              specifies the bad item (instead of the whole module). This is
+              currently impossible because inferred modalities can't be on the
+              RHS. *)
+              let arg_mode = Typedtree.mode_without_locks_exn arg.mod_mode in
+              submode ~loc:sarg.pmod_loc ~env arg_mode mode;
+              { arg with mod_mode = (Mode.Value.disallow_right mode, None)},
+              arg_shape
+          | Some smty ->
+              let mty = transl_modtype env smty in
+              wrap_constraint_with_shape env true arg mty.mty_type mode
+                arg_shape (Tmodtype_explicit mty)
         in
         { md with
           mod_loc = smod.pmod_loc;
           mod_attributes = smod.pmod_attributes;
         },
-        final_shape, None
+        final_shape
       with exn ->
        (* [merlin] For better Construct error messages we need to keep holes
           in the recovered typedtree *)
@@ -3173,9 +3074,11 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
         | _ -> raise exn
       end
   | Pmod_unpack sexp ->
+      let mode = Value.newvar () in
       let exp =
         Ctype.with_local_level_if_principal
-          (fun () -> Typecore.type_exp env sexp)
+          (fun () -> Typecore.type_exp env sexp
+            ~mode:(Value.disallow_left mode))
           ~post:Typecore.generalize_structure_exp
       in
       let mty =
@@ -3206,8 +3109,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
         mod_env = env;
         mod_attributes = smod.pmod_attributes;
         mod_loc = smod.pmod_loc },
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-      Shape.leaf_for_unpack, None
+      Shape.leaf_for_unpack
   | Pmod_extension ({ txt; _ }, _) when txt = Ast_helper.hole_txt ->
       { mod_desc = Tmod_typed_hole;
         mod_type = Mty_for_hole;
@@ -3215,11 +3117,6 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
         mod_attributes = smod.pmod_attributes;
         mod_loc = smod.pmod_loc },
       Shape.dummy_mod, None
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      Shape.leaf_for_unpack, None
-=======
-      Shape.leaf_for_unpack
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   | Pmod_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
   | Pmod_instance glob ->
@@ -3378,18 +3275,10 @@ and type_one_application ~ctx:(apply_loc,sfunct,md_f,args)
       let coercion =
         try Includemod.modtypes
               ~loc:arg.mod_loc ~mark:true env arg.mod_type mty_param
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-              ~modes:(Legacy held_locks)
+              ~modes:(Includemod.modes_functor_param arg.mod_mode)
         with Includemod.Error _ ->
           Msupport.raise_error (apply_error ());
           Tcoerce_none
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-              ~modes:(Legacy held_locks)
-        with Includemod.Error _ -> apply_error ()
-=======
-              ~modes:(Includemod.modes_functor_param arg.mod_mode)
-        with Includemod.Error _ -> apply_error ()
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       in
       let mty_appl =
         match arg_path with
@@ -3525,24 +3414,6 @@ and type_open_decl_aux ?used_slot ?toplevel funct_body names env od =
     } in
     open_descr, mode, sg, newenv
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-and type_structure ?(toplevel = None) funct_body anchor env sstr =
-  let names = Signature_names.create () in
-
-  let type_str_include ~loc env shape_map sincl sig_acc =
-    let smodl = sincl.pincl_mod in
-=======
-and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
-  sstr =
-  let names = Signature_names.create () in
-  let _, md_mode = register_allocation () in
-  Option.iter (fun x -> Value.submode md_mode x |> ignore)
-    expected_mode;
-
-  let type_str_include ~loc env shape_map sincl sig_acc =
-    let smodl = sincl.pincl_mod in
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 (* In the real compiler, the `toplevel` argument is a `signature option` because it serves
    two purposes: To tweak typing if we're in the toplevel, and to pass in the signature
    for what's been typed so far in that case (needed by include functor).  But in merlin
@@ -3550,8 +3421,12 @@ and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
    we're not in the toplevel (because it can incrementally type and cache parts of the
    module).  We don't want the typing tweaks that occur for the toplevel, so we need an
    extra argument (sig_acc), but leave `toplevel` alone to minimize the diff *)
-and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor env sig_acc sstr =
+and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor env
+  sig_acc ?expected_mode sstr =
   let names = Signature_names.create () in
+  let _, md_mode = register_allocation () in
+  Option.iter (fun x -> Value.submode md_mode x |> ignore; todo)
+    expected_mode;
 
   let type_str_include ~loc env shape_map sincl sig_acc =
     let smodl = sincl.pincl_mod in
@@ -3578,12 +3453,8 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
       Env.enter_signature_and_shape ~scope ~parent_shape:shape_map
         modl_shape sg ~mode env
     in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
     let new_env = Env.update_short_paths new_env in
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-=======
     let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
     Signature_group.iter (Signature_names.check_sig_item names loc) sg;
     let incl =
       { incl_mod = modl;
@@ -3944,12 +3815,8 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
         let (od, mode, sg, newenv) =
           type_open_decl ~toplevel funct_body names env sod
         in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
         let newenv = Env.update_short_paths newenv in
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-=======
         let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
         Tstr_open od, sg, shape_map, newenv
     | Pstr_class cl ->
         begin match Mode.Value.submode Value.legacy md_mode with
@@ -4049,19 +3916,7 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
               (List.rev_append sg sig_acc_include_functor)
         | exception exn ->
             Msupport.raise_error exn;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
             type_struct env shape_map srem str_acc sig_acc sig_acc_include_functor;
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-    let str = { str_items = items; str_type = sg; str_final_env = final_env } in
-    Cmt_format.set_saved_types
-      (Cmt_format.Partial_structure str :: previous_saved_types);
-    str, sg, names, Shape.str shape_map, final_env
-=======
-    let str = { str_items = items; str_type = sg; str_final_env = final_env } in
-    Cmt_format.set_saved_types
-      (Cmt_format.Partial_structure str :: previous_saved_types);
-    str, sg, md_mode, names, Shape.str shape_map, final_env
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   in
   Msupport.with_saved_types
     ?warning_attribute:(if Option.is_some toplevel || keep_warnings then None else Some [])
@@ -4069,7 +3924,11 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
     (fun () ->
        let (items, sg, shape_map, final_env) = type_struct env Shape.Map.empty sstr [] [] toplevel_sig in
        let str = { str_items = items; str_type = sg; str_final_env = final_env } in
-       str, sg, names, Shape.str shape_map, final_env)
+       (*=
+       Cmt_format.set_saved_types
+         (Cmt_format.Partial_structure str :: previous_saved_types);
+       *)
+       str, sg, md_mode, names, Shape.str shape_map, final_env)
 
 (* The toplevel will print some types not present in the signature *)
 let remove_mode_and_jkind_variables_for_toplevel str =
@@ -4088,21 +3947,13 @@ let type_toplevel_phrase env sig_acc s =
   Env.reset_required_globals ();
   Env.reset_probes ();
   Typecore.reset_allocations ();
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-  let (str, sg, _to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env sig_acc s in
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  let (str, sg, to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env s in
-=======
   let expected_mode = Value.(legacy |> disallow_left) in
   let (str, sg, mode, to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env ~expected_mode s in
+    type_structure ~toplevel:(Some sig_acc) false None env ~expected_mode sig_acc s in
   begin match Value.submode mode Value.legacy with
   | Ok () -> ()
-  | Error e -> raise (Error (Location.none, env, (Legacy_module (Toplevel, e))))
+  | Error e -> Msupport.raise_error (Error (Location.none, env, (Legacy_module (Toplevel, e))))
   end;
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   remove_mode_and_jkind_variables env sg;
   remove_mode_and_jkind_variables_for_toplevel str;
   Typecore.optimise_allocations ();
@@ -4407,22 +4258,13 @@ let type_implementation target modulename initial_env ast =
         ignore @@ Warnings.parse_options false "-32-34-37-38-60";
       if !Clflags.as_parameter then
         error Cannot_compile_implementation_as_parameter;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-      let (str, sg, names, shape, finalenv) = type_structure initial_env ast in
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      let (str, sg, names, shape, finalenv) =
-        Profile.record_call "infer" (fun () ->
-          type_structure initial_env ast) in
-=======
       let expected_mode = Env.mode_unit |> Value.disallow_left in
       let (str, sg, mode, names, shape, finalenv) =
-        Profile.record_call "infer" (fun () ->
-          type_structure initial_env ~expected_mode ast) in
+          type_structure initial_env ~expected_mode ast in
       begin match Value.submode mode Env.mode_unit with
       | Ok () -> ()
-      | Error e -> error (Legacy_module (Compilation_unit, e))
+      | Error e -> Msupport.raise_error (Legacy_module (Compilation_unit, e))
       end;
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       let uid = Uid.of_compilation_unit_id modulename in
       let shape = Shape.set_uid_if_none shape uid in
       if !Clflags.binary_annotations_cms then

@@ -181,13 +181,7 @@ let value_descriptions ~loc env name
              Option.iter (Mode.Locality.equate_exn loc) mode_l2;
              Option.iter (Mode.Yielding.equate_exn yield) mode_y2;
              try
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
                Ctype.moregeneral env true ty1 ty2
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-             with Ctype.Moregen err -> 
-=======
-             with Ctype.Moregen err ->
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
              with Ctype.Moregen err ->
                raise (Dont_match (Type err))
            ) yielding
@@ -730,23 +724,9 @@ module Record_diffing = struct
           | Mutable _, Immutable -> Some First
           | Immutable, Mutable _ -> Some Second
           | Mutable m1, Mutable m2 ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-            let open Mode.Alloc.Comonadic.Const in
-            (if not (Misc_stdlib.Le_result.equal ~le m1 legacy) then
-              Misc.fatal_errorf "Unexpected mutable(%a)" print m1);
-            (if not (Misc_stdlib.Le_result.equal ~le m2 legacy) then
-              Misc.fatal_errorf "Unexpected mutable(%a)" print m2);
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-            let open Mode.Alloc.Comonadic.Const in
-            (if not (Misc.Le_result.equal ~le m1 legacy) then
-              Misc.fatal_errorf "Unexpected mutable(%a)" print m1);
-            (if not (Misc.Le_result.equal ~le m2 legacy) then
-              Misc.fatal_errorf "Unexpected mutable(%a)" print m2);
-=======
             let open Mode.Value.Comonadic in
             equate_exn m1 legacy;
             equate_exn m2 legacy;
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
             None
         in
         begin match mut with

@@ -274,23 +274,9 @@ let mutable_ (mut : Types.mutability) : mutable_flag =
   match mut with
   | Immutable -> Immutable
   | Mutable m ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-      let open Mode.Alloc.Comonadic.Const in
-      if Misc_stdlib.Le_result.equal ~le m legacy then
-        Mutable
-      else
-        Misc.fatal_errorf "unexpected mutable(%a)" print m
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      let open Mode.Alloc.Comonadic.Const in
-      if Misc.Le_result.equal ~le m legacy then
-        Mutable
-      else
-        Misc.fatal_errorf "unexpected mutable(%a)" print m
-=======
       let open Mode.Value.Comonadic in
       equate_exn m legacy;
       Mutable
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 
 let label_declaration sub ld =
   let loc = sub.location sub ld.ld_loc in

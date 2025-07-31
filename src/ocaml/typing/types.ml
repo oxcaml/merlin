@@ -1858,6 +1858,9 @@ let undo_compress (changes, _old) =
         | _ -> ())
         log
 
+let functor_param_mode = Mode.Alloc.legacy
+let functor_res_mode = Mode.Alloc.legacy
+
 (* Merlin specific *)
 let linked_variables () = !linked_variables
 
@@ -1869,19 +1872,6 @@ let is_valid (changes, _old) =
 let on_backtrack f =
   log_change (Cfun f)
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
 let unpack_functor = function
   | Mty_functor (fp, mty) -> fp, mty
   | _ -> invalid_arg "Types.unpack_functor (merlin)"
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-            Transient_expr.set_desc ty desc; r := !next
-        | _ -> ())
-        log
-=======
-            Transient_expr.set_desc ty desc; r := !next
-        | _ -> ())
-        log
-
-let functor_param_mode = Mode.Alloc.legacy
-let functor_res_mode = Mode.Alloc.legacy
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30

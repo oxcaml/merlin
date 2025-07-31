@@ -2130,10 +2130,6 @@ let type_comprehension_for_range_iterator_index ~loc ~env ~param tps =
             pv_type
             pv_attributes)
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-
-=======
 let check_let_mutable (mf : mutable_flag) env ?restriction vbs =
   match vbs, mf with
   | vb :: vbs, Mutable -> begin
@@ -2146,16 +2142,15 @@ let check_let_mutable (mf : mutable_flag) env ?restriction vbs =
          - Mutables are not restricted here according to [restriction] *)
       Language_extension.assert_enabled ~loc Let_mutable ();
       match restriction, vb.pvb_pat.ppat_desc, vbs with
-      | _, _, _ :: _ -> raise (Error (loc, env, Unexpected_mutable In_group))
-      | Some r, _, _ -> raise (Error (loc, env, Unexpected_mutable r))
+      | _, _, _ :: _ -> raise_error (error (loc, env, Unexpected_mutable In_group))
+      | Some r, _, _ -> raise_error (error (loc, env, Unexpected_mutable r))
       | None, Ppat_var _, [] -> ()
       | None, (Ppat_constraint ({ppat_desc=Ppat_var _}, _, _)), [] -> ()
-      | None, _, [] -> raise (Error (loc, env, Illegal_mutable_pat))
+      | None, _, [] -> raise_error (error (loc, env, Illegal_mutable_pat))
     end
   | _ -> ()
 ;;
 
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 (* Type paths *)
 
 let rec expand_path env p =
@@ -2601,19 +2596,9 @@ let check_recordpat_labels loc lbl_pat_list closed record_form =
       let all = label1.lbl_all in
       let defined = Array.make (Array.length all) false in
       let check_defined (_, label, _) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-        if defined.(label.lbl_num)
-        then raise(error(loc, Env.empty, Label_multiply_defined label.lbl_name))
-        else defined.(label.lbl_num) <- true in
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-        if defined.(label.lbl_num)
-        then raise(Error(loc, Env.empty, Label_multiply_defined label.lbl_name))
-        else defined.(label.lbl_num) <- true in
-=======
         if defined.(label.lbl_pos)
-        then raise(Error(loc, Env.empty, Label_multiply_defined label.lbl_name))
+        then raise(error(loc, Env.empty, Label_multiply_defined label.lbl_name))
         else defined.(label.lbl_pos) <- true in
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       List.iter check_defined lbl_pat_list;
       if closed = Closed
       && Warnings.is_active
@@ -2794,17 +2779,17 @@ let components_have_label (labeled_components : (string option * 'a) list) =
 let rec type_pat
   : type k . type_pat_state -> k pattern_category ->
       no_existentials: existential_restriction option ->
-      alloc_mode:expected_pat_mode ->
+      alloc_mode:expected_pat_mode -> mutable_flag:_ ->
       penv: Pattern_env.t -> Parsetree.pattern ->
       type_expr -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~penv sp expected_ty ->
+  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp expected_ty ->
   Msupport.with_saved_types
     ~warning_attribute:sp.ppat_attributes ?save_part:None
     (fun () ->
        let saved = save_levels () in
        try
          type_pat_aux tps category ~no_existentials
-           ~alloc_mode ~penv sp expected_ty
+           ~alloc_mode ~mutable_flag ~penv sp expected_ty
        with Error _ as exn ->
          (* We only want to catch error, not internal exceptions such as
             [Need_backtrack], etc. *)
@@ -2825,52 +2810,15 @@ let rec type_pat
          in
          (match category with
              | Value -> pat
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
              | Computation -> as_computation_pattern pat)
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-let rec type_pat
-  : type k . type_pat_state -> k pattern_category ->
-      no_existentials: existential_restriction option ->
-      alloc_mode:expected_pat_mode ->
-      penv: Pattern_env.t -> Parsetree.pattern -> type_expr ->
-      k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~penv sp expected_ty ->
-  Builtin_attributes.warning_scope sp.ppat_attributes
-    (fun () ->
-       type_pat_aux tps category ~no_existentials
-         ~alloc_mode ~penv sp expected_ty
-=======
-let rec type_pat
-  : type k . type_pat_state -> k pattern_category ->
-      no_existentials: existential_restriction option ->
-      alloc_mode:expected_pat_mode -> mutable_flag:_ ->
-      penv: Pattern_env.t -> Parsetree.pattern -> type_expr ->
-      k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
-      expected_ty ->
-  Builtin_attributes.warning_scope sp.ppat_attributes
-    (fun () ->
-       type_pat_aux tps category ~no_existentials
-         ~alloc_mode ~mutable_flag ~penv sp expected_ty
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
     )
 
 and type_pat_aux
   : type k . type_pat_state -> k pattern_category -> no_existentials:_ ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-         alloc_mode:expected_pat_mode ->
+         alloc_mode:expected_pat_mode -> mutable_flag:mutable_flag ->
          penv:_ -> _ -> _ -> k general_pattern
   = fun tps category ~no_existentials
-      ~alloc_mode ~penv sp expected_ty ->
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-         alloc_mode:expected_pat_mode -> penv:_ -> _ -> _ -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~penv sp expected_ty ->
-=======
-         alloc_mode:expected_pat_mode -> mutable_flag:mutable_flag -> penv:_ ->
-         _ -> _ -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
-        expected_ty ->
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+      ~alloc_mode ~mutable_flag ~penv sp expected_ty ->
   let type_pat tps category ?(alloc_mode=alloc_mode) ?(penv=penv) =
     type_pat tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv
   in
@@ -3127,16 +3075,8 @@ and type_pat_aux
       let ty_var, mode = solve_Ppat_alias ~mode:alloc_mode.mode !!penv q in
       let mode = cross_left !!penv expected_ty mode in
       let id, uid =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-        enter_variable ~is_as_variable:true tps name.loc name mode
-          ty_var sp.ppat_attributes
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-        enter_variable ~is_as_variable:true tps name.loc name mode ty_var
-          sp.ppat_attributes
-=======
         enter_variable ~is_as_variable:true ~kind:Val_reg tps name.loc name mode
           ty_var sp.ppat_attributes
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       in
       rvp { pat_desc = Tpat_alias(q, id, name, uid, mode, ty_var);
             pat_loc = loc; pat_extra=[];
@@ -5909,16 +5849,8 @@ and type_expect_
       (* note: check_duplicates would better be implemented in
          disambiguate_sort_lid_a_list directly *)
       let rec check_duplicates = function
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-        | (_, lbl1, _) :: (_, lbl2, _) :: _ when lbl1.lbl_num = lbl2.lbl_num ->
-          raise(error(loc, env, Label_multiply_defined lbl1.lbl_name))
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-        | (_, lbl1, _) :: (_, lbl2, _) :: _ when lbl1.lbl_num = lbl2.lbl_num ->
-          raise(Error(loc, env, Label_multiply_defined lbl1.lbl_name))
-=======
         | (_, lbl1, _) :: (_, lbl2, _) :: _ when lbl1.lbl_pos = lbl2.lbl_pos ->
-          raise(Error(loc, env, Label_multiply_defined lbl1.lbl_name))
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+          raise(error(loc, env, Label_multiply_defined lbl1.lbl_name))
         | _ :: rem ->
             check_duplicates rem
         | [] -> ()
@@ -6611,28 +6543,12 @@ and type_expect_
         exp_attributes = sexp.pexp_attributes;
         exp_env = env }
   | Pexp_array(mut, sargl) ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      let mutability =
-        match mut with
-        | Mutable -> Mutable Alloc.Comonadic.Const.legacy
-        | Immutable ->
-            Language_extension.assert_enabled ~loc Immutable_arrays ();
-            Immutable
-=======
       let mutability =
         match mut with
         | Mutable -> Mutable Value.Comonadic.legacy
         | Immutable ->
             Language_extension.assert_enabled ~loc Immutable_arrays ();
             Immutable
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
-    let mutability =
-      match mut with
-      | Mutable -> Mutable Alloc.Comonadic.Const.legacy
-      | Immutable ->
-          Language_extension.assert_enabled ~loc Immutable_arrays ();
-          Immutable
     in
     type_generic_array
       ~loc
@@ -6865,53 +6781,6 @@ and type_expect_
               exp_attributes = sexp.pexp_attributes;
               exp_env = env }
         end
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-  | Pexp_setinstvar (lab, snewval) -> begin
-      let (path, mut, cl_num, ty) =
-        Env.lookup_instance_variable ~loc lab.txt env
-      in
-      match mut with
-      | Mutable ->
-          let newval =
-            type_expect env mode_legacy snewval
-              (mk_expected (instance ty))
-          in
-          let (path_self, _) =
-            Env.find_value_by_name (Longident.Lident ("self-" ^ cl_num)) env
-          in
-          rue {
-            exp_desc = Texp_setinstvar(path_self, path, lab, newval);
-            exp_loc = loc; exp_extra = [];
-            exp_type = instance Predef.type_unit;
-            exp_attributes = sexp.pexp_attributes;
-            exp_env = env }
-      | _ ->
-          raise(error(loc, env, Instance_variable_not_mutable lab.txt))
-    end
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | Pexp_setinstvar (lab, snewval) -> begin
-      let (path, mut, cl_num, ty) =
-        Env.lookup_instance_variable ~loc lab.txt env
-      in
-      match mut with
-      | Mutable ->
-          let newval =
-            type_expect env mode_legacy snewval
-              (mk_expected (instance ty))
-          in
-          let (path_self, _) =
-            Env.find_value_by_name (Longident.Lident ("self-" ^ cl_num)) env
-          in
-          rue {
-            exp_desc = Texp_setinstvar(path_self, path, lab, newval);
-            exp_loc = loc; exp_extra = [];
-            exp_type = instance Predef.type_unit;
-            exp_attributes = sexp.pexp_attributes;
-            exp_env = env }
-      | _ ->
-          raise(Error(loc, env, Instance_variable_not_mutable lab.txt))
-    end
-=======
   | Pexp_setvar (lab, snewval) ->
       let desc =
         match Env.lookup_settable_variable ~loc lab.txt env with
@@ -6924,7 +6793,7 @@ and type_expect_
             in
             Texp_setinstvar(path_self, path, lab, newval)
         | Instance_variable (_,Immutable,_,_) ->
-            raise(Error(loc, env, Instance_variable_not_mutable lab.txt))
+            raise(error(loc, env, Instance_variable_not_mutable lab.txt))
         | Mutable_variable (id, mode, ty, sort) ->
             let newval =
               type_expect env (mode_default mode)
@@ -6939,7 +6808,6 @@ and type_expect_
         exp_type = instance Predef.type_unit;
         exp_attributes = sexp.pexp_attributes;
         exp_env = env }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   | Pexp_override lst ->
       submode ~loc ~env Value.legacy expected_mode;
       let _ =
@@ -7181,20 +7049,8 @@ and type_expect_
         exp_env = env }
   | Pexp_open (od, e) ->
       let tv = newvar (Jkind.Builtin.any ~why:Dummy_jkind) in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      let (od, _, newenv) = !type_open_decl env od in
-      let exp = type_expect newenv expected_mode e ty_expected_explained in
-      (* Force the return type to be well-formed in the original
-         environment. *)
-=======
-      let (od, newenv) = !type_open_decl env od in
-      let exp = type_expect newenv expected_mode e ty_expected_explained in
-      (* Force the return type to be well-formed in the original
-         environment. *)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       begin match !type_open_decl env od with
-      | (od, _, newenv) ->
+      | (od, newenv) ->
         let exp = type_expect newenv expected_mode e ty_expected_explained in
         (* Force the return type to be well-formed in the original
            environment. *)
@@ -10795,15 +10651,8 @@ let maybe_check_uniqueness_value_bindings vbl =
     Uniqueness_analysis.check_uniqueness_value_bindings vbl
 
 (* Typing of toplevel bindings *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-let type_binding env rec_flag ?force_toplevel spat_sexp_list =
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-
-let type_binding env rec_flag ?force_toplevel spat_sexp_list =
-=======
 
 let type_binding env mutable_flag rec_flag ?force_toplevel spat_sexp_list =
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   let (pat_exp_list, new_env) =
     type_let
       ~check:(fun s _ -> Warnings.Unused_value_declaration s)

@@ -742,23 +742,6 @@ rule token state = parse
     { return (CHAR (char_for_backslash c)) }
   | "\'\\" 'o' ['0'-'3'] ['0'-'7'] ['0'-'7'] "\'"
     { char_for_octal_code state lexbuf 3 >>= fun c -> return (CHAR c) }
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | "*"  { STAR }
-  | ","  { COMMA }
-  | "->" { MINUSGREATER }
-  | "."  { DOT }
-  | ".." { DOTDOT }
-  | ".#" { DOTHASH }
-=======
-  | "*"  { STAR }
-  | ","  { COMMA }
-  | "->" { MINUSGREATER }
-  | "$"  { DOLLAR }
-  | "."  { DOT }
-  | ".." { DOTDOT }
-  | ".#" { DOTHASH }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
     { char_for_decimal_code state lexbuf 2 >>= fun c -> return (CHAR c) }
   | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
@@ -770,23 +753,6 @@ rule token state = parse
         state.comment_start_loc <- [start_loc];
         Buffer.reset state.buffer;
         comment state lexbuf >>= fun end_loc ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | ";"  { SEMI }
-  | ";;" { SEMISEMI }
-  | "<"  { LESS }
-  | "<-" { LESSMINUS }
-  | "="  { EQUAL }
-  | "["  { LBRACKET }
-=======
-  | ";"  { SEMI }
-  | ";;" { SEMISEMI }
-  | "<"  { LESS }
-  | "<[" { LESSLBRACKET }
-  | "<-" { LESSMINUS }
-  | "="  { EQUAL }
-  | "["  { LBRACKET }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
         let s = Buffer.contents state.buffer in
         Buffer.reset state.buffer;
         return (COMMENT (s, { start_loc with
@@ -795,23 +761,6 @@ rule token state = parse
   | "(*)"
       { let loc = Location.curr lexbuf in
         Location.prerr_warning loc Warnings.Comment_start;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | "[<" { LBRACKETLESS }
-  | "[>" { LBRACKETGREATER }
-  | "]"  { RBRACKET }
-  | "{"  { LBRACE }
-  | "{<" { LBRACELESS }
-  | "|"  { BAR }
-=======
-  | "[<" { LBRACKETLESS }
-  | "[>" { LBRACKETGREATER }
-  | "]"  { RBRACKET }
-  | "]>" { RBRACKETGREATER }
-  | "{"  { LBRACE }
-  | "{<" { LBRACELESS }
-  | "|"  { BAR }
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
         state.comment_start_loc <- [loc];
         Buffer.reset state.buffer;
         comment state lexbuf >>= fun end_loc ->
@@ -844,6 +793,7 @@ rule token state = parse
   | "*"  { return STAR }
   | ","  { return COMMA }
   | "->" { return MINUSGREATER }
+  | "$"  { return DOLLAR }
   | "."  { return DOT }
   | ".." { return DOTDOT }
   | ".#" { return DOTHASH }
@@ -855,6 +805,7 @@ rule token state = parse
   | ";"  { return SEMI }
   | ";;" { return SEMISEMI }
   | "<"  { return LESS }
+  | "<[" { return LESSLBRACKET }
   | "<-" { return LESSMINUS }
   | "="  { return EQUAL }
   | "["  { return LBRACKET }
@@ -863,6 +814,7 @@ rule token state = parse
   | "[<" { return LBRACKETLESS }
   | "[>" { return LBRACKETGREATER }
   | "]"  { return RBRACKET }
+  | "]>" { return RBRACKETGREATER }
   | "{"  { return LBRACE }
   | "{<" { return LBRACELESS }
   | "|"  { return BAR }

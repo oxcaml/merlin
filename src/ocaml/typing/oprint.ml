@@ -16,6 +16,8 @@
 open Format
 open Outcometree
 
+module Misc = Misc_stdlib
+
 exception Ellipsis
 
 let cautious f ppf arg =
@@ -663,28 +665,14 @@ and print_out_jkind_const ppf ojkind =
         | Some base -> fprintf ppf "%a@ " (pp_element ~nested:true) base
         | None -> ()
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-      Misc_stdlib.pp_parens_if nested (fun ppf (base, modes) ->
-        fprintf ppf "%amod @[%a@]" pp_base base
-          (pp_print_list
-              ~pp_sep:(fun ppf () -> fprintf ppf "@ ")
-              (fun ppf -> fprintf ppf "%s"))
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      Misc.pp_parens_if nested (fun ppf (base, modes) ->
-        fprintf ppf "%amod @[%a@]" pp_base base
-          (pp_print_list
-              ~pp_sep:(fun ppf () -> fprintf ppf "@ ")
-              (fun ppf -> fprintf ppf "%s"))
-=======
       Misc.pp_parens_if nested (fun ppf (base, modes) ->
         fprintf ppf "%amod @[<hv>%a@]" pp_base base
           (pp_print_list ~pp_sep:pp_print_space pp_print_string)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
           modes
       ) ppf (base, modes)
     | Ojkind_const_product ts ->
       let pp_sep ppf () = Format.fprintf ppf "@ & " in
-      Misc_stdlib.pp_nested_list ~nested ~pp_element ~pp_sep ppf ts
+      Misc.pp_nested_list ~nested ~pp_element ~pp_sep ppf ts
     | Ojkind_const_with _ -> failwith "XXX unreachable (stripped off earlier)"
     | Ojkind_const_kind_of _ ->
       failwith "XXX unimplemented jkind syntax");
@@ -708,7 +696,7 @@ and print_out_jkind ppf ojkind =
     | Ojkind_const jkind -> print_out_jkind_const ppf jkind
     | Ojkind_product ts ->
       let pp_sep ppf () = Format.fprintf ppf "@ & " in
-      Misc_stdlib.pp_nested_list ~nested ~pp_element ~pp_sep ppf ts
+      Misc.pp_nested_list ~nested ~pp_element ~pp_sep ppf ts
   in
   pp_element ~nested:false ppf ojkind
 

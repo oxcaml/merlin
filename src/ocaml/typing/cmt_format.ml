@@ -263,13 +263,9 @@ let iter_on_occurrences
       | Texp_object _ | Texp_pack _ | Texp_letop _ | Texp_unreachable
       | Texp_list_comprehension _ | Texp_array_comprehension _ | Texp_probe _
       | Texp_probe_is_enabled _ | Texp_exclave _
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
       | Texp_typed_hole
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-=======
       (* CR-someday let_mutable: maybe iterate on mutvar? *)
       | Texp_mutvar _ | Texp_setmutvar _
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
       | Texp_open _ | Texp_src_pos | Texp_overwrite _ | Texp_hole _ -> ());
       default_iterator.expr sub e);
 

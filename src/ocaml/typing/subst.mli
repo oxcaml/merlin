@@ -75,14 +75,8 @@ val with_additional_action: additional_action_config -> t -> t
 *)
 val reset_additional_action_type_id: unit -> unit
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
 val make_loc_ghost: t -> t
-val change_locs: t -> Location.t -> t
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-val change_locs: t -> Location.t -> t
-=======
 val change_locs: 'k subst -> Location.t -> 'k subst
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 
 val module_path: t -> Path.t -> Path.t
 val type_path: t -> Path.t -> Path.t

@@ -1765,24 +1765,10 @@ let tree_of_label l =
     match l.ld_mutable with
     | Mutable m ->
         let mut =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-          let open Alloc.Comonadic.Const in
-          if Misc_stdlib.Le_result.equal ~le m legacy then
-            Om_mutable None
-          else
-            Om_mutable (Some "<non-legacy>")
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-          let open Alloc.Comonadic.Const in
-          if Misc.Le_result.equal ~le m legacy then
-            Om_mutable None
-          else
-            Om_mutable (Some "<non-legacy>")
-=======
           let open Value.Comonadic in
           match equate m legacy with
           | Ok () -> Om_mutable None
           | Error _ -> Om_mutable (Some "<non-legacy>")
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
         in
         mut
     | Immutable -> Om_immutable

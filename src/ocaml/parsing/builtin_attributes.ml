@@ -672,18 +672,12 @@ let parse_standard_implementation_attributes attr =
   afl_inst_ratio_attribute attr;
   flambda_o3_attribute attr;
   flambda_oclassic_attribute attr;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
   zero_alloc_attribute attr
   *)
   unsafe_allow_any_mode_crossing_attribute attr
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  zero_alloc_attribute ~in_signature:false attr;
-  unsafe_allow_any_mode_crossing_attribute attr
-=======
-  zero_alloc_attribute ~in_signature:false attr;
-  unsafe_allow_any_mode_crossing_attribute attr;
+  (*
   llvm_backend_attribute attr
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+  *)
 
 let has_local_opt attrs =
   has_attribute "local_opt" attrs

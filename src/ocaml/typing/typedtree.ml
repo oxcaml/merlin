@@ -1365,6 +1365,12 @@ let loc_of_decl ~uid =
   | Class cd -> cd.ci_id_name
   | Class_type ctd -> ctd.ci_id_name
 
+let min_mode_with_locks = (Mode.Value.(disallow_right legacy), None)
+
+let mode_without_locks_exn = function
+  | (_, Some _) -> assert false
+  | (m, None) -> m
+
 
 (* Merlin specific *)
 
@@ -1374,22 +1380,6 @@ let unpack_functor_me me =
   | _ -> invalid_arg "Typedtree.unpack_functor_me (merlin)"
 
 let unpack_functor_mty mty =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
   match mty.mty_desc with
   | Tmty_functor (fp, mty) -> fp, mty
   | _ -> invalid_arg "Typedtree.unpack_functor_mty (merlin)"
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | Module_substitution msd -> msd.ms_name
-  | Class cd -> cd.ci_id_name
-  | Class_type ctd -> ctd.ci_id_name
-=======
-  | Module_substitution msd -> msd.ms_name
-  | Class cd -> cd.ci_id_name
-  | Class_type ctd -> ctd.ci_id_name
-
-let min_mode_with_locks = (Mode.Value.(disallow_right legacy), None)
-
-let mode_without_locks_exn = function
-  | (_, Some _) -> assert false
-  | (m, None) -> m
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30

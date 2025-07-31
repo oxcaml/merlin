@@ -20,42 +20,8 @@ open Types
 open Typedtree
 open Lambda
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
 (* Expand a type, looking through ordinary synonyms, private synonyms, links,
    and [@@unboxed] types. The returned type will be therefore be none of these
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-type error =
-    Non_value_layout of type_expr * Jkind.Violation.t option
-  | Non_value_sort of Jkind.Sort.t * type_expr
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Non_value_sort_unknown_ty of Jkind.Sort.t
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of type_expr * Jkind.Violation.t
-  | Unsupported_sort of Jkind.Sort.Const.t
-  | Unsupported_product_in_lazy of Jkind.Sort.Const.t
-  | Unsupported_vector_in_product_array
-  | Mixed_product_array of Jkind.Sort.Const.t * type_expr
-  | Product_iarrays_unsupported
-  | Opaque_array_non_value of
-      { array_type: type_expr;
-=======
-type error =
-    Non_value_layout of type_expr * Jkind.Violation.t option
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of type_expr * Jkind.Violation.t
-  | Unsupported_product_in_lazy of Jkind.Sort.Const.t
-  | Unsupported_vector_in_product_array
-  | Mixed_product_array of Jkind.Sort.Const.t * type_expr
-  | Unsupported_void_in_array
-  | Product_iarrays_unsupported
-  | Opaque_array_non_value of
-      { array_type: type_expr;
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
    cases (except in case of missing cmis).
 
    If we fail to fully scrape the type due to missing a missing cmi file, we
@@ -237,46 +203,8 @@ let classify ~classify_product env ty sort : _ classification =
   | Base Vec256 -> Unboxed_vector Unboxed_vec256
   | Base Vec512 -> Unboxed_vector Unboxed_vec512
   | Base Word -> Unboxed_int Unboxed_nativeint
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | Base Void as c ->
-    raise (Error (loc, Unsupported_sort c))
-  | Product c -> Product (classify_product ty c)
-
-let rec scannable_product_array_kind elt_ty_for_error loc sorts =
-=======
   | Base Void -> Void
   | Product c -> Product (classify_product ty c)
-
-let rec scannable_product_array_kind elt_ty_for_error loc sorts =
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
-  | Base Void (* as c *) ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-    (* raise (Error (loc, Unsupported_sort c)) *)
-    Misc.fatal_error "merlin-jst: void encountered in classify"
-  | Product c -> Product (classify_product ty c)
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-     kinds. *)
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits32 | Bits64 | Word | Vec128) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void as c ->
-    raise (Error (loc, Unsupported_sort c))
-  | Product sorts ->
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
-=======
-     kinds. *)
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
-          Vec128 | Vec256 | Vec512) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void ->
-    raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts ->
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
 
 let array_kind_of_elt ~elt_sort env loc ty =
   let elt_sort =
@@ -299,33 +227,11 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Int -> Pintarray
   | Unboxed_float f -> Punboxedfloatarray f
   | Unboxed_int i -> Punboxedintarray i
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
   | Unboxed_vector v -> Punboxedvectorarray v
   | Product c -> c
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  | Base Value -> Pint_ignorable
-  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
-  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
-  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
-  | Base Vec128 -> raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void as c -> raise (Error (loc, Unsupported_sort c))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-=======
-  | Base Value -> Pint_ignorable
-  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
-  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
-  | Base Bits8 -> Punboxedint_ignorable Unboxed_int8
-  | Base Bits16 -> Punboxedint_ignorable Unboxed_int16
-  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
-  | Base (Vec128 | Vec256 | Vec512) ->
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
+  | Void ->
+    (*= raise (Error (loc, Unsupported_void_in_array)) *)
+    Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
 
 let array_type_kind ~elt_sort ~elt_ty env loc ty =
   match scrape_poly env ty with
@@ -458,7 +364,8 @@ let value_kind_of_value_jkind env jkind =
   | Base Value, Internal -> Pgenval
   | Any, _
   | Product _, _
-  | Base (Void | Float64 | Float32 | Word | Bits32 | Bits64 | Vec128) , _ ->
+  | Base (Void | Float64 | Float32 | Word | Bits8 | Bits16 | Bits32 | Bits64 |
+          Vec128 | Vec256 | Vec512) , _ ->
     Misc.fatal_error "expected a layout of value"
 
 (* [value_kind] has a pre-condition that it is only called on values.  With the
@@ -545,22 +452,6 @@ let add_nullability_from_jkind env jkind raw_kind =
     | Non_null -> Non_nullable
     | Maybe_null -> Nullable
   in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-  (* CR dkalinichenko: many checks in [classify] are redundant
-     with separability. *)
-  match classify ~classify_product env loc ty elt_sort with
-  | Any ->
-    if Config.flat_float_array
-      && not (Language_extension.is_at_least Separability ()
-=======
-  (* CR dkalinichenko: many checks in [classify] are redundant
-     with separability. *)
-  match classify ~classify_product env ty elt_sort with
-  | Any ->
-    if Config.flat_float_array
-      && not (Language_extension.is_at_least Separability ()
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
   { raw_kind; nullable }
 
 let fallback_if_missing_cmi ~default f =
@@ -1155,8 +1046,8 @@ let lazy_val_requires_forward env (* loc *) ty =
   (* CR layouts: Fix this when supporting lazy unboxed values.
      Blocks with forward_tag can get scanned by the gc thus can't
      store unboxed values. Not boxing is also incorrect since the lazy
+     type has layout [value] which is different from these unboxed layouts. *)
   | Unboxed_float _ | Unboxed_int _ | Unboxed_vector _ | Void ->
-  | Unboxed_float _ | Unboxed_int _ | Unboxed_vector _ ->
     Misc.fatal_error "Unboxed value encountered inside lazy expression"
   | Float -> false (* TODO: Config.flat_float_array *)
   | Addr | Int -> false
@@ -1216,67 +1107,3 @@ let rec layout_union l1 l2 =
     _ ->
       Ptop
 *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-      end
-  | Non_value_sort (sort, ty) ->
-      fprintf ppf
-        "Non-value layout %a detected in [Typeopt.layout] as sort for type@ %a.@ \
-         Please report this error to the Jane Street compilers team."
-        Jkind.Sort.format sort Printtyp.type_expr ty
-  | Non_value_sort_unknown_ty sort ->
-      fprintf ppf
-        "Non-value layout %a detected in [layout_of_sort]@ Please report this \
-         error to the Jane Street compilers team."
-        Jkind.Sort.format sort
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
-      begin match ty with
-=======
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-      end
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
-      begin match ty with
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      fprintf ppf "A representable layout is required here.@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-  | Unsupported_sort const ->
-      fprintf ppf "Layout %a is not supported yet."
-        Jkind.Sort.Const.format const
-  | Unsupported_product_in_lazy const ->
-      fprintf ppf
-        "Product layout %a detected in [lazy] in [Typeopt.Layout]@ \
-=======
-      fprintf ppf "A representable layout is required here.@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)) err
-  | Unsupported_product_in_lazy const ->
-      fprintf ppf
-        "Product layout %a detected in [lazy] in [Typeopt.Layout]@ \
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-16
-||||||| ocaml-flambda/flambda-backend:e609909979262053d552213efd4996d983c399b7
-      fprintf ppf
-        "Unboxed vector types are not yet supported in arrays of unboxed@ \
-         products."
-  | Mixed_product_array (const, elt_ty) ->
-      fprintf ppf
-        "An unboxed product array element must be formed from all@ \
-=======
-      fprintf ppf
-        "Unboxed vector types are not yet supported in arrays of unboxed@ \
-         products."
-  | Unsupported_void_in_array ->
-      fprintf ppf
-        "Types whose layout contains [void] are not yet supported in arrays."
-  | Mixed_product_array (const, elt_ty) ->
-      fprintf ppf
-        "An unboxed product array element must be formed from all@ \
->>>>>>> ocaml-flambda/flambda-backend:00e9f22e7c52c951992ba327e68cdba4ea9c0b30
