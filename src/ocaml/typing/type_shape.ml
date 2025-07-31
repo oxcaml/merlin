@@ -474,6 +474,9 @@ let rec type_name : 'a. 'a Shape.ts -> _ =
       let name = Path.name type_decl_shape.path in
       args ^ name)
 
+(* Merlin-only: The below functions are only used for printing when the compiler is passed
+   the -ddebug-uids flag, which isn't relevant to Merlin *)
+(*
 let print_table_all_type_decls ppf =
   let entries = Uid.Tbl.to_list all_type_decls in
   let entries = List.sort (fun (a, _) (b, _) -> Uid.compare a b) entries in
@@ -508,3 +511,4 @@ let print_debug_uid_tables ppf =
   print_table_all_type_decls ppf;
   Format.fprintf ppf "\n";
   print_table_all_type_shapes ppf
+*)

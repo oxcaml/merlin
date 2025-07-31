@@ -20,7 +20,7 @@ open Typedtree
 open Types
 
 let map_error = Result.map_error
-open Misc.Stdlib.Monad.Result.Syntax
+open Misc_stdlib.Monad.Result.Syntax
 
 type pos =
   | Module of Ident.t

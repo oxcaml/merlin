@@ -2928,10 +2928,12 @@ and type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
         str_final_env = env;
       };
       mod_type = Mty_signature [];
+      (* CR 5.2.0minus-16: check this *)
+      mod_mode = Value.newvar (), None;
       mod_env = env;
       mod_attributes = Msupport.flush_saved_types () @ smod.pmod_attributes;
       mod_loc = smod.pmod_loc },
-      Shape.dummy_mod, None
+      Shape.dummy_mod
 
 and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
   ?expected_mode smod =
@@ -3066,11 +3068,13 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
             {
               mod_desc = Tmod_typed_hole;
               mod_type = Mty_for_hole;
+              (* CR 5.2.0minus-16: check this *)
+              mod_mode = Value.newvar (), None;
               mod_loc = sarg.pmod_loc;
               mod_env = env;
               mod_attributes = sarg.pmod_attributes;
             },
-            Shape.dummy_mod, None
+            Shape.dummy_mod
         | _ -> raise exn
       end
   | Pmod_unpack sexp ->
@@ -3113,10 +3117,12 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
   | Pmod_extension ({ txt; _ }, _) when txt = Ast_helper.hole_txt ->
       { mod_desc = Tmod_typed_hole;
         mod_type = Mty_for_hole;
+        (* CR 5.2.0minus-16: check this *)
+        mod_mode = Value.newvar (), None;
         mod_env = env;
         mod_attributes = smod.pmod_attributes;
         mod_loc = smod.pmod_loc },
-      Shape.dummy_mod, None
+      Shape.dummy_mod
   | Pmod_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
   | Pmod_instance glob ->
@@ -3266,6 +3272,8 @@ and type_one_application ~ctx:(apply_loc,sfunct,md_f,args)
           Msupport.raise_error (apply_error ());
           { mod_desc = Tmod_apply_unit(funct);
             mod_type = mty_res;
+            (* CR 5.2.0minus-16: check this *)
+            mod_mode = Value.newvar (), None;
             mod_env = env;
             mod_attributes = app_attributes;
             mod_loc = app_loc },
@@ -3425,7 +3433,8 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
   sig_acc ?expected_mode sstr =
   let names = Signature_names.create () in
   let _, md_mode = register_allocation () in
-  Option.iter (fun x -> Value.submode md_mode x |> ignore; todo)
+  (* CR 5.2.0minus-16: is this right?  *)
+  Option.iter (fun x -> Value.submode md_mode x |> ignore)
     expected_mode;
 
   let type_str_include ~loc env shape_map sincl sig_acc =
@@ -3920,7 +3929,7 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
   in
   Msupport.with_saved_types
     ?warning_attribute:(if Option.is_some toplevel || keep_warnings then None else Some [])
-    ~save_part:(fun (str,_,_,_,_) -> Cmt_format.Partial_structure str)
+    ~save_part:(fun (str,_,_,_,_,_) -> Cmt_format.Partial_structure str)
     (fun () ->
        let (items, sg, shape_map, final_env) = type_struct env Shape.Map.empty sstr [] [] toplevel_sig in
        let str = { str_items = items; str_type = sg; str_final_env = final_env } in
@@ -3948,7 +3957,7 @@ let type_toplevel_phrase env sig_acc s =
   Env.reset_probes ();
   Typecore.reset_allocations ();
   let expected_mode = Value.(legacy |> disallow_left) in
-  let (str, sg, mode, to_remove_from_sg, shape, env) =
+  let (str, sg, mode, _to_remove_from_sg, shape, env) =
     type_structure ~toplevel:(Some sig_acc) false None env ~expected_mode sig_acc s in
   begin match Value.submode mode Value.legacy with
   | Ok () -> ()
@@ -3967,7 +3976,7 @@ let type_module = type_module true false None
 let type_module_maybe_hold_locks = type_module_maybe_hold_locks true false None
 
 let merlin_type_structure env sig_acc str =
-  let (str, sg, _sg_names, _shape, env) =
+  let (str, sg, _mode, _sg_names, _shape, env) =
     type_structure ~keep_warnings:true false None env sig_acc str
   in
   str, sg, env
@@ -4263,7 +4272,7 @@ let type_implementation target modulename initial_env ast =
           type_structure initial_env ~expected_mode ast in
       begin match Value.submode mode Env.mode_unit with
       | Ok () -> ()
-      | Error e -> Msupport.raise_error (Legacy_module (Compilation_unit, e))
+      | Error e -> Msupport.raise_error (error (Legacy_module (Compilation_unit, e)))
       end;
       let uid = Uid.of_compilation_unit_id modulename in
       let shape = Shape.set_uid_if_none shape uid in

@@ -69,8 +69,10 @@ val estimate_layout_from_type_decl_shape : Shape.tds -> Layout.t option
 
 val type_name : _ Shape.ts -> string
 
+(*
 val print_table_all_type_decls : Format.formatter -> unit
 
 val print_table_all_type_shapes : Format.formatter -> unit
 
 val print_debug_uid_tables : Format.formatter -> unit
+*)

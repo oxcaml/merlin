@@ -53,8 +53,8 @@ let type_declarations_changelog, type_declarations = !stamped_type_declarations
 let stamped_module_declarations = s_table local_stamped 32
 let module_declarations_changelog, module_declarations = !stamped_module_declarations
 
-let mutated_mutable_values : unit usage_tbl ref =
-  s_table Types.Uid.Tbl.create 16
+let stamped_mutated_mutable_values = s_table local_stamped 32
+let mutated_mutable_values_changelog, mutated_mutable_values = !stamped_mutated_mutable_values
 
 type constructor_usage = Positive | Pattern | Exported_private | Exported
 type constructor_usages =
@@ -2476,7 +2476,7 @@ and store_value ?check ~mode id addr decl shape env =
       check_usage decl.val_loc id decl.val_uid f value_declarations;
       match decl.val_kind with
       | Val_mut _ ->
-        check_usage decl.val_loc id decl.val_uid f !mutated_mutable_values
+        check_usage decl.val_loc id decl.val_uid f mutated_mutable_values
       | _ -> ())
     check;
   let vda =
@@ -3195,7 +3195,7 @@ let mark_value_used uid =
   | exception Not_found -> ()
 
 let mark_value_mutated uid =
-  match Types.Uid.Tbl.find !mutated_mutable_values uid with
+  match Stamped_hashtable.find mutated_mutable_values uid with
   | mark -> mark ()
   | exception Not_found -> ()
 
@@ -3262,7 +3262,7 @@ let set_value_used_callback vd callback =
   stamped_uid_add value_declarations vd.Subst.Lazy.val_uid callback
 
 let set_value_mutated_callback vd callback =
-  Types.Uid.Tbl.add !mutated_mutable_values vd.Subst.Lazy.val_uid callback
+  Stamped_hashtable.add mutated_mutable_values vd.Subst.Lazy.val_uid callback
 
 let set_type_used_callback td callback =
   if Uid.for_actual_declaration td.type_uid then
@@ -5406,6 +5406,7 @@ let cleanup_usage_tables ~stamp =
   Stamped_hashtable.backtrack value_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack type_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack module_declarations_changelog ~stamp;
+  Stamped_hashtable.backtrack mutated_mutable_values_changelog ~stamp;
   Stamped_hashtable.backtrack used_constructors_changelog ~stamp;
   Stamped_hashtable.backtrack used_labels_changelog ~stamp;
 
