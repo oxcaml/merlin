@@ -4955,10 +4955,15 @@ atomic_type:
       { mktyp ~loc:$loc (Ptyp_of_kind jkind) }
   | LESSLBRACKET core_type RBRACKETGREATER
       { quotation_reserved "<[" $loc($1) }
+  (*
   | LESSLBRACKET core_type error
       { unclosed "<[" $loc($1) "]>" $loc($3) }
+  *)
+  (*
+  (* Merlin: comment this back in once DOLLAR is parsed for real *)
   | DOLLAR error
       { quotation_reserved "$" $loc($1) }
+  *)
 
 
 (* This is the syntax of the actual type parameters in an application of

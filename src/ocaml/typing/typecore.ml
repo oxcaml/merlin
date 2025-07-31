@@ -27,6 +27,12 @@ open Typedtree
 open Btype
 open Ctype
 
+(* Merlin: make Misc_stdlib be  Misc.Stdlib *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+end
+
 let raise_error = Msupport.raise_error
 
 type comprehension_type =
@@ -961,9 +967,9 @@ let constant : Parsetree.constant -> (Typedtree.constant, error) result =
       Ok (Const_unboxed_float f)
   | Pconst_unboxed_float (f, Some 's') ->
       if Language_extension.is_enabled Small_numbers then Ok (Const_unboxed_float32 f)
-      else Error (Float32_literal (Misc_stdlib.format_as_unboxed_literal f))
+      else Error (Float32_literal (Misc.Stdlib.format_as_unboxed_literal f))
   | Pconst_unboxed_float (x, Some c) ->
-      Error (Unknown_literal (Misc_stdlib.format_as_unboxed_literal x, c))
+      Error (Unknown_literal (Misc.Stdlib.format_as_unboxed_literal x, c))
   | Pconst_unboxed_integer (i, suffix) ->
       begin match constant_integer i ~suffix with
       | Ok (Int32 v) -> Ok (Const_unboxed_int32 v)
@@ -973,7 +979,7 @@ let constant : Parsetree.constant -> (Typedtree.constant, error) result =
       | Error Int64_literal_overflow -> Error (Literal_overflow "int64#")
       | Error Nativeint_literal_overflow -> Error (Literal_overflow "nativeint#")
       | Error Unknown_constant_literal ->
-          Error (Unknown_literal (Misc_stdlib.format_as_unboxed_literal i, suffix))
+          Error (Unknown_literal (Misc.Stdlib.format_as_unboxed_literal i, suffix))
       end
 
 let constant_or_raise env loc cst =
@@ -8106,10 +8112,9 @@ and type_label_access
         lbl_name = "";
         lbl_res = ty_exp;
         lbl_arg = newvar arg_kind;
-        lbl_mut = Mutable Alloc.Comonadic.Const.legacy;
+        lbl_mut = Mutable Mode.Value.Comonadic.legacy;
         lbl_modalities = Mode.Modality.Value.Const.id;
         lbl_pos = 0;
-        lbl_num = 0;
         lbl_all = [||];
         lbl_repres =
           (match record_form with
@@ -8945,7 +8950,7 @@ and type_tuple ~overwrite ~loc ~env ~(expected_mode : expected_mode) ~ty_expecte
     overwrite
   in
   let expl =
-    Misc_stdlib.List.map3
+    Misc.Stdlib.List.map3
       (fun (label, body) ((_, ty), argument_mode) overwrite ->
         Option.iter (fun _ ->
              Language_extension.assert_enabled ~loc Labeled_tuples ())
@@ -9142,7 +9147,7 @@ and type_construct ~overwrite env (expected_mode : expected_mode) loc lid sarg
       overwrite
   in
   let args =
-    Misc_stdlib.List.map3
+    Misc.Stdlib.List.map3
       (fun e ({Types.ca_type=ty; ca_modalities=gf; _},t0) overwrite ->
          let argument_mode = mode_modality gf argument_mode in
          type_argument ~recarg ~overwrite env argument_mode e ty t0)
