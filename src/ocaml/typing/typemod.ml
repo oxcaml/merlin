@@ -2922,14 +2922,9 @@ and type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
         ?expected_mode smod)
   with exn ->
     Msupport.raise_error exn;
-    { mod_desc = Tmod_structure {
-        str_items = [];
-        str_type = [];
-        str_final_env = env;
-      };
-      mod_type = Mty_signature [];
-      (* CR 5.2.0minus-16: check this *)
-      mod_mode = Value.newvar (), None;
+    { mod_desc = Tmod_typed_hole;
+      mod_type = Mty_for_hole;
+      mod_mode = Value.(disallow_right min), None;
       mod_env = env;
       mod_attributes = Msupport.flush_saved_types () @ smod.pmod_attributes;
       mod_loc = smod.pmod_loc },
@@ -3068,8 +3063,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
             {
               mod_desc = Tmod_typed_hole;
               mod_type = Mty_for_hole;
-              (* CR 5.2.0minus-16: check this *)
-              mod_mode = Value.newvar (), None;
+              mod_mode = Value.(disallow_right min), None;
               mod_loc = sarg.pmod_loc;
               mod_env = env;
               mod_attributes = sarg.pmod_attributes;
@@ -3117,8 +3111,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
   | Pmod_extension ({ txt; _ }, _) when txt = Ast_helper.hole_txt ->
       { mod_desc = Tmod_typed_hole;
         mod_type = Mty_for_hole;
-        (* CR 5.2.0minus-16: check this *)
-        mod_mode = Value.newvar (), None;
+        mod_mode = Value.(disallow_right min), None;
         mod_env = env;
         mod_attributes = smod.pmod_attributes;
         mod_loc = smod.pmod_loc },
@@ -3272,8 +3265,7 @@ and type_one_application ~ctx:(apply_loc,sfunct,md_f,args)
           Msupport.raise_error (apply_error ());
           { mod_desc = Tmod_apply_unit(funct);
             mod_type = mty_res;
-            (* CR 5.2.0minus-16: check this *)
-            mod_mode = Value.newvar (), None;
+            mod_mode = Value.(disallow_right min), None;
             mod_env = env;
             mod_attributes = app_attributes;
             mod_loc = app_loc },
@@ -3433,7 +3425,6 @@ and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor
   sig_acc ?expected_mode sstr =
   let names = Signature_names.create () in
   let _, md_mode = register_allocation () in
-  (* CR 5.2.0minus-16: is this right?  *)
   Option.iter (fun x -> Value.submode md_mode x |> ignore)
     expected_mode;
 
