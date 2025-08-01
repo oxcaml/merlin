@@ -1095,7 +1095,7 @@ and Component : sig
     | Module_type of
         Origin.t * Ident.t * Desc.Module_type.t * source * Desc.visibility
     | Module of
-        Origin.t * Ident.t * Desc.Module.t * source * Desc.visibility 
+        Origin.t * Ident.t * Desc.Module.t * source * Desc.visibility
     | Declare_type of Origin.t * Ident.t
     | Declare_class_type of Origin.t * Ident.t
     | Declare_module_type of Origin.t * Ident.t
@@ -1170,7 +1170,18 @@ end = struct
     | exception Not_found -> None
     | prev ->
       match Type.declaration prev with
-      | None -> failwith "Graph.add: type already defined"
+      | None ->
+        (* CR-soon: This is a good assertion to have because it verifies that the
+           environment is well-formed (that is, is doesn't have duplicate identifiers).
+           But as of OxCaml version 5.2.0minus-16, there is a compiler bug causing this
+           case to be hit. This is a re-appearance of the upstream issue
+           https://github.com/ocaml/merlin/issues/1322, which was initially resolved in
+           the compiler pr https://github.com/ocaml/ocaml/pull/10382. Commenting this
+           assertion back in causes test tests/test-dirs/issue1322.t/run.t to fail. This
+           bug should get fixed in the compiler, and then this assertion should get added
+           back. *)
+        (* failwith "Graph.add: type already defined" *)
+        None
       | Some _ as o -> o
 
   let previous_class_type t id =
