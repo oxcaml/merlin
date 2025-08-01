@@ -1165,9 +1165,13 @@ end = struct
       module_type_names = String_map.empty;
       module_names = String_map.empty; }
 
+  type prev_result =
+    | Already_defined
+    | Not_already_defined of Origin.t option
+
   let previous_type t id =
     match Ident_map.find id t.types with
-    | exception Not_found -> None
+    | exception Not_found -> Not_already_defined None
     | prev ->
       match Type.declaration prev with
       | None ->
@@ -1179,10 +1183,13 @@ end = struct
            the compiler pr https://github.com/ocaml/ocaml/pull/10382. Commenting this
            assertion back in causes test tests/test-dirs/issue1322.t/run.t to fail. This
            bug should get fixed in the compiler, and then this assertion should get added
-           back. *)
+           back.
+
+           Once that gets changed back, this function should just return a
+           [Origin.t option] again. *)
         (* failwith "Graph.add: type already defined" *)
-        None
-      | Some _ as o -> o
+        Already_defined
+      | Some _ as o -> Not_already_defined o
 
   let previous_class_type t id =
     match Ident_map.find id t.class_types with
@@ -1236,14 +1243,16 @@ end = struct
     let rec loop acc diff declarations = function
       | [] -> loop_declarations acc diff declarations
       | Component.Type(origin, id, desc, source, dpr) :: rest ->
-          let prev = previous_type acc id in
-          let typ = Type.base origin id (Some desc) dpr in
-          let types = Ident_map.add id typ acc.types in
-          let type_names = add_name source id acc.type_names in
-          let item = Diff.Item.Type(id, typ, prev) in
-          let diff = item :: diff in
-          let acc = { acc with types; type_names } in
-          loop acc diff declarations rest
+          (match previous_type acc id with
+          | Already_defined -> loop acc diff declarations rest
+          | Not_already_defined prev ->
+            let typ = Type.base origin id (Some desc) dpr in
+            let types = Ident_map.add id typ acc.types in
+            let type_names = add_name source id acc.type_names in
+            let item = Diff.Item.Type(id, typ, prev) in
+            let diff = item :: diff in
+            let acc = { acc with types; type_names } in
+            loop acc diff declarations rest)
       | Component.Class_type(origin,id, desc, source, dpr) :: rest ->
           let prev = previous_class_type acc id in
           let clty = Class_type.base origin id (Some desc) dpr in
