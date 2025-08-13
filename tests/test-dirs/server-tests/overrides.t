@@ -7,16 +7,12 @@
   > local file="$2"
   > 
   > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq 'del(.timing)' \
-  >    | jq 'del(.heap_mbytes)' \
-  >    | jq 'del(.query_num)' \
+  >    | jq '{value: .value, locate_overrides_phase: .cache.locate_overrides_phase}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
   > 
-  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq 'del(.timing)' \
-  >    | jq 'del(.heap_mbytes)' \
-  >    | jq 'del(.query_num)' \
+  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file"  < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
+  >    | jq '{value: .value, document_overrides_phase: .cache.document_overrides_phase}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
   > 
@@ -72,7 +68,6 @@ Test no .merlin, relative path
 
   $ test_merlin_overrides "1:4" "./simple.ml"
   [merlin locate] output: {
-    "class": "return",
     "value": {
       "file": "$TESTCASE_ROOT/test/ppx.ml",
       "pos": {
@@ -80,55 +75,15 @@ Test no .merlin, relative path
         "col": 21
       }
     },
-    "notifications": [],
-    "cache": {
-      "reader_phase": "miss",
-      "ppx_phase": "miss",
-      "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
-      "document_overrides_forced": "false",
-      "locate_overrides_forced": "true"
-    }
+    "locate_overrides_phase": "miss"
   }
   [merlin document] output: {
-    "class": "return",
     "value": "@@@do_nothing expands into nothing",
-    "notifications": [],
-    "cache": {
-      "reader_phase": "miss",
-      "ppx_phase": "miss",
-      "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
-      "document_overrides_forced": "true",
-      "locate_overrides_forced": "false"
-    }
+    "document_overrides_phase": "miss"
   }
 
   $ test_merlin_overrides "1:4" "./simple.ml"
   [merlin locate] output: {
-    "class": "return",
     "value": {
       "file": "$TESTCASE_ROOT/test/ppx.ml",
       "pos": {
@@ -136,50 +91,11 @@ Test no .merlin, relative path
         "col": 21
       }
     },
-    "notifications": [],
-    "cache": {
-      "reader_phase": "miss",
-      "ppx_phase": "miss",
-      "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
-      "document_overrides_forced": "false",
-      "locate_overrides_forced": "true"
-    }
+    "locate_overrides_phase": "hit"
   }
   [merlin document] output: {
-    "class": "return",
     "value": "@@@do_nothing expands into nothing",
-    "notifications": [],
-    "cache": {
-      "reader_phase": "miss",
-      "ppx_phase": "miss",
-      "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
-      "document_overrides_forced": "true",
-      "locate_overrides_forced": "false"
-    }
+    "document_overrides_phase": "hit"
   }
 
   $ $MERLIN server stop-server

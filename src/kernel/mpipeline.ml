@@ -95,7 +95,9 @@ type t =
     reader_cache_hit : bool ref;
     typer_cache_stats : Mtyper.typer_cache_stats ref;
     document_overrides : string Overrides.t lazy_t;
-    locate_overrides : Lexing.position Overrides.t lazy_t
+    document_overrides_cache_hit : bool ref;
+    locate_overrides : Lexing.position Overrides.t lazy_t;
+    locate_overrides_cache_hit : bool ref
   }
 
 let raw_source t = t.raw_source
@@ -178,26 +180,26 @@ module Ppx_phase = struct
   let f { parsetree; config; _ } = Mppx.rewrite parsetree config
   let title = "PPX phase"
 
-  module Single_fingerprint = struct
-    type t = { binary_id : File_id.t; args : string list; workdir : string }
+  module All_fingerprints = struct
+    module Single_fingerprint = struct
+      type t = { binary_id : File_id.t; args : string list; workdir : string }
 
-    let make ~binary ~args ~workdir =
-      let qualified_binary = Filename.concat workdir binary in
-      match File_id.get_res qualified_binary with
-      | Ok binary_id -> Ok { binary_id; args; workdir }
-      | Error err -> Error err
+      let make ~binary ~args ~workdir =
+        let qualified_binary = Filename.concat workdir binary in
+        match File_id.get_res qualified_binary with
+        | Ok binary_id -> Ok { binary_id; args; workdir }
+        | Error err -> Error err
 
-    let equal { binary_id = b1; args = a1; workdir = w1 }
-        { binary_id = b2; args = a2; workdir = w2 } =
-      File_id.check b1 b2
-      && List.same ~f:String.equal a1 a2
-      && String.equal w1 w2
-  end
+      let equal { binary_id = b1; args = a1; workdir = w1 }
+          { binary_id = b2; args = a2; workdir = w2 } =
+        File_id.check b1 b2
+        && List.same ~f:String.equal a1 a2
+        && String.equal w1 w2
+    end
 
-  module Fingerprint = struct
-    type t = Single_fingerprint.t list * reader_cache
+    type t = Single_fingerprint.t list
 
-    let make { config; reader_cache; _ } =
+    let make ~(config : Mconfig.t) =
       let rec all_fingerprints acc = function
         | [] -> acc
         | { Std.workdir; workval } :: tl -> (
@@ -209,8 +211,17 @@ module Ppx_phase = struct
                 all_fingerprints (Result.map ~f:(List.cons fp) acc) tl)
               (Single_fingerprint.make ~binary ~args ~workdir))
       in
-      Result.map (all_fingerprints (Ok []) config.ocaml.ppx) ~f:(fun l ->
-          (l, reader_cache))
+      all_fingerprints (Ok []) config.ocaml.ppx
+
+    let equal f1 f2 = List.equal ~eq:Single_fingerprint.equal f1 f2
+  end
+
+  module Fingerprint = struct
+    type t = All_fingerprints.t * reader_cache
+
+    let make { config; reader_cache; _ } =
+      Result.map (All_fingerprints.make ~config) ~f:(fun fingerprints ->
+          (fingerprints, reader_cache))
 
     let equal_cache_version cv1 cv2 =
       match (cv1, cv2) with
@@ -218,16 +229,67 @@ module Ppx_phase = struct
       | Version v1, Version v2 -> Int.equal v1 v2
 
     let equal (f1, rcv1) (f2, rcv2) =
-      equal_cache_version rcv1 rcv2
-      && List.equal ~eq:Single_fingerprint.equal f1 f2
+      equal_cache_version rcv1 rcv2 && All_fingerprints.equal f1 f2
   end
 end
 
 module Ppx_with_cache = Phase_cache.With_cache (Ppx_phase)
 
+module Document_overrides_phase = struct
+  type t = { ppx : Ppx.t lazy_t; config : Mconfig.t }
+  type output = string Overrides.t
+
+  let f { ppx; _ } =
+    (Lazy.force ppx).parsetree
+    |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Document
+
+  let title = "Document overrides phase"
+
+  (* Because processing [[@@@merlin.document]] depends on [Ppx_phase] (calling
+     [Lazy.force ppx] access [Ppx_phase]), using the same fingerprint as [Ppx_phase] is
+     equivalent to defining a fingerprint on [ppx.parsetree]. *)
+  module Fingerprint = struct
+    type t = Ppx_phase.All_fingerprints.t
+
+    let make { config; _ } = Ppx_phase.All_fingerprints.make ~config
+
+    let equal = Ppx_phase.All_fingerprints.equal
+  end
+end
+
+module Document_overrides_with_cache =
+  Phase_cache.With_cache (Document_overrides_phase)
+
+module Locate_overrides_phase = struct
+  type t = { ppx : Ppx.t lazy_t; config : Mconfig.t }
+  type output = Lexing.position Overrides.t
+
+  let f { ppx; _ } =
+    (Lazy.force ppx).parsetree
+    |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Locate
+
+  let title = "Locate overrides phase"
+
+  (* Because processing [[@@@merlin.locate]] depends on [Ppx_phase] (calling
+     [Lazy.force ppx] access [Ppx_phase]), using the same fingerprint as [Ppx_phase] is
+     equivalent to defining a fingerprint on [ppx.parsetree]. *)
+  module Fingerprint = struct
+    type t = Ppx_phase.All_fingerprints.t
+
+    let make { config; _ } = Ppx_phase.All_fingerprints.make ~config
+
+    let equal = Ppx_phase.All_fingerprints.equal
+  end
+end
+
+module Locate_overrides_with_cache =
+  Phase_cache.With_cache (Locate_overrides_phase)
+
 let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
     ?(ppx_time = ref 0.0) ?(typer_time = ref 0.0) ?(error_time = ref 0.0)
     ?(ppx_cache_hit = ref false) ?(reader_cache_hit = ref false)
+    ?(document_overrides_cache_hit = ref false)
+    ?(locate_overrides_cache_hit = ref false)
     ?(typer_cache_stats = ref Mtyper.Miss) ?for_completion config raw_source =
   let state =
     match state with
@@ -328,15 +390,21 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
   in
   let document_overrides =
     lazy
-      ((Lazy.force ppx).Ppx.parsetree
-      |> Overrides.get_overrides
-           ~attribute_name:Overrides.Attribute_name.Document)
+      (let (lazy { Reader.config; _ }) = reader in
+       let { Document_overrides_with_cache.output; cache_was_hit } =
+         Document_overrides_with_cache.apply { ppx; config }
+       in
+       document_overrides_cache_hit := cache_was_hit;
+       output)
   in
   let locate_overrides =
     lazy
-      ((Lazy.force ppx).Ppx.parsetree
-      |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Locate
-      )
+      (let (lazy { Reader.config; _ }) = reader in
+       let { Locate_overrides_with_cache.output; cache_was_hit } =
+         Locate_overrides_with_cache.apply { ppx; config }
+       in
+       locate_overrides_cache_hit := cache_was_hit;
+       output)
   in
   { config;
     state;
@@ -354,7 +422,9 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
     reader_cache_hit;
     typer_cache_stats;
     document_overrides;
-    locate_overrides
+    document_overrides_cache_hit;
+    locate_overrides;
+    locate_overrides_cache_hit
   }
 
 let make config source = process (Mconfig.normalize config) source
@@ -405,8 +475,6 @@ let cache_information t =
       ("cmt", cmt);
       ("cms", cms);
       ("cmi", cmi);
-      ( "document_overrides_forced",
-        `String (Bool.to_string (Lazy.is_val t.document_overrides)) );
-      ( "locate_overrides_forced",
-        `String (Bool.to_string (Lazy.is_val t.locate_overrides)) )
+      ("document_overrides_phase", fmt_bool !(t.document_overrides_cache_hit));
+      ("locate_overrides_phase", fmt_bool !(t.locate_overrides_cache_hit))
     ]
