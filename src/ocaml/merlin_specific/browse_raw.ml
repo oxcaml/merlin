@@ -484,6 +484,7 @@ let rec of_expression_desc loc = function
   | Texp_exclave e -> of_expression e
   | Texp_idx (block_access, unboxed_access) ->
     of_block_access block_access ** list_fold of_unboxed_access unboxed_access
+  | Texp_atomic_loc (exp, _, _, _, _) -> of_expression exp
   | Texp_hole _ -> id_fold
 
 (* We should consider taking into account param.fp_loc at some point, as it

@@ -90,6 +90,7 @@ let expr_tail_positions = function
   | Texp_mutvar _
   | Texp_setmutvar _
   | Texp_idx _
+  | Texp_atomic_loc _
   | Texp_hole _ -> []
   | Texp_match (_, _, cs, _) -> List.map cs ~f:(fun c -> Case c)
   | Texp_try (_, cs) -> List.map cs ~f:(fun c -> Case c)
