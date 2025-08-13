@@ -12,6 +12,12 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(* Merlin-only: make Misc_stdlib look like Misc.Stdlib to reduce diff *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+end
+
 type any_locality_mode = Any_locality_mode
 
 let equal_any_locality_mode Any_locality_mode Any_locality_mode = true

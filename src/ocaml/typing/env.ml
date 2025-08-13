@@ -3266,7 +3266,7 @@ let mark_extension_used usage ext =
   | mark -> mark usage
   | exception Not_found -> ()
 
-let mark_label_used usage ld =
+let mark_label_used usage uid =
   match stamped_find used_labels uid with
   | mark -> mark usage
   | exception Not_found -> ()

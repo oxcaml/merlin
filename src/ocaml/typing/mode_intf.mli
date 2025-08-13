@@ -582,7 +582,7 @@ module type S = sig
 
       val is_areality :
         'a Alloc.Axis.t ->
-        (('a, Locality.Const.t) Misc.eq, 'a Value.Axis.t) Either.t
+        (('a, Locality.Const.t) Misc_stdlib.eq, 'a Value.Axis.t) Either.t
     end
 
     val locality_as_regionality : Locality.Const.t -> Regionality.Const.t

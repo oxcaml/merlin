@@ -106,7 +106,7 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
 (* CR layouts v3.0: have a better error message
    for nullable jkinds.*)
 let type_sort ~why env _loc ty =
-  match Ctype.type_sort ~why env ty with
+  match Ctype.type_sort ~why ~fixed:false env ty with
   | Ok sort -> sort
   | Error _ -> Misc.fatal_error "merlin-jst: a representable layout is required here"
 
