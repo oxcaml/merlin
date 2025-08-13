@@ -3081,17 +3081,13 @@ module Format_history = struct
     | Mutable_var_assignment ->
       fprintf ppf "it's the type of a mutable variable used in an assignment"
     | Old_style_unboxed_type -> fprintf ppf "it's an [@@@@unboxed] type"
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-    | Merlin ->
-      fprintf ppf "merlin needed to create a fake AST node"
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-=======
     | Array_element -> fprintf ppf "it's the type of an array element"
     | Idx_element ->
       fprintf ppf
         "it's the element type (the second type parameter) for a@ block index \
          (idx or mut_idx)"
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+    | Merlin ->
+      fprintf ppf "merlin needed to create a fake AST node"
 
   let format_concrete_legacy_creation_reason ppf :
       History.concrete_legacy_creation_reason -> unit = function
@@ -3903,13 +3899,9 @@ module Debug_printers = struct
     | Peek_or_poke -> fprintf ppf "Peek_or_poke"
     | Mutable_var_assignment -> fprintf ppf "Mutable_var_assignment"
     | Old_style_unboxed_type -> fprintf ppf "Old_style_unboxed_type"
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-    | Merlin -> fprintf ppf "Merlin"
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-=======
     | Array_element -> fprintf ppf "Array_element"
     | Idx_element -> fprintf ppf "Idx_element"
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+    | Merlin -> fprintf ppf "Merlin"
 
   let concrete_legacy_creation_reason ppf :
       History.concrete_legacy_creation_reason -> unit = function

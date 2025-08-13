@@ -625,19 +625,7 @@ let array_mode exp elt_sort = match Typeopt.array_kind exp elt_sort with
   | Paddrarray | Pintarray ->
     (* non-generic, non-float arrays act as constructors *)
     Guard
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-  | Lambda.Punboxedfloatarray _ | Lambda.Punboxedintarray _
-  | Lambda.Punboxedvectorarray _
-  | Lambda.Pgcscannableproductarray _ | Lambda.Pgcignorableproductarray _ ->
-    Dereference
-=======
-  | Lambda.Punboxedfloatarray _ | Lambda.Punboxedoruntaggedintarray _
-  | Lambda.Punboxedvectorarray _
-  | Lambda.Pgcscannableproductarray _ | Lambda.Pgcignorableproductarray _ ->
-    Dereference
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
-  | Punboxedfloatarray _ | Punboxedintarray _
+  | Punboxedfloatarray _ | Punboxedoruntaggedintarray _
   | Punboxedvectorarray _
   | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
     Dereference

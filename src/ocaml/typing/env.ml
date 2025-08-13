@@ -3266,16 +3266,8 @@ let mark_extension_used usage ext =
   | mark -> mark usage
   | exception Not_found -> ()
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
 let mark_label_used usage ld =
-  match stamped_find used_labels ld.ld_uid with
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-let mark_label_used usage ld =
-  match Types.Uid.Tbl.find !used_labels ld.ld_uid with
-=======
-let mark_label_used usage uid =
-  match Types.Uid.Tbl.find !used_labels uid with
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+  match stamped_find used_labels uid with
   | mark -> mark usage
   | exception Not_found -> ()
 

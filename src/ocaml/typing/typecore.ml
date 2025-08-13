@@ -6638,22 +6638,13 @@ and type_expect_
         | Immutable ->
             Language_extension.assert_enabled ~loc Immutable_arrays ();
             Immutable
-    in
-    type_generic_array
-      ~loc
-      ~env
-      ~expected_mode
-      ~ty_expected
-      ~explanation
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-      ~mutability
-      ~attributes:sexp.pexp_attributes
-      sargl
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-        ~mutability
-        ~attributes:sexp.pexp_attributes
-        sargl
-=======
+      in
+      type_generic_array
+        ~loc
+        ~env
+        ~expected_mode
+        ~ty_expected
+        ~explanation
         ~mutability
         ~attributes:sexp.pexp_attributes
         sargl
@@ -6741,7 +6732,6 @@ and type_expect_
       exp_type = instance ty_expected;
       exp_attributes = sexp.pexp_attributes;
       exp_env = env }
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
   | Pexp_ifthenelse(scond, sifso, sifnot) ->
       let cond =
         type_expect env mode_max scond

@@ -3063,18 +3063,12 @@ fun_:
       { mkexp ~loc:$sloc (mkinfix e1 op e2) }
 ;
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-%public simple_expr:
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-simple_expr:
-=======
 unboxed_access:
   | DOTHASH mkrhs(label_longident)
       { Uaccess_unboxed_field $2 }
 ;
 
-simple_expr:
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+%public simple_expr:
   | LPAREN seq_expr RPAREN
       { reloc_exp ~loc:$sloc $2 }
   (*

@@ -103,34 +103,10 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
     needs to be a way to store sort vars on [Tconstr]s. That means
     either introducing a [Tpoly_constr], allow type parameters with
     sort info, or do something else. *)
-
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-(* CR layouts v2.8: Calling [type_legacy_sort] in [typeopt] is not ideal
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
-
-(* CR layouts v2.8: Calling [type_legacy_sort] in [typeopt] is not ideal
-=======
-let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
-
-(* CR layouts v2.8: Calling [type_sort] in [typeopt] is not ideal
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
-   and this function should be removed at some point. To do that, there
-   needs to be a way to store sort vars on [Tconstr]s. That means
-   either introducing a [Tpoly_constr], allow type parameters with
-   sort info, or do something else. *)
 (* CR layouts v3.0: have a better error message
    for nullable jkinds.*)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-let type_legacy_sort ~why env _loc ty =
-  match Ctype.type_legacy_sort ~why env ty with
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-let type_legacy_sort ~why env loc ty =
-  match Ctype.type_legacy_sort ~why env ty with
-=======
-let type_sort ~why env loc ty =
-  match Ctype.type_sort ~why ~fixed:false env ty with
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+let type_sort ~why env _loc ty =
+  match Ctype.type_sort ~why env ty with
   | Ok sort -> sort
   | Error _ -> Misc.fatal_error "merlin-jst: a representable layout is required here"
 
@@ -235,27 +211,9 @@ let array_kind_of_elt ~elt_sort env loc ty =
     | Some s -> s
     | None ->
       Jkind.Sort.default_for_transl_and_get
-        (type_legacy_sort ~why:Array_element env loc ty)
+        (type_sort ~why:Array_element env loc ty)
   in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
   let classify_product ty _sorts =
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
-          Vec128 | Vec256 | Vec512) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void ->
-    raise (Error (loc, Unsupported_void_in_array))
-=======
-  match s with
-  | Base Value -> Paddr_scannable
-  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
-          Untagged_immediate | Vec128 | Vec256 | Vec512) as c ->
-    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
-  | Base Void ->
-    raise (Error (loc, Unsupported_void_in_array))
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
     if is_always_gc_ignorable env ty then
       Pgcignorableproductarray ()
     else
@@ -267,36 +225,15 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Addr | Lazy -> Paddrarray
   | Int -> Pintarray
   | Unboxed_float f -> Punboxedfloatarray f
-  | Unboxed_int i -> Punboxedintarray i
+  | Unboxed_int Untagged_int -> Punboxedoruntaggedintarray Untagged_int
+  | Unboxed_int Unboxed_int64 -> Punboxedoruntaggedintarray Unboxed_int64
+  | Unboxed_int Unboxed_nativeint ->
+    Punboxedoruntaggedintarray Unboxed_nativeint
+  | Unboxed_int Unboxed_int32 -> Punboxedoruntaggedintarray Unboxed_int32
+  | Unboxed_int Untagged_int16 -> Punboxedoruntaggedintarray Untagged_int16
+  | Unboxed_int Untagged_int8 -> Punboxedoruntaggedintarray Untagged_int8
   | Unboxed_vector v -> Punboxedvectorarray v
   | Product c -> c
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-  | Base Value -> Pint_ignorable
-  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
-  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
-  | Base Bits8 -> Punboxedint_ignorable Unboxed_int8
-  | Base Bits16 -> Punboxedint_ignorable Unboxed_int16
-  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
-  | Base (Vec128 | Vec256 | Vec512) ->
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
-=======
-  | Base Value -> Pint_ignorable
-  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
-  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
-  | Base Bits8 -> Punboxedoruntaggedint_ignorable Untagged_int8
-  | Base Bits16 -> Punboxedoruntaggedint_ignorable Untagged_int16
-  | Base Bits32 -> Punboxedoruntaggedint_ignorable Unboxed_int32
-  | Base Bits64 -> Punboxedoruntaggedint_ignorable Unboxed_int64
-  | Base Word -> Punboxedoruntaggedint_ignorable Unboxed_nativeint
-  | Base Untagged_immediate -> Punboxedoruntaggedint_ignorable Untagged_int
-  | Base (Vec128 | Vec256 | Vec512) ->
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
   | Void ->
     (*= raise (Error (loc, Unsupported_void_in_array)) *)
     Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
@@ -313,7 +250,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
         (* raise (Error (loc, Product_iarrays_unsupported)) *)
         Misc.fatal_error "merlin-jst: product kind encountered in array_type_kind"
       | Pgenarray | Paddrarray | Pintarray | Pfloatarray | Punboxedfloatarray _
-      | Punboxedintarray _ | Punboxedvectorarray _  ->
+      | Punboxedoruntaggedintarray _ | Punboxedvectorarray _  ->
         kind
       end
   | Tconstr(p, [], _) when Path.same p Predef.path_floatarray ->
@@ -347,45 +284,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
         Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
       end
     | None ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-      Jkind.Sort.default_for_transl_and_get
-        (type_legacy_sort ~why:Array_element env loc ty)
-  in
-  let elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
-  let classify_product ty sorts =
-=======
-      Jkind.Sort.default_for_transl_and_get
-        (type_sort ~why:Array_element env loc ty)
-  in
-  let elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
-  let classify_product ty sorts =
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
       (*= raise (Error(loc,
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-  | Addr | Lazy -> Paddrarray
-  | Int -> Pintarray
-  | Unboxed_float f -> Punboxedfloatarray f
-  | Unboxed_int i -> Punboxedintarray i
-  | Unboxed_vector v -> Punboxedvectorarray v
-  | Product c -> c
-  | Void ->
-=======
-  | Addr | Lazy -> Paddrarray
-  | Int -> Pintarray
-  | Unboxed_float f -> Punboxedfloatarray f
-  | Unboxed_int Untagged_int -> Punboxedoruntaggedintarray Untagged_int
-  | Unboxed_int Unboxed_int64 -> Punboxedoruntaggedintarray Unboxed_int64
-  | Unboxed_int Unboxed_nativeint ->
-    Punboxedoruntaggedintarray Unboxed_nativeint
-  | Unboxed_int Unboxed_int32 -> Punboxedoruntaggedintarray Unboxed_int32
-  | Unboxed_int Untagged_int16 -> Punboxedoruntaggedintarray Untagged_int16
-  | Unboxed_int Untagged_int8 -> Punboxedoruntaggedintarray Untagged_int8
-  | Unboxed_vector v -> Punboxedvectorarray v
-  | Product c -> c
-  | Void ->
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
         Opaque_array_non_value {
           array_type = ty;
           elt_kinding_failure = None;
@@ -461,8 +360,9 @@ let value_kind_of_value_jkind env jkind =
   let layout = Jkind.get_layout_defaulting_to_value jkind in
   (* In other places, we use [Ctype.type_jkind_purely_if_principal]. Here, we omit
      the principality check, as we're just trying to compute optimizations. *)
-  let jkind_of_type ty = Some (Ctype.type_jkind_purely env ty) in
-  let externality_upper_bound = Jkind.get_externality_upper_bound ~jkind_of_type jkind in
+  let context = Ctype.mk_jkind_context_always_principal env in
+  let externality_upper_bound =
+    Jkind.get_externality_upper_bound ~context jkind in
   match layout, externality_upper_bound with
   | Base Value, External -> Pintval
   | Base Value, External64 ->
@@ -470,8 +370,8 @@ let value_kind_of_value_jkind env jkind =
   | Base Value, Internal -> Pgenval
   | Any, _
   | Product _, _
-  | Base (Void | Float64 | Float32 | Word | Bits8 | Bits16 | Bits32 | Bits64 |
-          Vec128 | Vec256 | Vec512) , _ ->
+  | Base (Void | Untagged_immediate | Float64 | Float32 | Word | Bits8 |
+          Bits16 | Bits32 | Bits64 | Vec128 | Vec256 | Vec512) , _ ->
     Misc.fatal_error "expected a layout of value"
 
 (* [value_kind] has a pre-condition that it is only called on values.  With the
@@ -552,9 +452,9 @@ let nullable raw_kind = { raw_kind; nullable = Nullable }
    have a jkind. We should pick one, or rationalize why there are two.
 *)
 let add_nullability_from_jkind env jkind raw_kind =
-  let jkind_of_type ty = Some (Ctype.type_jkind_purely env ty) in
+  let context = Ctype.mk_jkind_context_always_principal env in
   let nullable =
-    match Jkind.get_nullability ~jkind_of_type jkind with
+    match Jkind.get_nullability ~context jkind with
     | Non_null -> Non_nullable
     | Maybe_null -> Nullable
   in
@@ -783,6 +683,7 @@ and value_kind_mixed_block_field env ~loc ~visited ~depth ~num_nodes_visited
   | Vec256 -> num_nodes_visited, Vec256
   | Vec512 -> num_nodes_visited, Vec512
   | Word -> num_nodes_visited, Word
+  | Untagged_immediate -> num_nodes_visited, Untagged_immediate
   | Product fs ->
     let num_nodes_visited, kinds =
       Array.fold_left_map (fun num_nodes_visited field ->
@@ -937,21 +838,7 @@ and value_kind_variant env ~loc ~visited ~depth ~num_nodes_visited
         match non_consts with
         | [] -> assert false  (* See [List.for_all is_constant], above *)
         | _::_ ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
           (num_nodes_visited, Pvariant { consts; non_consts })
-||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
-      | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
-        raise (Error (loc, Product_iarrays_unsupported))
-      | Pgenarray | Paddrarray | Pintarray | Pfloatarray | Punboxedfloatarray _
-      | Punboxedintarray _ | Punboxedvectorarray _  ->
-        kind
-=======
-      | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
-        raise (Error (loc, Product_iarrays_unsupported))
-      | Pgenarray | Paddrarray | Pintarray | Pfloatarray | Punboxedfloatarray _
-      | Punboxedoruntaggedintarray _ | Punboxedvectorarray _  ->
-        kind
->>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
       end
     in
     num_nodes_visited, non_nullable raw_kind
