@@ -8403,7 +8403,7 @@ and type_label_access
         lbl_name = "";
         lbl_res = ty_exp;
         lbl_arg = newvar arg_kind;
-        lbl_mut = Mutable Mode.Value.Comonadic.legacy;
+        lbl_mut = Mutable { mode = Mode.Value.Comonadic.legacy; atomic = Nonatomic };
         lbl_modalities = Mode.Modality.Value.Const.id;
         lbl_pos = 0;
         lbl_all = [||];

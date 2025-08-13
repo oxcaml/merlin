@@ -3261,8 +3261,10 @@ block_access:
       | _ ->
         raise Syntaxerr.(Error(Block_access_bad_paren(make_loc $loc(_p))))
     }
+  (*
   | DOT ident _p=LPAREN seq_expr _e=error
     { indexop_unclosed_error $loc(_p) Paren $loc(_e) }
+  *)
 ;
 
 %inline simple_expr_:
