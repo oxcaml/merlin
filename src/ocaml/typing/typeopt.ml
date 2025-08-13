@@ -104,15 +104,33 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
     either introducing a [Tpoly_constr], allow type parameters with
     sort info, or do something else. *)
 
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
 (* CR layouts v2.8: Calling [type_legacy_sort] in [typeopt] is not ideal
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
+
+(* CR layouts v2.8: Calling [type_legacy_sort] in [typeopt] is not ideal
+=======
+let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
+
+(* CR layouts v2.8: Calling [type_sort] in [typeopt] is not ideal
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
    and this function should be removed at some point. To do that, there
    needs to be a way to store sort vars on [Tconstr]s. That means
    either introducing a [Tpoly_constr], allow type parameters with
    sort info, or do something else. *)
 (* CR layouts v3.0: have a better error message
    for nullable jkinds.*)
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
 let type_legacy_sort ~why env _loc ty =
   match Ctype.type_legacy_sort ~why env ty with
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+let type_legacy_sort ~why env loc ty =
+  match Ctype.type_legacy_sort ~why env ty with
+=======
+let type_sort ~why env loc ty =
+  match Ctype.type_sort ~why ~fixed:false env ty with
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
   | Ok sort -> sort
   | Error _ -> Misc.fatal_error "merlin-jst: a representable layout is required here"
 
@@ -125,7 +143,7 @@ type 'a classification =
   | Float
   | Void
   | Unboxed_float of unboxed_float
-  | Unboxed_int of unboxed_integer
+  | Unboxed_int of Primitive.unboxed_or_untagged_integer
   | Unboxed_vector of unboxed_vector
   | Lazy
   | Addr  (* any value except a float or a lazy *)
@@ -139,7 +157,11 @@ let classify ~classify_product env ty sort : _ classification =
   let ty = scrape_ty env ty in
   match (sort : Jkind.Sort.Const.t) with
   | Base Value -> begin
-  if is_always_gc_ignorable env ty then Int
+  (* CR or_null: [immediate_or_null] arrays can be intarrays once that is
+     supported by the middle-end *)
+  if is_always_gc_ignorable env ty
+    && Ctype.check_type_nullability env ty Non_null
+  then Int
   else match get_desc ty with
   | Tvar _ | Tunivar _ ->
       Any
@@ -195,14 +217,15 @@ let classify ~classify_product env ty sort : _ classification =
   end
   | Base Float64 -> Unboxed_float Unboxed_float64
   | Base Float32 -> Unboxed_float Unboxed_float32
-  | Base Bits8 -> Unboxed_int Unboxed_int8
-  | Base Bits16 -> Unboxed_int Unboxed_int16
+  | Base Bits8 -> Unboxed_int Untagged_int8
+  | Base Bits16 -> Unboxed_int Untagged_int16
   | Base Bits32 -> Unboxed_int Unboxed_int32
   | Base Bits64 -> Unboxed_int Unboxed_int64
   | Base Vec128 -> Unboxed_vector Unboxed_vec128
   | Base Vec256 -> Unboxed_vector Unboxed_vec256
   | Base Vec512 -> Unboxed_vector Unboxed_vec512
   | Base Word -> Unboxed_int Unboxed_nativeint
+  | Base Untagged_immediate -> Unboxed_int Untagged_int
   | Base Void -> Void
   | Product c -> Product (classify_product ty c)
 
@@ -214,7 +237,25 @@ let array_kind_of_elt ~elt_sort env loc ty =
       Jkind.Sort.default_for_transl_and_get
         (type_legacy_sort ~why:Array_element env loc ty)
   in
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
   let classify_product ty _sorts =
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+  match s with
+  | Base Value -> Paddr_scannable
+  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
+          Vec128 | Vec256 | Vec512) as c ->
+    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
+  | Base Void ->
+    raise (Error (loc, Unsupported_void_in_array))
+=======
+  match s with
+  | Base Value -> Paddr_scannable
+  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
+          Untagged_immediate | Vec128 | Vec256 | Vec512) as c ->
+    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
+  | Base Void ->
+    raise (Error (loc, Unsupported_void_in_array))
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
     if is_always_gc_ignorable env ty then
       Pgcignorableproductarray ()
     else
@@ -229,6 +270,33 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Unboxed_int i -> Punboxedintarray i
   | Unboxed_vector v -> Punboxedvectorarray v
   | Product c -> c
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+  | Base Value -> Pint_ignorable
+  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
+  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
+  | Base Bits8 -> Punboxedint_ignorable Unboxed_int8
+  | Base Bits16 -> Punboxedint_ignorable Unboxed_int16
+  | Base Bits32 -> Punboxedint_ignorable Unboxed_int32
+  | Base Bits64 -> Punboxedint_ignorable Unboxed_int64
+  | Base Word -> Punboxedint_ignorable Unboxed_nativeint
+  | Base (Vec128 | Vec256 | Vec512) ->
+    raise (Error (loc, Unsupported_vector_in_product_array))
+  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
+=======
+  | Base Value -> Pint_ignorable
+  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
+  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
+  | Base Bits8 -> Punboxedoruntaggedint_ignorable Untagged_int8
+  | Base Bits16 -> Punboxedoruntaggedint_ignorable Untagged_int16
+  | Base Bits32 -> Punboxedoruntaggedint_ignorable Unboxed_int32
+  | Base Bits64 -> Punboxedoruntaggedint_ignorable Unboxed_int64
+  | Base Word -> Punboxedoruntaggedint_ignorable Unboxed_nativeint
+  | Base Untagged_immediate -> Punboxedoruntaggedint_ignorable Untagged_int
+  | Base (Vec128 | Vec256 | Vec512) ->
+    raise (Error (loc, Unsupported_vector_in_product_array))
+  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
   | Void ->
     (*= raise (Error (loc, Unsupported_void_in_array)) *)
     Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
@@ -279,7 +347,45 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
         Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
       end
     | None ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+      Jkind.Sort.default_for_transl_and_get
+        (type_legacy_sort ~why:Array_element env loc ty)
+  in
+  let elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
+  let classify_product ty sorts =
+=======
+      Jkind.Sort.default_for_transl_and_get
+        (type_sort ~why:Array_element env loc ty)
+  in
+  let elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
+  let classify_product ty sorts =
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
       (*= raise (Error(loc,
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+  | Addr | Lazy -> Paddrarray
+  | Int -> Pintarray
+  | Unboxed_float f -> Punboxedfloatarray f
+  | Unboxed_int i -> Punboxedintarray i
+  | Unboxed_vector v -> Punboxedvectorarray v
+  | Product c -> c
+  | Void ->
+=======
+  | Addr | Lazy -> Paddrarray
+  | Int -> Pintarray
+  | Unboxed_float f -> Punboxedfloatarray f
+  | Unboxed_int Untagged_int -> Punboxedoruntaggedintarray Untagged_int
+  | Unboxed_int Unboxed_int64 -> Punboxedoruntaggedintarray Unboxed_int64
+  | Unboxed_int Unboxed_nativeint ->
+    Punboxedoruntaggedintarray Unboxed_nativeint
+  | Unboxed_int Unboxed_int32 -> Punboxedoruntaggedintarray Unboxed_int32
+  | Unboxed_int Untagged_int16 -> Punboxedoruntaggedintarray Untagged_int16
+  | Unboxed_int Untagged_int8 -> Punboxedoruntaggedintarray Untagged_int8
+  | Unboxed_vector v -> Punboxedvectorarray v
+  | Product c -> c
+  | Void ->
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
         Opaque_array_non_value {
           array_type = ty;
           elt_kinding_failure = None;
@@ -831,7 +937,21 @@ and value_kind_variant env ~loc ~visited ~depth ~num_nodes_visited
         match non_consts with
         | [] -> assert false  (* See [List.for_all is_constant], above *)
         | _::_ ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
           (num_nodes_visited, Pvariant { consts; non_consts })
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+      | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
+        raise (Error (loc, Product_iarrays_unsupported))
+      | Pgenarray | Paddrarray | Pintarray | Pfloatarray | Punboxedfloatarray _
+      | Punboxedintarray _ | Punboxedvectorarray _  ->
+        kind
+=======
+      | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
+        raise (Error (loc, Product_iarrays_unsupported))
+      | Pgenarray | Paddrarray | Pintarray | Pfloatarray | Punboxedfloatarray _
+      | Punboxedoruntaggedintarray _ | Punboxedvectorarray _  ->
+        kind
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
       end
     in
     num_nodes_visited, non_nullable raw_kind
@@ -930,17 +1050,23 @@ let[@inline always] rec layout_of_const_sort_generic ~value_kind ~error
   | Base Float64 when Language_extension.(is_at_least Layouts Stable) ->
     Lambda.Punboxed_float Unboxed_float64
   | Base Word when Language_extension.(is_at_least Layouts Stable) ->
-    Lambda.Punboxed_int Unboxed_nativeint
+    Lambda.Punboxed_or_untagged_integer Unboxed_nativeint
+  | Base Untagged_immediate as const ->
+    if
+      Language_extension.(is_at_least Layouts Beta)
+      && Language_extension.(is_at_least Small_numbers Beta) then
+      Lambda.Punboxed_or_untagged_integer Untagged_int
+    else error const
   | Base Bits8 when Language_extension.(is_at_least Layouts Beta) &&
                     Language_extension.(is_at_least Small_numbers Beta) ->
-    Lambda.Punboxed_int Unboxed_int8
+    Lambda.Punboxed_or_untagged_integer Untagged_int8
   | Base Bits16 when Language_extension.(is_at_least Layouts Beta) &&
                      Language_extension.(is_at_least Small_numbers Beta) ->
-    Lambda.Punboxed_int Unboxed_int16
+    Lambda.Punboxed_or_untagged_integer Untagged_int16
   | Base Bits32 when Language_extension.(is_at_least Layouts Stable) ->
-    Lambda.Punboxed_int Unboxed_int32
+    Lambda.Punboxed_or_untagged_integer Unboxed_int32
   | Base Bits64 when Language_extension.(is_at_least Layouts Stable) ->
-    Lambda.Punboxed_int Unboxed_int64
+    Lambda.Punboxed_or_untagged_integer Unboxed_int64
   | Base Float32 when Language_extension.(is_at_least Layouts Stable) ->
     Lambda.Punboxed_float Unboxed_float32
   | Base Vec128 when Language_extension.(is_at_least Layouts Stable) &&
@@ -961,8 +1087,8 @@ let[@inline always] rec layout_of_const_sort_generic ~value_kind ~error
       (List.map (layout_of_const_sort_generic
                    ~value_kind:(lazy Lambda.generic_value) ~error)
          consts)
-  | ((  Base (Void | Float32 | Float64 | Word | Bits8 | Bits16 | Bits32
-             | Bits64 | Vec128 | Vec256 | Vec512)
+  | ((  Base (Void | Float32 | Float64 | Word | Bits8 |
+             Bits16 | Bits32 | Bits64 | Vec128 | Vec256 | Vec512)
       | Product _) as const) ->
     error const
 
@@ -981,7 +1107,8 @@ let layout env loc sort ty =
       | Base (Vec128 | Vec256 | Vec512) as const ->
         raise (Error (loc, Simd_sort_without_extension
                              (Jkind.Sort.of_const const, Some ty)))
-      | (Base (Float64 | Word | Bits8 | Bits16 | Bits32 | Bits64) | Product _)
+      | (Base (Float64 | Word | Untagged_immediate | Bits8 | Bits16 | Bits32 |
+               Bits64) | Product _)
         as const ->
         raise (Error (loc, Sort_without_extension (Jkind.Sort.of_const const,
                                                    Stable,
@@ -1002,7 +1129,8 @@ let layout_of_sort loc sort =
     | Base (Vec128 | Vec256 | Vec512) as const ->
       raise (Error (loc, Simd_sort_without_extension
                            (Jkind.Sort.of_const const, None)))
-    | (Base (Float64 | Word | Bits8 | Bits16 | Bits32 | Bits64) | Product _)
+    | (Base (Float64 | Word | Untagged_immediate | Bits8 | Bits16 | Bits32 |
+             Bits64) | Product _)
       as const ->
       raise (Error (loc, Sort_without_extension
                            (Jkind.Sort.of_const const, Stable, None)))
@@ -1095,14 +1223,14 @@ let rec layout_union l1 l2 =
       Pvalue (value_kind_union layout1 layout2)
   | Punboxed_float f1, Punboxed_float f2 ->
       if Primitive.equal_unboxed_float f1 f2 then l1 else Ptop
-  | Punboxed_int bi1, Punboxed_int bi2 ->
-      if Primitive.equal_unboxed_integer bi1 bi2 then l1 else Ptop
+  | Punboxed_or_untagged_integer bi1, Punboxed_or_untagged_integer bi2 ->
+      if Primitive.equal_unboxed_or_untagged_integer bi1 bi2 then l1 else Ptop
   | Punboxed_vector vi1, Punboxed_vector vi2 ->
       if Primitive.equal_unboxed_vector vi1 vi2 then l1 else Ptop
   | Punboxed_product layouts1, Punboxed_product layouts2 ->
       if List.compare_lengths layouts1 layouts2 <> 0 then Ptop
       else Punboxed_product (List.map2 layout_union layouts1 layouts2)
-  | (Ptop | Pvalue _ | Punboxed_float _ | Punboxed_int _ |
+  | (Ptop | Pvalue _ | Punboxed_float _ | Punboxed_or_untagged_integer _ |
      Punboxed_vector _ | Punboxed_product _),
     _ ->
       Ptop

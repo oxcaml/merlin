@@ -349,6 +349,18 @@ val get_tracing_probe_payload :
 (* Merlin specific *)
 
 (** The name of the attribute used to identify punned let expressions. When a let
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
     expression is punned, an attribute with this name is added to the pattern and
     expression nodes by the parser. *)
 val merlin_let_punned : string
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+*)
+val get_tracing_probe_payload :
+  Parsetree.payload -> (tracing_probe, unit) result
+=======
+*)
+val get_tracing_probe_payload :
+  Parsetree.payload -> (tracing_probe, unit) result
+
+val has_atomic: Parsetree.attributes -> bool
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0

@@ -234,7 +234,8 @@ let classify_expression : Typedtree.expression -> sd =
     | Texp_apply _ ->
         Dynamic
 
-    | Texp_array _ ->
+    | Texp_array _
+    | Texp_idx _ ->
         Static
     | Texp_pack mexp ->
         classify_module_expression env mexp
@@ -624,6 +625,18 @@ let array_mode exp elt_sort = match Typeopt.array_kind exp elt_sort with
   | Paddrarray | Pintarray ->
     (* non-generic, non-float arrays act as constructors *)
     Guard
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+  | Lambda.Punboxedfloatarray _ | Lambda.Punboxedintarray _
+  | Lambda.Punboxedvectorarray _
+  | Lambda.Pgcscannableproductarray _ | Lambda.Pgcignorableproductarray _ ->
+    Dereference
+=======
+  | Lambda.Punboxedfloatarray _ | Lambda.Punboxedoruntaggedintarray _
+  | Lambda.Punboxedvectorarray _
+  | Lambda.Pgcscannableproductarray _ | Lambda.Pgcignorableproductarray _ ->
+    Dereference
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
   | Punboxedfloatarray _ | Punboxedintarray _
   | Punboxedvectorarray _
   | Pgcscannableproductarray _ | Pgcignorableproductarray _ ->
@@ -739,6 +752,24 @@ let rec expression : Typedtree.expression -> term_judg =
     | Texp_array (_, elt_sort, exprs, _) ->
       let elt_sort = Jkind.Sort.default_for_transl_and_get elt_sort in
       list expression exprs << array_mode exp elt_sort
+    | Texp_idx (ba, _uas) ->
+      let block_access = function
+        | Baccess_field _ -> empty
+        | Baccess_array
+            { mut = _
+            ; index_kind = _
+            ; index
+            ; base_ty = _
+            ; elt_ty = _
+            ; elt_sort = _ } ->
+          expression index << Dereference
+        | Baccess_block (_, idx) ->
+          expression idx << Dereference
+      in
+      (* All unboxed accesses are nonrecursive, but we include the below match
+         in case we add new unboxed access types *)
+      let _unboxed_access = function Uaccess_unboxed_field _ -> empty in
+      block_access ba
     | Texp_list_comprehension { comp_body; comp_clauses } ->
       join ((expression comp_body << Guard) ::
             comprehension_clauses comp_clauses)
@@ -763,7 +794,8 @@ let rec expression : Typedtree.expression -> term_judg =
                 (match mixed_shape.(i) with
                  | Value | Float_boxed -> Guard
                  | Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64
-                 | Vec128 | Vec256 | Vec512 | Word | Void | Product _ ->
+                 | Vec128 | Vec256 | Vec512 | Word | Untagged_immediate
+                 | Void | Product _ ->
                    Dereference))
       in
       let arg i e = expression e << arg_mode i in
@@ -790,7 +822,8 @@ let rec expression : Typedtree.expression -> term_judg =
             (match mixed_shape.(i) with
              | Value | Float_boxed -> Guard
              | Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64
-             | Vec128 | Vec256 | Vec512 | Word | Void | Product _ ->
+             | Vec128 | Vec256 | Vec512 | Word | Untagged_immediate
+             | Void | Product _ ->
                Dereference)
         in
         let field (label, field_def) =

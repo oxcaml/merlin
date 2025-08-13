@@ -74,6 +74,7 @@ let warn_unused () =
    misplaced attribute warnings. *)
 let builtin_attrs =
   [ "inline"
+  ; "atomic"
   ; "inlined"
   ; "specialise"
   ; "specialised"
@@ -1137,7 +1138,13 @@ let get_tracing_probe_payload (payload : Parsetree.payload) =
     | _ -> Error ()
   in
   Ok { name; name_loc; enabled_at_init; arg }
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
 
 (* Merlin specific *)
 
 let merlin_let_punned = "merlin.let-punned"
+||||||| ocaml-flambda/flambda-backend:2314e9cbd6ae3e5c70fa08e95d49bb9dc27cc812
+=======
+
+let has_atomic attrs = has_attribute "atomic" attrs
+>>>>>>> ocaml-flambda/flambda-backend:342a11315b4fe664b04768b578920d7a8d2077a0
