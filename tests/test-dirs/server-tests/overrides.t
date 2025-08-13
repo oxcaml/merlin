@@ -7,12 +7,12 @@
   > local file="$2"
   > 
   > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq '{value: .value, locate_overrides_phase: .cache.locate_overrides_phase}' \
+  >    | jq '{value: .value, cache: .cache}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
   > 
   > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file"  < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq '{value: .value, document_overrides_phase: .cache.document_overrides_phase}' \
+  >    | jq '{value: .value, cache: .cache}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
   > 
@@ -25,6 +25,7 @@ All following tests are performed in /test and merlin has access to /test/.merli
   $ cd test
   $ cat >.merlin <<EOF
   > SOURCE_ROOT ../
+  > USE_PPX_CACHE
   > EOF
 
 Test no .merlin, relative path
@@ -75,11 +76,47 @@ Test no .merlin, relative path
         "col": 21
       }
     },
-    "locate_overrides_phase": "miss"
+    "cache": {
+      "reader_phase": "miss",
+      "ppx_phase": "miss",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
+      "locate_overrides_phase": "miss"
+    }
   }
   [merlin document] output: {
     "value": "@@@do_nothing expands into nothing",
-    "document_overrides_phase": "miss"
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "hit",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
+      "locate_overrides_phase": "miss"
+    }
   }
 
   $ test_merlin_overrides "1:4" "./simple.ml"
@@ -91,11 +128,45 @@ Test no .merlin, relative path
         "col": 21
       }
     },
-    "locate_overrides_phase": "hit"
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "hit",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
+      "locate_overrides_phase": "hit"
+    }
   }
   [merlin document] output: {
     "value": "@@@do_nothing expands into nothing",
-    "document_overrides_phase": "hit"
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "miss",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "hit",
+      "locate_overrides_phase": "miss"
+    }
   }
-
-  $ $MERLIN server stop-server
