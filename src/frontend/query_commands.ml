@@ -534,10 +534,10 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
     let pos = Mpipeline.get_lexing_pos pipeline pos in
     let from_document_override_attribute =
       pipeline |> Mpipeline.document_overrides |> Overrides.find ~cursor:pos
+      |> Option.map ~f:Overrides.Override.payload
     in
     match from_document_override_attribute with
-    | Some document_override ->
-      `Found (Overrides.Override.payload document_override)
+    | Some document_override -> `Found document_override
     | None ->
       let typer = Mpipeline.typer_result pipeline in
       let local_defs = Mtyper.get_typedtree typer in
@@ -580,10 +580,10 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
     let mconfig = Mpipeline.final_config pipeline in
     let from_locate_override_attribute =
       pipeline |> Mpipeline.locate_overrides |> Overrides.find ~cursor:pos
+      |> Option.map ~f:Overrides.Override.payload
     in
     match from_locate_override_attribute with
-    | Some locate_override ->
-      let source_position = Overrides.Override.payload locate_override in
+    | Some source_position ->
       let absolute_file_path =
         (* Path returned is always an absolute path because [mconfig.merlin.source_root]
            is absolute (see [dot_merlin_reader.ml#prepend_config]) and, when
