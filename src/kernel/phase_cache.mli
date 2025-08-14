@@ -29,7 +29,13 @@ module type S = sig
 end
 
 module With_cache (Phase : S) : sig
-  type t = { output : Phase.output; cache_was_hit : bool }
+  module Version : sig
+    type t
+
+    val equal : t -> t -> bool
+  end
+
+  type t = { output : Phase.output; cache_was_hit : bool; version : Version.t }
 
   (** [apply ~cache_disabling ~force_invalidation phase_input] runs the phase
       computation [Phase.f phase_input], if there's some [cache_disabling].

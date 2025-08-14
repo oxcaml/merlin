@@ -6,12 +6,12 @@
   > local position="$1"
   > local file="$2"
   > 
-  > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
+  > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" -log-file - -log-section "maxwang"< "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
   >    | jq '{value: .value, cache: .cache}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
   > 
-  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file"  < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
+  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file" -log-file - -log-section "maxwang" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
   >    | jq '{value: .value, cache: .cache}' \
   >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
   >    | sed -e 's:\\n:\n:g')
@@ -154,7 +154,7 @@ Test cache hits on second use
     "value": "@@@do_nothing expands into nothing",
     "cache": {
       "reader_phase": "hit",
-      "ppx_phase": "miss",
+      "ppx_phase": "hit",
       "typer": "miss",
       "cmt": {
         "hit": 0,
@@ -208,7 +208,7 @@ Test same file, different position
     "value": "@@@do_nothing expands into nothing",
     "cache": {
       "reader_phase": "hit",
-      "ppx_phase": "miss",
+      "ppx_phase": "hit",
       "typer": "miss",
       "cmt": {
         "hit": 0,
@@ -223,6 +223,61 @@ Test same file, different position
         "miss": 0
       },
       "document_overrides_phase": "hit",
+      "locate_overrides_phase": "miss"
+    }
+  }
+
+Test cache invalidation
+
+  $ cat >./simple.ml <<EOF
+  > [@@@do_nothing]
+  > EOF
+
+  $ test_merlin_overrides "1:4" "./simple.ml"
+  [merlin locate] output: {
+    "value": "Not in environment 'do_nothing'",
+    "cache": {
+      "reader_phase": "miss",
+      "ppx_phase": "miss",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
+      "locate_overrides_phase": "miss"
+    }
+  }
+  [merlin document] output: {
+    "value": "Not in environment 'do_nothing'",
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "hit",
+      "typer": {
+        "reused": 1,
+        "typed": 0
+      },
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
       "locate_overrides_phase": "miss"
     }
   }

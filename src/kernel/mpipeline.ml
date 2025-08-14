@@ -64,18 +64,166 @@ module Cache = struct
       state
 end
 
+module Reader_phase = struct
+  type t =
+    { source : Msource.t * Mreader.parsetree option;
+      for_completion : Msource.position option;
+      config : Mconfig.t
+    }
+
+  type output = Mreader.result
+
+  let f { source; for_completion; config } =
+    Mreader.parse ?for_completion config source
+
+  let title = "Reader phase"
+
+  module Fingerprint = struct
+    type t = Msource.Digest.t
+
+    let make { source = source, _; _ } = Ok (Msource.Digest.make source)
+    let equal = Msource.Digest.equal
+  end
+end
+
+module Reader_with_cache = Phase_cache.With_cache (Reader_phase)
+
+module Ppx_phase = struct
+  type t =
+    { parsetree : Mreader.parsetree;
+      config : Mconfig.t;
+      reader_cache : Reader_with_cache.Version.t
+    }
+  type output = Mreader.parsetree
+
+  let f { parsetree; config; _ } = Mppx.rewrite parsetree config
+  let title = "PPX phase"
+
+  module Single_fingerprint = struct
+    type t = { binary_id : File_id.t; args : string list; workdir : string }
+
+    let make ~binary ~args ~workdir =
+      let qualified_binary = Filename.concat workdir binary in
+      match File_id.get_res qualified_binary with
+      | Ok binary_id -> Ok { binary_id; args; workdir }
+      | Error err -> Error err
+
+    let equal { binary_id = b1; args = a1; workdir = w1 }
+        { binary_id = b2; args = a2; workdir = w2 } =
+      File_id.check b1 b2
+      && List.same ~f:String.equal a1 a2
+      && String.equal w1 w2
+  end
+
+  (* Currently the cache is invalidated even for source changes that don't
+     change the parsetree. To avoid that, we'd have to digest the
+     parsetree in the cache. *)
+  module Fingerprint = struct
+    type t = Single_fingerprint.t list * Reader_with_cache.Version.t
+
+    let make { config; reader_cache; _ } =
+      let rec all_fingerprints acc = function
+        | [] -> acc
+        | { Std.workdir; workval } :: tl -> (
+          match Std.String.split_on_char ~sep:' ' workval with
+          | [] -> Error ("unhandled workval" ^ workval)
+          | binary :: args ->
+            Result.bind
+              ~f:(fun fp ->
+                all_fingerprints (Result.map ~f:(List.cons fp) acc) tl)
+              (Single_fingerprint.make ~binary ~args ~workdir))
+      in
+
+      Result.map (all_fingerprints (Ok []) config.ocaml.ppx)
+        ~f:(fun fingerprints -> (fingerprints, reader_cache))
+
+    let equal (f1, rcv1) (f2, rcv2) =
+      Reader_with_cache.Version.equal rcv1 rcv2
+      && List.equal ~eq:Single_fingerprint.equal f1 f2
+  end
+end
+
+module Ppx_with_cache = Phase_cache.With_cache (Ppx_phase)
+
+module Overrides_cache = struct
+  module type S = sig
+    type t
+
+    val title : string
+    val attribute_name : t Overrides.Attribute_name.t
+  end
+
+  module Make (Attribute : S) = struct
+    type t =
+      { ppx_parsetree : Mreader.parsetree;
+        config : Mconfig.t;
+        ppx_cache_version : Ppx_with_cache.Version.t
+      }
+    type output = Attribute.t Overrides.t
+
+    let f { ppx_parsetree; _ } =
+      ppx_parsetree
+      |> Overrides.get_overrides ~attribute_name:Attribute.attribute_name
+
+    let title = Attribute.title
+
+    (* Because processing [[@@@merlin.document]] depends on [Ppx_phase] (calling
+       [Lazy.force ppx] access [Ppx_phase]), using the cache version outputted by
+       [Ppx_phase] is equivalent to using the same Fingerprint as [Ppx_phase]. *)
+    module Fingerprint = struct
+      type t = Ppx_with_cache.Version.t
+
+      let make { ppx_cache_version; _ } = Result.ok ppx_cache_version
+
+      let equal = Ppx_with_cache.Version.equal
+    end
+  end
+
+  module Document = struct
+    type t = string
+
+    let title = "Document overrides phase"
+
+    let attribute_name = Overrides.Attribute_name.Document
+  end
+  module Locate = struct
+    type t = Lexing.position
+
+    let title = "Locate overrides phase"
+
+    let attribute_name = Overrides.Attribute_name.Locate
+  end
+
+  module Document_overrides_phase = Make (Document)
+  module Locate_overrides_phase = Make (Locate)
+end
+
+module Document_overrides_with_cache =
+  Phase_cache.With_cache (Overrides_cache.Document_overrides_phase)
+
+module Locate_overrides_with_cache =
+  Phase_cache.With_cache (Overrides_cache.Locate_overrides_phase)
+
 module Typer = struct
   type t = { errors : exn list lazy_t; result : Mtyper.result }
 end
 
 module Ppx = struct
   type t =
-    { config : Mconfig.t; errors : exn list; parsetree : Mreader.parsetree }
+    { config : Mconfig.t;
+      errors : exn list;
+      parsetree : Mreader.parsetree;
+      cache_version : Ppx_with_cache.Version.t
+    }
 end
 
 module Reader = struct
   type t =
-    { result : Mreader.result; config : Mconfig.t; cache_version : int option }
+    { result : Mreader.result;
+      config : Mconfig.t;
+      cache_version : Reader_with_cache.Version.t;
+      cache_disabling : string option
+    }
 end
 
 type t =
@@ -140,154 +288,6 @@ let typer_errors t = Lazy.force (typer t).Typer.errors
 let document_overrides t = Lazy.force t.document_overrides
 let locate_overrides t = Lazy.force t.locate_overrides
 
-module Reader_phase = struct
-  type t =
-    { source : Msource.t * Mreader.parsetree option;
-      for_completion : Msource.position option;
-      config : Mconfig.t
-    }
-
-  type output = { result : Mreader.result; cache_version : int }
-
-  let f =
-    let cache_version = ref 0 in
-    fun { source; for_completion; config } ->
-      let result = Mreader.parse ?for_completion config source in
-      incr cache_version;
-      { result; cache_version = !cache_version }
-
-  let title = "Reader phase"
-
-  module Fingerprint = struct
-    type t = Msource.Digest.t
-
-    let make { source = source, _; _ } = Ok (Msource.Digest.make source)
-    let equal = Msource.Digest.equal
-  end
-end
-
-module Reader_with_cache = Phase_cache.With_cache (Reader_phase)
-
-module Ppx_phase = struct
-  type reader_cache = Off | Version of int
-  type t =
-    { parsetree : Mreader.parsetree;
-      config : Mconfig.t;
-      reader_cache : reader_cache
-    }
-  type output = Mreader.parsetree
-
-  let f { parsetree; config; _ } = Mppx.rewrite parsetree config
-  let title = "PPX phase"
-
-  (* Currently the cache is invalidated even for source changes that don't
-     change the parsetree. To avoid that, we'd have to digest the
-     parsetree in the cache. *)
-  module All_fingerprints = struct
-    module Single_fingerprint = struct
-      type t = { binary_id : File_id.t; args : string list; workdir : string }
-
-      let make ~binary ~args ~workdir =
-        let qualified_binary = Filename.concat workdir binary in
-        match File_id.get_res qualified_binary with
-        | Ok binary_id -> Ok { binary_id; args; workdir }
-        | Error err -> Error err
-
-      let equal { binary_id = b1; args = a1; workdir = w1 }
-          { binary_id = b2; args = a2; workdir = w2 } =
-        File_id.check b1 b2
-        && List.same ~f:String.equal a1 a2
-        && String.equal w1 w2
-    end
-
-    type t = Single_fingerprint.t list
-
-    let make ~(config : Mconfig.t) =
-      let rec all_fingerprints acc = function
-        | [] -> acc
-        | { Std.workdir; workval } :: tl -> (
-          match Std.String.split_on_char ~sep:' ' workval with
-          | [] -> Error ("unhandled workval" ^ workval)
-          | binary :: args ->
-            Result.bind
-              ~f:(fun fp ->
-                all_fingerprints (Result.map ~f:(List.cons fp) acc) tl)
-              (Single_fingerprint.make ~binary ~args ~workdir))
-      in
-      all_fingerprints (Ok []) config.ocaml.ppx
-
-    let equal f1 f2 = List.equal ~eq:Single_fingerprint.equal f1 f2
-  end
-
-  module Fingerprint = struct
-    type t = All_fingerprints.t * reader_cache
-
-    let make { config; reader_cache; _ } =
-      Result.map (All_fingerprints.make ~config) ~f:(fun fingerprints ->
-          (fingerprints, reader_cache))
-
-    let equal_cache_version cv1 cv2 =
-      match (cv1, cv2) with
-      | Off, _ | _, Off -> false
-      | Version v1, Version v2 -> Int.equal v1 v2
-
-    let equal (f1, rcv1) (f2, rcv2) =
-      equal_cache_version rcv1 rcv2 && All_fingerprints.equal f1 f2
-  end
-end
-
-module Ppx_with_cache = Phase_cache.With_cache (Ppx_phase)
-
-module Document_overrides_phase = struct
-  type t = { ppx : Ppx.t lazy_t; config : Mconfig.t }
-  type output = string Overrides.t
-
-  let f { ppx; _ } =
-    (Lazy.force ppx).parsetree
-    |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Document
-
-  let title = "Document overrides phase"
-
-  (* Because processing [[@@@merlin.document]] depends on [Ppx_phase] (calling
-     [Lazy.force ppx] access [Ppx_phase]), using the same fingerprint as [Ppx_phase] is
-     equivalent to defining a fingerprint on [ppx.parsetree]. *)
-  module Fingerprint = struct
-    type t = Ppx_phase.All_fingerprints.t
-
-    let make { config; _ } = Ppx_phase.All_fingerprints.make ~config
-
-    let equal = Ppx_phase.All_fingerprints.equal
-  end
-end
-
-module Document_overrides_with_cache =
-  Phase_cache.With_cache (Document_overrides_phase)
-
-module Locate_overrides_phase = struct
-  type t = { ppx : Ppx.t lazy_t; config : Mconfig.t }
-  type output = Lexing.position Overrides.t
-
-  let f { ppx; _ } =
-    (Lazy.force ppx).parsetree
-    |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Locate
-
-  let title = "Locate overrides phase"
-
-  (* Because processing [[@@@merlin.locate]] depends on [Ppx_phase] (calling
-     [Lazy.force ppx] access [Ppx_phase]), using the same fingerprint as [Ppx_phase] is
-     equivalent to defining a fingerprint on [ppx.parsetree]. *)
-  module Fingerprint = struct
-    type t = Ppx_phase.All_fingerprints.t
-
-    let make { config; _ } = Ppx_phase.All_fingerprints.make ~config
-
-    let equal = Ppx_phase.All_fingerprints.equal
-  end
-end
-
-module Locate_overrides_with_cache =
-  Phase_cache.With_cache (Locate_overrides_phase)
-
 let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
     ?(ppx_time = ref 0.0) ?(typer_time = ref 0.0) ?(error_time = ref 0.0)
     ?(ppx_cache_hit = ref false) ?(reader_cache_hit = ref false)
@@ -330,16 +330,11 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
              Some "source preprocessor usage"
            | true, None -> None
          in
-         let { Reader_with_cache.output = { result; cache_version };
-               cache_was_hit
-             } =
+         let { Reader_with_cache.output = result; cache_was_hit; version } =
            Reader_with_cache.apply ~cache_disabling
              { source; for_completion; config }
          in
          reader_cache_hit := cache_was_hit;
-         let cache_version =
-           if Option.is_some cache_disabling then None else Some cache_version
-         in
          (* When we loaded the configuration in Mocaml, we guessed whether we're working
             with an intf or impl file based on the suffix of the filename. But now we know
             based on the contents of the file, so we update the value we wrote before. *)
@@ -351,7 +346,7 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
                      | `Interface _ -> Intf
                      | `Implementation _ -> Impl))
          |> Env.set_unit_name;
-         { Reader.result; config; cache_version }))
+         { Reader.result; config; cache_version = version; cache_disabling }))
   in
   let ppx =
     timed_lazy ppx_time
@@ -359,24 +354,27 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
         (let (lazy
                { Reader.result = { Mreader.parsetree; _ };
                  config;
-                 cache_version
+                 cache_version = reader_cache;
+                 cache_disabling = reader_cache_disabling
                }) =
            reader
          in
          let caught = ref [] in
          Msupport.catch_errors Mconfig.(config.ocaml.warnings) caught
          @@ fun () ->
-         let cache_disabling, reader_cache =
-           match cache_version with
-           | Some v -> (None, Ppx_phase.Version v)
-           | None -> (Some "reader cache is disabled", Off)
+         let cache_disabling =
+           Option.map reader_cache_disabling ~f:(fun _ ->
+               "reader cache is disabled")
          in
-         let { Ppx_with_cache.output = parsetree; cache_was_hit } =
+         let { Ppx_with_cache.output = parsetree;
+               cache_was_hit;
+               version = cache_version
+             } =
            Ppx_with_cache.apply ~cache_disabling
              { parsetree; config; reader_cache }
          in
          ppx_cache_hit := cache_was_hit;
-         { Ppx.config; parsetree; errors = !caught }))
+         { Ppx.config; parsetree; errors = !caught; cache_version }))
   in
   let typer =
     timed_lazy typer_time
@@ -391,8 +389,12 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
   let document_overrides =
     lazy
       (let (lazy { Reader.config; _ }) = reader in
-       let { Document_overrides_with_cache.output; cache_was_hit } =
-         Document_overrides_with_cache.apply { ppx; config }
+       let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
+         ppx
+       in
+       let { Document_overrides_with_cache.output; cache_was_hit; _ } =
+         Document_overrides_with_cache.apply
+           { ppx_parsetree = parsetree; config; ppx_cache_version }
        in
        document_overrides_cache_hit := cache_was_hit;
        output)
@@ -400,8 +402,12 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
   let locate_overrides =
     lazy
       (let (lazy { Reader.config; _ }) = reader in
-       let { Locate_overrides_with_cache.output; cache_was_hit } =
-         Locate_overrides_with_cache.apply { ppx; config }
+       let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
+         ppx
+       in
+       let { Locate_overrides_with_cache.output; cache_was_hit; _ } =
+         Locate_overrides_with_cache.apply
+           { ppx_parsetree = parsetree; config; ppx_cache_version }
        in
        locate_overrides_cache_hit := cache_was_hit;
        output)
