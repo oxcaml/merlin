@@ -20,7 +20,9 @@
   > echo "[merlin document] output: $document_output" 
   > }
 
-All following tests are performed in /test and merlin has access to /test/.merlin
+All following tests are performed in /test and merlin has access to /test/.merlin. With 
+[USE_PPX_CACHE], tests with use [reader_phase] and [ppx_phase] caches, which are dependencies
+of overrides. 
 
   $ cd test
   $ cat >.merlin <<EOF
@@ -28,7 +30,7 @@ All following tests are performed in /test and merlin has access to /test/.merli
   > USE_PPX_CACHE
   > EOF
 
-Test no .merlin, relative path
+Test cache hits on second use
 
   $ cat >./simple.ml <<EOF
   > [@@@do_nothing]
@@ -170,3 +172,60 @@ Test no .merlin, relative path
       "locate_overrides_phase": "miss"
     }
   }
+
+Test same file, different position
+
+  $ test_merlin_overrides "1:9" "./simple.ml"
+  [merlin locate] output: {
+    "value": {
+      "file": "$TESTCASE_ROOT/test/ppx.ml",
+      "pos": {
+        "line": 101,
+        "col": 21
+      }
+    },
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "hit",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "miss",
+      "locate_overrides_phase": "hit"
+    }
+  }
+  [merlin document] output: {
+    "value": "@@@do_nothing expands into nothing",
+    "cache": {
+      "reader_phase": "hit",
+      "ppx_phase": "miss",
+      "typer": "miss",
+      "cmt": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cms": {
+        "hit": 0,
+        "miss": 0
+      },
+      "cmi": {
+        "hit": 0,
+        "miss": 0
+      },
+      "document_overrides_phase": "hit",
+      "locate_overrides_phase": "miss"
+    }
+  }
+
+  $ ocamlmerlin server stop-server
+  [255]

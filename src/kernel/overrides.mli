@@ -36,7 +36,7 @@ end
 
 type 'a t
 
-(** Constructs a [t] from a [Mreader.parsetree]. An error is returned on an unexpected
+(** Constructs a [t] from a [Mreader.parsetree]. An error is returned on unexpected
     AST node structures and parsing errors.
 
     If there are multiple [@@@merlin.X] attributes (of the same .X), they will be merged. *)
