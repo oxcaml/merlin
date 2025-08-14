@@ -180,6 +180,9 @@ module Ppx_phase = struct
   let f { parsetree; config; _ } = Mppx.rewrite parsetree config
   let title = "PPX phase"
 
+  (* Currently the cache is invalidated even for source changes that don't
+     change the parsetree. To avoid that, we'd have to digest the
+     parsetree in the cache. *)
   module All_fingerprints = struct
     module Single_fingerprint = struct
       type t = { binary_id : File_id.t; args : string list; workdir : string }
@@ -363,9 +366,6 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
          let caught = ref [] in
          Msupport.catch_errors Mconfig.(config.ocaml.warnings) caught
          @@ fun () ->
-         (* Currently the cache is invalidated even for source changes that don't
-             change the parsetree. To avoid that, we'd have to digest the
-             parsetree in the cache. *)
          let cache_disabling, reader_cache =
            match cache_version with
            | Some v -> (None, Ppx_phase.Version v)
