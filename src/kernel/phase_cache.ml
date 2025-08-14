@@ -37,7 +37,7 @@ module With_cache (Phase : S) = struct
 
   let get_next_version =
     let next_version = ref 0 in
-    fun () ->
+    fun () : Version.t ->
       let v = Some !next_version in
       incr next_version;
       v

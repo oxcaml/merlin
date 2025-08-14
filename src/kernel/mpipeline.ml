@@ -145,10 +145,10 @@ end
 
 module Ppx_with_cache = Phase_cache.With_cache (Ppx_phase)
 
-module Overrides_cache = struct
+(** [Phase_cache] creation for [Overrides] caching. Depends on [Ppx_phase] *)
+module Overrides_phase = struct
   module type S = sig
     type t
-
     val title : string
     val attribute_name : t Overrides.Attribute_name.t
   end
@@ -181,16 +181,12 @@ module Overrides_cache = struct
 
   module Document = struct
     type t = string
-
     let title = "Document overrides phase"
-
     let attribute_name = Overrides.Attribute_name.Document
   end
   module Locate = struct
     type t = Lexing.position
-
     let title = "Locate overrides phase"
-
     let attribute_name = Overrides.Attribute_name.Locate
   end
 
@@ -199,10 +195,10 @@ module Overrides_cache = struct
 end
 
 module Document_overrides_with_cache =
-  Phase_cache.With_cache (Overrides_cache.Document_overrides_phase)
+  Phase_cache.With_cache (Overrides_phase.Document_overrides_phase)
 
 module Locate_overrides_with_cache =
-  Phase_cache.With_cache (Overrides_cache.Locate_overrides_phase)
+  Phase_cache.With_cache (Overrides_phase.Locate_overrides_phase)
 
 module Typer = struct
   type t = { errors : exn list lazy_t; result : Mtyper.result }
