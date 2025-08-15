@@ -15,9 +15,10 @@ let error_unexpected_merlin_override_attribute_structure =
   Error "unexpected merlin.X attribute structure"
 
 module Attribute_name = struct
-  type t = Document | Locate
+  type 'a t = Document : string t | Locate : Lexing.position t
 
-  let to_name = function
+  let to_name (type a) (t : a t) =
+    match t with
     | Document -> "merlin.document"
     | Locate -> "merlin.locate"
 end
@@ -46,10 +47,12 @@ module Override = struct
     | _ -> error_unexpected_position_expression_structure
 
   module Payload = struct
-    type t = Document of string | Locate of Lexing.position
+    type 'a t =
+      | Document : string -> string t
+      | Locate : Lexing.position -> Lexing.position t
 
-    let of_expression ~(attribute_name : Attribute_name.t)
-        (expr : Parsetree.expression) =
+    let of_expression (type a) ~(attribute_name : a Attribute_name.t)
+        (expr : Parsetree.expression) : (a t, string) result =
       match (attribute_name, expr.pexp_desc) with
       | Document, Pexp_constant (Pconst_string (documentation, _, _)) ->
         Ok (Document documentation)
@@ -58,7 +61,7 @@ module Override = struct
       | _ -> error_unexpected_payload_expression_structure
   end
 
-  type t = { loc : Location.t; payload : Payload.t }
+  type 'a t = { loc : Location.t; payload : 'a Payload.t }
 
   let of_expression ~attribute_name ({ pexp_desc; _ } : Parsetree.expression) =
     match pexp_desc with
@@ -89,13 +92,16 @@ module Override = struct
       Ok { loc = { Location.loc_start; loc_end; loc_ghost }; payload }
     | _ -> error_unexpected_merlin_override_attribute_structure
 
-  let payload t = t.payload
+  let payload (type a) (t : a t) : a =
+    match t.payload with
+    | Document doc -> doc
+    | Locate loc -> loc
 
   let to_interval t =
     Overrides_interval_tree.Interval.create ~loc:t.loc ~payload:t
 end
 
-type t = Override.t Overrides_interval_tree.t
+type 'a t = 'a Override.t Overrides_interval_tree.t
 
 let rec of_payload ~attribute_name ({ pexp_desc; _ } : Parsetree.expression) =
   match pexp_desc with
@@ -116,9 +122,9 @@ let of_attribute ~attribute_name (attribute : Parsetree.attribute) =
     Ok (of_payload ~attribute_name expr)
   | _ -> error_unexpected_merlin_override_attribute_structure
 
-let get_overrides ~attribute_name pipeline =
+let get_overrides ~attribute_name (ppx_parsetree : Mreader.parsetree) =
   let attributes =
-    match Mpipeline.ppx_parsetree pipeline with
+    match ppx_parsetree with
     | `Interface signature ->
       List.filter_map signature.psg_items
         ~f:(fun (signature_item : Parsetree.signature_item) ->
@@ -143,7 +149,7 @@ let get_overrides ~attribute_name pipeline =
          | Error err ->
            log ~title:"get_overrides" "%s" err;
            [])
-  |> List.filter_map ~f:(fun (override : Override.t) ->
+  |> List.filter_map ~f:(fun (override : _ Override.t) ->
          match Override.to_interval override with
          | Ok interval -> Some interval
          | Error err ->

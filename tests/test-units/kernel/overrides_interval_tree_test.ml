@@ -1,4 +1,4 @@
-open Merlin_analysis
+open Merlin_kernel
 
 let create_position pos_cnum =
   { Lexing.pos_fname = "test.ml"; pos_lnum = 1; pos_bol = 0; pos_cnum }

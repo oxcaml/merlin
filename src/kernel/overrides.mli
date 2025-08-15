@@ -25,26 +25,23 @@
 
 (** Constants for override attribute names *)
 module Attribute_name : sig
-  type t = Document | Locate
+  type _ t = Document : string t | Locate : Lexing.position t
 end
 
 module Override : sig
-  module Payload : sig
-    type t = Document of string | Locate of Lexing.position
-  end
+  type 'a t
 
-  type t
-
-  val payload : t -> Payload.t
+  val payload : 'a t -> 'a
 end
 
-type t
+type 'a t
 
-(** Constructs a [t] from a [Mpipeline.t]. An error is returned on an unexpected
+(** Constructs a [t] from a [Mreader.parsetree]. An error is returned on unexpected
     AST node structures and parsing errors.
 
     If there are multiple [@@@merlin.X] attributes (of the same .X), they will be merged. *)
-val get_overrides : attribute_name:Attribute_name.t -> Mpipeline.t -> t
+val get_overrides :
+  attribute_name:'a Attribute_name.t -> Mreader.parsetree -> 'a t
 
 (** Finds the first [Override.t] that [cursor] is enclosed in. *)
-val find : t -> cursor:Lexing.position -> Override.t option
+val find : 'a t -> cursor:Lexing.position -> 'a Override.t option

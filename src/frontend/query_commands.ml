@@ -533,17 +533,11 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
   | Document (patho, pos) -> (
     let pos = Mpipeline.get_lexing_pos pipeline pos in
     let from_document_override_attribute =
-      pipeline
-      |> Overrides.get_overrides
-           ~attribute_name:Overrides.Attribute_name.Document
-      |> Overrides.find ~cursor:pos
-      |> Option.bind ~f:(fun override ->
-             match Overrides.Override.payload override with
-             | Document doc -> Some doc
-             | Locate _ -> None)
+      pipeline |> Mpipeline.document_overrides |> Overrides.find ~cursor:pos
+      |> Option.map ~f:Overrides.Override.payload
     in
     match from_document_override_attribute with
-    | Some doc_string -> `Found doc_string
+    | Some document_override -> `Found document_override
     | None ->
       let typer = Mpipeline.typer_result pipeline in
       let local_defs = Mtyper.get_typedtree typer in
@@ -585,13 +579,8 @@ let dispatch pipeline (type a) : a Query_protocol.t -> a = function
     let pos = Mpipeline.get_lexing_pos pipeline pos in
     let mconfig = Mpipeline.final_config pipeline in
     let from_locate_override_attribute =
-      pipeline
-      |> Overrides.get_overrides ~attribute_name:Overrides.Attribute_name.Locate
-      |> Overrides.find ~cursor:pos
-      |> Option.bind ~f:(fun override ->
-             match Overrides.Override.payload override with
-             | Document _ -> None
-             | Locate loc -> Some loc)
+      pipeline |> Mpipeline.locate_overrides |> Overrides.find ~cursor:pos
+      |> Option.map ~f:Overrides.Override.payload
     in
     match from_locate_override_attribute with
     | Some source_position ->
