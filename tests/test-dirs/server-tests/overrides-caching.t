@@ -12,9 +12,7 @@
   >         document_overrides_phase: .cache.document_overrides_phase, \
   >         locate_overrides_phase: .cache.locate_overrides_phase
   >       } \
-  >      }" \
-  >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
-  >    | sed -e 's:\\n:\n:g'
+  >      }"
   > }
 
   $ test_merlin_overrides () {
