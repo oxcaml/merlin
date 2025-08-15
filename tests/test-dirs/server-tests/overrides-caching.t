@@ -2,19 +2,30 @@
 
   $ mkdir test
 
+  $ cleanup_output () {
+  > jq "{ \
+  >       value: .value, \
+  >       cache: { \
+  >         reader_phase: .cache.reader_phase, \
+  >         ppx_phase: .cache.ppx_phase, \
+  >         typer: .cache.typer, \
+  >         document_overrides_phase: .cache.document_overrides_phase, \
+  >         locate_overrides_phase: .cache.locate_overrides_phase
+  >       } \
+  >      }" \
+  >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
+  >    | sed -e 's:\\n:\n:g'
+  > }
+
   $ test_merlin_overrides () {
   > local position="$1"
   > local file="$2"
   > 
-  > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" -log-file - -log-section "maxwang"< "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq '{value: .value, cache: .cache}' \
-  >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
-  >    | sed -e 's:\\n:\n:g')
+  > local locate_output=$(ocamlmerlin server locate -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
+  >    | cleanup_output)
   > 
-  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file" -log-file - -log-section "maxwang" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
-  >    | jq '{value: .value, cache: .cache}' \
-  >    | sed -e 's:"[^"]*lib/ocaml:"lib/ocaml:g' \
-  >    | sed -e 's:\\n:\n:g')
+  > local document_output=$(ocamlmerlin server document -position "$position" -filename "$file" < "$file" -ocamllib-path "$MERLIN_TEST_OCAMLLIB_PATH" \
+  >    | cleanup_output)
   > 
   > echo "[merlin locate] output: $locate_output" 
   > echo "[merlin document] output: $document_output" 
@@ -82,18 +93,6 @@ Test cache hits on second use
       "reader_phase": "miss",
       "ppx_phase": "miss",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "miss"
     }
@@ -104,18 +103,6 @@ Test cache hits on second use
       "reader_phase": "hit",
       "ppx_phase": "hit",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "miss"
     }
@@ -134,18 +121,6 @@ Test cache hits on second use
       "reader_phase": "hit",
       "ppx_phase": "hit",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "hit"
     }
@@ -156,18 +131,6 @@ Test cache hits on second use
       "reader_phase": "hit",
       "ppx_phase": "hit",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "hit",
       "locate_overrides_phase": "miss"
     }
@@ -188,18 +151,6 @@ Test same file, different position
       "reader_phase": "hit",
       "ppx_phase": "hit",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "hit"
     }
@@ -210,18 +161,6 @@ Test same file, different position
       "reader_phase": "hit",
       "ppx_phase": "hit",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "hit",
       "locate_overrides_phase": "miss"
     }
@@ -240,18 +179,6 @@ Test cache invalidation
       "reader_phase": "miss",
       "ppx_phase": "miss",
       "typer": "miss",
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
-      },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "miss"
     }
@@ -264,18 +191,6 @@ Test cache invalidation
       "typer": {
         "reused": 1,
         "typed": 0
-      },
-      "cmt": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cms": {
-        "hit": 0,
-        "miss": 0
-      },
-      "cmi": {
-        "hit": 0,
-        "miss": 0
       },
       "document_overrides_phase": "miss",
       "locate_overrides_phase": "miss"

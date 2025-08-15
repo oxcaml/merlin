@@ -156,14 +156,13 @@ module Overrides_phase = struct
   module Make (Attribute : S) = struct
     type t =
       { ppx_parsetree : Mreader.parsetree;
-        config : Mconfig.t;
         ppx_cache_version : Ppx_with_cache.Version.t
       }
     type output = Attribute.t Overrides.t
 
-    let f { ppx_parsetree; _ } =
-      ppx_parsetree
-      |> Overrides.get_overrides ~attribute_name:Attribute.attribute_name
+    let f { ppx_parsetree; ppx_cache_version = _ } =
+      Overrides.get_overrides ~attribute_name:Attribute.attribute_name
+        ppx_parsetree
 
     let title = Attribute.title
 
@@ -173,7 +172,8 @@ module Overrides_phase = struct
     module Fingerprint = struct
       type t = Ppx_with_cache.Version.t
 
-      let make { ppx_cache_version; _ } = Result.ok ppx_cache_version
+      let make { ppx_cache_version; ppx_parsetree = _ } =
+        Result.ok ppx_cache_version
 
       let equal = Ppx_with_cache.Version.equal
     end
@@ -384,26 +384,24 @@ let process ?state ?(pp_time = ref 0.0) ?(reader_time = ref 0.0)
   in
   let document_overrides =
     lazy
-      (let (lazy { Reader.config; _ }) = reader in
-       let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
+      (let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
          ppx
        in
        let { Document_overrides_with_cache.output; cache_was_hit; _ } =
          Document_overrides_with_cache.apply
-           { ppx_parsetree = parsetree; config; ppx_cache_version }
+           { ppx_parsetree = parsetree; ppx_cache_version }
        in
        document_overrides_cache_hit := cache_was_hit;
        output)
   in
   let locate_overrides =
     lazy
-      (let (lazy { Reader.config; _ }) = reader in
-       let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
+      (let (lazy { Ppx.parsetree; cache_version = ppx_cache_version; _ }) =
          ppx
        in
        let { Locate_overrides_with_cache.output; cache_was_hit; _ } =
          Locate_overrides_with_cache.apply
-           { ppx_parsetree = parsetree; config; ppx_cache_version }
+           { ppx_parsetree = parsetree; ppx_cache_version }
        in
        locate_overrides_cache_hit := cache_was_hit;
        output)

@@ -29,8 +29,8 @@ module type S = sig
 end
 
 module With_cache (Phase : S) : sig
-  (** [Version] represents a naive, generic digest of a cache entry and is different once
-      the cache has been invalidated. It is robust to [Fingerprint.make] errors.
+  (** [Version] represents a naive, generic stamp of a cache entry and is recomputed each
+      time the cache is refreshed. It is robust to [Fingerprint.make] errors.
 
       It is generic because it does not depend on [output], and is naive because a cache
       invalidation could result in the same [output], but the [version] would be the same. *)
