@@ -36,11 +36,15 @@ module With_cache (Phase : S) = struct
     }
 
   let get_next_version =
+    (* A mutable counter separate from [cache.version] is necessary because of [Phase.f]
+       erroring. In [apply], when [Phase.f = Error], cache is reset to [None], losing the
+       value of [next_version] if not stored elsewhere. *)
     let next_version = ref 0 in
     fun () : Version.t ->
       let v = Some !next_version in
       incr next_version;
       v
+
   let cache = ref None
 
   let apply ?(cache_disabling = None) ?(force_invalidation = false) input =
