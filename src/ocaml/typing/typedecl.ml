@@ -1826,7 +1826,7 @@ let add_types_to_env ~shapes decls env =
   | None ->
     List.fold_right
       (fun (id, decl) env ->
-        add_type ~check:true id decl env)
+        add_type ~long_path:false ~check:true id decl env)
       decls env
   | Some shapes ->
     List.fold_right2
@@ -2816,10 +2816,10 @@ let normalize_decl_jkinds env decls =
   (* Add the types, with non-normalized kinds, to the environment to start, so that eg
      types can look up their own (potentially non-normalized) kinds *)
   let env =
-    List.fold_right2
-      (fun (id, _, _, decl) shape env ->
+    List.fold_right
+      (fun (id, _, _, decl) env ->
          add_type ~long_path:false ~check:true id decl env)
-      decls shapes env
+      decls env
   in
   List.fold_left_map
     (fun env (id, original_decl, allow_any_crossing, decl) ->
