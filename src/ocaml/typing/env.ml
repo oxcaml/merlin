@@ -3171,15 +3171,8 @@ let save_signature_with_imports ~alerts sg modname cu cmi imports =
 (* Make the initial environment, without language extensions *)
 let initial () =
   let add_type_and_remember_decl (type_ident : Ident.t) decl env =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-    Ident.Tbl.add added_types type_ident decl;
-    add_type type_ident decl env ~check:false ~predef:true ~long_path:false
-||||||| ocaml-flambda/flambda-backend:d4c133509a1338c5816593485df58f5b6a93c6ee
-    Ident.Tbl.add added_types type_ident decl;
-    add_type type_ident decl env ~check:false
-=======
     match !Clflags.shape_format with
-    | Clflags.Old_merlin -> add_type type_ident decl env ~check:false
+    | Clflags.Old_merlin -> add_type type_ident decl env ~check:false ~predef:true ~long_path:false
     | Clflags.Debugging_shapes ->
       let type_decl_shape =
         Type_shape.Type_decl_shape.of_type_declaration (Pident type_ident) decl
@@ -3189,8 +3182,7 @@ let initial () =
       let shape = Shape.leaf' None in
       (* CR sspies: This will be replaced by an actual shape computation in
          the future. *)
-      add_type type_ident ~shape decl env ~check:false
->>>>>>> ocaml-flambda/flambda-backend:99a981ed89174fff510618ec288ed8c683758215
+      add_type type_ident ~shape decl env ~check:false ~predef:true ~long_path:false
   in
   let initial_env =
     Predef.build_initial_env add_type_and_remember_decl

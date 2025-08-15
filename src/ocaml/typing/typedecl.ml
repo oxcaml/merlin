@@ -2816,22 +2816,10 @@ let normalize_decl_jkinds env decls =
   (* Add the types, with non-normalized kinds, to the environment to start, so that eg
      types can look up their own (potentially non-normalized) kinds *)
   let env =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
     List.fold_right2
       (fun (id, _, _, decl) shape env ->
-         add_type ~long_path:false ~check:true ~shape id decl env)
+         add_type ~long_path:false ~check:true id decl env)
       decls shapes env
-||||||| ocaml-flambda/flambda-backend:d4c133509a1338c5816593485df58f5b6a93c6ee
-    List.fold_right2
-      (fun (id, _, _, decl) shape env ->
-         add_type ~check:true ~shape id decl env)
-      decls shapes env
-=======
-    List.fold_right
-      (fun (id, _, _, decl) env ->
-         add_type ~check:true id decl env)
-      decls env
->>>>>>> ocaml-flambda/flambda-backend:99a981ed89174fff510618ec288ed8c683758215
   in
   List.fold_left_map
     (fun env (id, original_decl, allow_any_crossing, decl) ->
@@ -2842,13 +2830,7 @@ let normalize_decl_jkinds env decls =
        (* Add the decl with the normalized kind back to the environment, so that later
           kinds don't have to normalize this kind if they mention this type in their
           with-bounds *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
-      let env = add_type ~long_path:false ~check:false ~shape:shape id decl env in
-||||||| ocaml-flambda/flambda-backend:d4c133509a1338c5816593485df58f5b6a93c6ee
-       let env = add_type ~check:false ~shape:shape id decl env in
-=======
-       let env = add_type ~check:false id decl env in
->>>>>>> ocaml-flambda/flambda-backend:99a981ed89174fff510618ec288ed8c683758215
+       let env = add_type ~long_path:false ~check:false id decl env in
        env, (id, decl)
     )
     env
