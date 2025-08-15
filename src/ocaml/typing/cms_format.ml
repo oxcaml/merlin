@@ -32,6 +32,7 @@ type cms_infos = {
   cms_initial_env : Env.t option;
   cms_uid_to_loc : string Location.loc Shape.Uid.Tbl.t;
   cms_uid_to_attributes : Parsetree.attributes Shape.Uid.Tbl.t;
+  cms_shape_format : Clflags.shape_format;
   cms_impl_shape : Shape.t option; (* None for mli *)
   cms_ident_occurrences :
     (Longident.t Location.loc * Shape_reduce.result) array;
@@ -134,6 +135,23 @@ let save_cms target modname binary_annots initial_env shape
                  here.  But we don't seem to have the same lexer, so we can't
                  do that straightforwardly.  On the other hand, this function
                  should never be called by merlin, so it doesn't matter, right?
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-17
+||||||| ocaml-flambda/flambda-backend:d4c133509a1338c5816593485df58f5b6a93c6ee
+            cms_initial_env;
+            cms_uid_to_loc;
+            cms_uid_to_attributes;
+            cms_impl_shape = shape;
+            cms_ident_occurrences;
+            cms_declaration_dependencies;
+=======
+            cms_initial_env;
+            cms_uid_to_loc;
+            cms_uid_to_attributes;
+            cms_shape_format = !Clflags.shape_format;
+            cms_impl_shape = shape;
+            cms_ident_occurrences;
+            cms_declaration_dependencies;
+>>>>>>> ocaml-flambda/flambda-backend:99a981ed89174fff510618ec288ed8c683758215
               *)
            cms_comments = [];
            cms_sourcefile = sourcefile;
@@ -151,3 +169,8 @@ let save_cms target modname binary_annots initial_env shape
   end
 
 let clear () = ()
+
+let shape_format_to_string =
+  function
+  | Clflags.Old_merlin -> "old-merlin"
+  | Clflags.Debugging_shapes -> "debugging-shapes"
