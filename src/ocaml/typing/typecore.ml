@@ -2820,16 +2820,17 @@ let rec type_pat
   : type k . type_pat_state -> k pattern_category ->
       no_existentials: existential_restriction option ->
       alloc_mode:expected_pat_mode -> mutable_flag:_ ->
-      penv: Pattern_env.t -> Parsetree.pattern ->
-      type_expr -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp expected_ty ->
+      penv: Pattern_env.t -> Parsetree.pattern -> type_expr ->
+      Jkind.Sort.t -> k general_pattern
+  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
+      expected_ty sort ->
   Msupport.with_saved_types
     ~warning_attribute:sp.ppat_attributes ?save_part:None
     (fun () ->
        let saved = save_levels () in
        try
          type_pat_aux tps category ~no_existentials
-           ~alloc_mode ~mutable_flag ~penv sp expected_ty
+           ~alloc_mode ~mutable_flag ~penv sp expected_ty sort
        with Error _ as exn ->
          (* We only want to catch error, not internal exceptions such as
             [Need_backtrack], etc. *)
@@ -2849,52 +2850,16 @@ let rec type_pat
            }
          in
          (match category with
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-18
              | Value -> pat
              | Computation -> as_computation_pattern pat)
-||||||| ocaml-flambda/flambda-backend:e50954f1a39c111ab64754f8d418e7826188e26f
-      no_existentials: existential_restriction option ->
-      alloc_mode:expected_pat_mode -> mutable_flag:_ ->
-      penv: Pattern_env.t -> Parsetree.pattern -> type_expr ->
-      k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
-      expected_ty ->
-  Builtin_attributes.warning_scope sp.ppat_attributes
-    (fun () ->
-       type_pat_aux tps category ~no_existentials
-         ~alloc_mode ~mutable_flag ~penv sp expected_ty
-=======
-      no_existentials: existential_restriction option ->
-      alloc_mode:expected_pat_mode -> mutable_flag:_ ->
-      penv: Pattern_env.t -> Parsetree.pattern -> type_expr ->
-      Jkind.Sort.t -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
-      expected_ty sort ->
-  Builtin_attributes.warning_scope sp.ppat_attributes
-    (fun () ->
-       type_pat_aux tps category ~no_existentials
-         ~alloc_mode ~mutable_flag ~penv sp expected_ty sort
->>>>>>> ocaml-flambda/flambda-backend:0ac8fae40c9729a24ef59fa55b51d70247ac5274
     )
 
 and type_pat_aux
   : type k . type_pat_state -> k pattern_category -> no_existentials:_ ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-18
-         alloc_mode:expected_pat_mode -> mutable_flag:mutable_flag ->
-         penv:_ -> _ -> _ -> k general_pattern
-  = fun tps category ~no_existentials
-      ~alloc_mode ~mutable_flag ~penv sp expected_ty ->
-||||||| ocaml-flambda/flambda-backend:e50954f1a39c111ab64754f8d418e7826188e26f
-         alloc_mode:expected_pat_mode -> mutable_flag:mutable_flag -> penv:_ ->
-         _ -> _ -> k general_pattern
-  = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
-        expected_ty ->
-=======
          alloc_mode:expected_pat_mode -> mutable_flag:mutable_flag -> penv:_ ->
          _ -> _ -> _ -> k general_pattern
   = fun tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv sp
         expected_ty sort ->
->>>>>>> ocaml-flambda/flambda-backend:0ac8fae40c9729a24ef59fa55b51d70247ac5274
   let type_pat tps category ?(alloc_mode=alloc_mode) ?(penv=penv) =
     type_pat tps category ~no_existentials ~alloc_mode ~mutable_flag ~penv
   in
@@ -9666,14 +9631,8 @@ and map_half_typed_cases
     -> ret list * partial
   = fun ?additional_checks_for_split_cases
     category env pat_mode
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-18
-    ty_arg ty_res loc caselist ~type_body ~check_if_total ->
-  let has_errors = Msupport.monitor_errors () in
-||||||| ocaml-flambda/flambda-backend:e50954f1a39c111ab64754f8d418e7826188e26f
-    ty_arg ty_res loc caselist ~type_body ~check_if_total ->
-=======
     ty_arg sort_arg ty_res loc caselist ~type_body ~check_if_total ->
->>>>>>> ocaml-flambda/flambda-backend:0ac8fae40c9729a24ef59fa55b51d70247ac5274
+  let has_errors = Msupport.monitor_errors () in
   (* ty_arg is _fully_ generalized *)
   let patterns = List.map (fun ((x : untyped_case), _) -> x.pattern) caselist in
   let contains_polyvars = List.exists contains_polymorphic_variant patterns in
