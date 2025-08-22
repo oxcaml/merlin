@@ -16,6 +16,15 @@ isn't on the PATH, we can still read the .merlin file.
   > | jq .value.merlin.unit_name -r
   Dot_merlin_was_successfully_read
 
+If ocamlmerlin is a symlink, it looks in the original install directory.
+
+  $ mkdir merlin-bin-symlink
+  $ ln -s $(realpath merlin-bin/ocamlmerlin) merlin-bin-symlink/ocamlmerlin
+
+  $ PATH="" merlin-bin-symlink/ocamlmerlin single dump-configuration -filename test.ml \
+  > | jq .value.merlin.unit_name -r
+  Dot_merlin_was_successfully_read
+
 The dot-merlin-reader in the same directory is prioritized over the one on the PATH.
   $ mkdir bad-dot-merlin-reader-bin
   $ cat > bad-dot-merlin-reader-bin/dot-merlin-reader <<EOF

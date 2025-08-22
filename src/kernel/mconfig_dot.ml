@@ -139,7 +139,7 @@ end = struct
       let get_from_env_var = lazy (Sys.getenv_opt "DOT_MERLIN_READER_EXE") in
       let get_from_same_dir_as_merlin_exe =
         lazy
-          (let merlin_exe = Sys.executable_name in
+          (let merlin_exe = Unix.realpath Sys.executable_name in
            let merlin_bin = Filename.dirname merlin_exe in
            let dot_merlin_reader_exe =
              Filename.concat merlin_bin "dot-merlin-reader"
