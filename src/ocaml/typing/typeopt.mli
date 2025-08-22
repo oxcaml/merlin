@@ -49,6 +49,18 @@ val bigarray_specialize_kind_and_layout :
 val value_kind : Env.t -> Types.type_expr -> Lambda.value_kind
 *)
 
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-18
+||||||| ocaml-flambda/flambda-backend:0ac8fae40c9729a24ef59fa55b51d70247ac5274
+val value_kind : Env.t -> Location.t -> Types.type_expr -> Lambda.value_kind
+
+=======
+val value_kind : Env.t -> Location.t -> Types.type_expr -> Lambda.value_kind
+
+val transl_mixed_block_element :
+  Env.t -> Location.t -> Types.type_expr -> Types.mixed_block_element
+  -> unit Lambda.mixed_block_element
+
+>>>>>>> ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
 val classify_lazy_argument : Typedtree.expression ->
                              [ `Constant_or_function
                              | `Float_that_cannot_be_shortcut
