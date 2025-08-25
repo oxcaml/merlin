@@ -273,3 +273,566 @@ on (module S : Set.S with type elt = s)
   > -filename ./first-class-modules.ml < ./first-class-modules.ml | jq '.value.name'
   "First class module"
 
+  $ syn_doc_name () {
+  >   file="$1"
+  >   line="$2"
+  >   col="$3"
+  >   
+  >   # Print the line, with a ^ underneath pointing at the character
+  >   sed -n "${line}p" "$file"
+  >   printf "%*s^\n" "$col" ""
+  >   
+  >   # Call merlin on the position
+  >   "$MERLIN" single syntax-document -position  "$line:$col" -filename "$file" < "$file" \
+  >     | jq 'if (.value | type) == "string" then .value else .value.name end' -r
+  > }
+
+Convenience function to ensure we haven't made any syntax errors.
+(This is especially convenient for oxcaml language features, as their syntax is volatile.)
+
+  $ syntax_errors () {
+  >   "$MERLIN" single errors -filename "$1" < "$1" | jq '.value[] | select(.type == "parser")'
+  > }
+
+// Modes
+# CR-someday: Add raw modes (and @?) to typedtree so this information can be recovered
+
+  $ cat > modes.ml << EOF
+  > module type S = sig
+  >   type t = foo @ local -> bar @ portable
+  > end
+  > let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+  > let x : int @ local = 10
+  > EOF
+
+  $ syntax_errors modes.ml
+
+  $ syn_doc_name modes.ml 2 15
+    type t = foo @ local -> bar @ portable
+                 ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 2 19
+    type t = foo @ local -> bar @ portable
+                     ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 2 30
+    type t = foo @ local -> bar @ portable
+                                ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 2 35
+    type t = foo @ local -> bar @ portable
+                                     ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 7
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+         ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 12
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+              ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 29
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+                               ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 33
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+                                   ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 51
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+                                                     ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 4 58
+  let (f @ stateless) (x : int @ contended) = (_ : _ @ contended)
+                                                            ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 5 12
+  let x : int @ local = 10
+              ^
+  No documentation found
+
+  $ syn_doc_name modes.ml 5 17
+  let x : int @ local = 10
+                   ^
+  No documentation found
+
+// Modalities
+# CR-someday: Add raw modalities (and @@?) to typedtree so this information can be recovered
+
+  $ cat > modalities.ml << EOF
+  > module type S = sig @@ portable
+  >   val foo : int -> int @@ stateless
+  > end
+  > external id : 'a -> 'a @@ portable = "%identity"
+  > type t = { foo : int @@ contended }
+  > EOF
+
+  $ syntax_errors modalities.ml
+
+  $ syn_doc_name modalities.ml 1 21
+  module type S = sig @@ portable
+                       ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 1 23
+  module type S = sig @@ portable
+                         ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 2 23
+    val foo : int -> int @@ stateless
+                         ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 2 28
+    val foo : int -> int @@ stateless
+                              ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 4 24
+  external id : 'a -> 'a @@ portable = "%identity"
+                          ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 4 28
+  external id : 'a -> 'a @@ portable = "%identity"
+                              ^
+  No documentation found
+
+  $ syn_doc_name modalities.ml 5 22
+  type t = { foo : int @@ contended }
+                        ^
+  Record Type
+
+  $ syn_doc_name modalities.ml 5 28
+  type t = { foo : int @@ contended }
+                              ^
+  Record Type
+
+// Kinds
+
+  $ cat > kinds.ml << EOF
+  > type ('a : immediate) t : value mod portable with 'a @@ global
+  > module type S = sig
+  >   val id : ('a : value). 'a -> 'a
+  >   val id2 : ('a : value) -> ('a : value)
+  > end
+  > let f (x : (_ : value)) = (x : (_ : value))
+  > type t : float64 mod everything
+  > EOF
+
+  $ syntax_errors kinds.ml
+
+  $ syn_doc_name kinds.ml 1 16
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                  ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 1 28
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                              ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 1 33
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                   ^
+  mod keyword
+
+  $ syn_doc_name kinds.ml 1 40
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                          ^
+  Mode (in kind)
+
+  $ syn_doc_name kinds.ml 1 47
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                                 ^
+  with keyword (kinds)
+
+  $ syn_doc_name kinds.ml 1 51
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                                     ^
+  with-type
+
+  $ syn_doc_name kinds.ml 1 53
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                                       ^
+  @@ keyword
+
+  $ syn_doc_name kinds.ml 1 57
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                                           ^
+  Modality (in kind)
+
+  $ syn_doc_name kinds.ml 3 20
+    val id : ('a : value). 'a -> 'a
+                      ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 4 20
+    val id2 : ('a : value) -> ('a : value)
+                      ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 4 37
+    val id2 : ('a : value) -> ('a : value)
+                                       ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 6 19
+  let f (x : (_ : value)) = (x : (_ : value))
+                     ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 6 36
+  let f (x : (_ : value)) = (x : (_ : value))
+                                      ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 7 13
+  type t : float64 mod everything
+               ^
+  Kind abbreviation
+
+  $ syn_doc_name kinds.ml 7 28
+  type t : float64 mod everything
+                              ^
+  Mode (in kind)
+
+// include functor
+
+  $ cat > include_functor.ml << EOF
+  > module type F = functor (S : sig end) -> sig end
+  > module F (S : sig end) = struct end
+  > module M : sig
+  >   include functor F
+  > end = struct
+  >   include functor F
+  > end
+  > EOF
+
+  $ syntax_errors include_functor.ml
+
+  $ syn_doc_name include_functor.ml 4 2
+    include functor F
+    ^
+  include functor
+
+  $ syn_doc_name include_functor.ml 4 13
+    include functor F
+               ^
+  include functor
+
+  $ syn_doc_name include_functor.ml 4 18
+    include functor F
+                    ^
+  No documentation found
+
+  $ syn_doc_name include_functor.ml 6 2
+    include functor F
+    ^
+  include functor
+
+  $ syn_doc_name include_functor.ml 6 13
+    include functor F
+               ^
+  include functor
+
+  $ syn_doc_name include_functor.ml 6 18
+    include functor F
+                    ^
+  No documentation found
+
+// local allocations
+
+  $ cat > local.ml << EOF
+  > let f x =
+  >   let _ = stack_ Some x in
+  >   exclave_ Some x
+  > let f x = g x [@nontail]
+  > EOF
+
+  $ syntax_errors local.ml
+
+  $ syn_doc_name local.ml 2 13
+    let _ = stack_ Some x in
+               ^
+  stack_
+
+  $ syn_doc_name local.ml 2 18
+    let _ = stack_ Some x in
+                    ^
+  No documentation found
+
+  $ syn_doc_name local.ml 3 4
+    exclave_ Some x
+      ^
+  exclave_
+
+  $ syn_doc_name local.ml 3 13
+    exclave_ Some x
+               ^
+  No documentation found
+
+  $ syn_doc_name local.ml 4 20
+  let f x = g x [@nontail]
+                      ^
+  nontail annotation
+
+// zero-alloc annotations
+
+  $ cat > zero_alloc.ml << EOF
+  > let[@zero_alloc] f x = x
+  > let[@zero_alloc opt] f x = x
+  > let[@zero_alloc assume] f x = x
+  > let[@zero_alloc strict] f x = x
+  > let f x =
+  >   (g[@zero_alloc assume]) x
+  > module type S = sig
+  >   val[@zero_alloc] f : int -> int
+  >   val[@zero_alloc arity 1] f : t
+  > end
+  > external id : 'a -> 'a = "%identity" [@@noalloc]
+  > EOF
+
+  $ syntax_errors zero_alloc.ml
+
+  $ syn_doc_name zero_alloc.ml 1 10
+  let[@zero_alloc] f x = x
+            ^
+  Zero-alloc annotation
+
+  $ syn_doc_name zero_alloc.ml 2 10
+  let[@zero_alloc opt] f x = x
+            ^
+  Zero-alloc opt annotation
+
+  $ syn_doc_name zero_alloc.ml 2 18
+  let[@zero_alloc opt] f x = x
+                    ^
+  Zero-alloc opt annotation
+
+  $ syn_doc_name zero_alloc.ml 3 10
+  let[@zero_alloc assume] f x = x
+            ^
+  Zero-alloc assume annotation
+
+  $ syn_doc_name zero_alloc.ml 3 18
+  let[@zero_alloc assume] f x = x
+                    ^
+  Zero-alloc assume annotation
+
+  $ syn_doc_name zero_alloc.ml 4 10
+  let[@zero_alloc strict] f x = x
+            ^
+  Zero-alloc strict annotation
+
+  $ syn_doc_name zero_alloc.ml 4 18
+  let[@zero_alloc strict] f x = x
+                    ^
+  Zero-alloc strict annotation
+
+  $ syn_doc_name zero_alloc.ml 6 3
+    (g[@zero_alloc assume]) x
+     ^
+  No documentation found
+
+  $ syn_doc_name zero_alloc.ml 6 10
+    (g[@zero_alloc assume]) x
+            ^
+  Zero-alloc assume annotation
+
+  $ syn_doc_name zero_alloc.ml 6 18
+    (g[@zero_alloc assume]) x
+                    ^
+  Zero-alloc assume annotation
+
+  $ syn_doc_name zero_alloc.ml 8 10
+    val[@zero_alloc] f : int -> int
+            ^
+  Zero-alloc annotation
+
+  $ syn_doc_name zero_alloc.ml 9 13
+    val[@zero_alloc arity 1] f : t
+               ^
+  Zero-alloc arity annotation
+
+  $ syn_doc_name zero_alloc.ml 9 21
+    val[@zero_alloc arity 1] f : t
+                       ^
+  Zero-alloc arity annotation
+
+  $ syn_doc_name zero_alloc.ml 9 24
+    val[@zero_alloc arity 1] f : t
+                          ^
+  Zero-alloc arity annotation
+
+  $ syn_doc_name zero_alloc.ml 11 44
+  external id : 'a -> 'a = "%identity" [@@noalloc]
+                                              ^
+  noalloc annotation
+
+// inlining annotations
+
+  $ cat > inlining.ml << EOF
+  > let[@inline always] f x = x
+  > let[@inline never] f x = x
+  > let[@inline] f x = x
+  > let () = (f [@inlined always]) 0
+  > let () = (f [@inlined never]) 0
+  > let () = (f [@inlined]) 0
+  > let[@specialise always] f x = x
+  > let[@specialise never] f x = x
+  > let[@specialise] f x = x
+  > let () = (f [@specialised always]) 0
+  > let () = (f [@specialised never]) 0
+  > let () = (f [@specialised]) 0
+  > let () = (f [@unrolled 10]) 0
+  > EOF
+
+  $ syntax_errors inlining.ml
+
+  $ syn_doc_name inlining.ml 1 10
+  let[@inline always] f x = x
+            ^
+  Inline always annotation
+
+  $ syn_doc_name inlining.ml 1 15
+  let[@inline always] f x = x
+                 ^
+  Inline always annotation
+
+  $ syn_doc_name inlining.ml 2 10
+  let[@inline never] f x = x
+            ^
+  Inline never annotation
+
+  $ syn_doc_name inlining.ml 2 13
+  let[@inline never] f x = x
+               ^
+  Inline never annotation
+
+  $ syn_doc_name inlining.ml 3 10
+  let[@inline] f x = x
+            ^
+  Inline annotation
+
+  $ syn_doc_name inlining.ml 4 17
+  let () = (f [@inlined always]) 0
+                   ^
+  Inlined always annotation
+
+  $ syn_doc_name inlining.ml 4 25
+  let () = (f [@inlined always]) 0
+                           ^
+  Inlined always annotation
+
+  $ syn_doc_name inlining.ml 5 17
+  let () = (f [@inlined never]) 0
+                   ^
+  Inlined never annotation
+
+  $ syn_doc_name inlining.ml 5 25
+  let () = (f [@inlined never]) 0
+                           ^
+  Inlined never annotation
+
+  $ syn_doc_name inlining.ml 6 17
+  let () = (f [@inlined]) 0
+                   ^
+  Inlined annotation
+
+  $ syn_doc_name inlining.ml 7 10
+  let[@specialise always] f x = x
+            ^
+  Specialise always annotation
+
+  $ syn_doc_name inlining.ml 7 17
+  let[@specialise always] f x = x
+                   ^
+  Specialise always annotation
+
+  $ syn_doc_name inlining.ml 8 10
+  let[@specialise never] f x = x
+            ^
+  Specialise never annotation
+
+  $ syn_doc_name inlining.ml 8 17
+  let[@specialise never] f x = x
+                   ^
+  Specialise never annotation
+
+  $ syn_doc_name inlining.ml 9 10
+  let[@specialise] f x = x
+            ^
+  Specialise annotation
+
+  $ syn_doc_name inlining.ml 10 17
+  let () = (f [@specialised always]) 0
+                   ^
+  Specialised always annotation
+
+  $ syn_doc_name inlining.ml 10 29
+  let () = (f [@specialised always]) 0
+                               ^
+  Specialised always annotation
+
+  $ syn_doc_name inlining.ml 11 17
+  let () = (f [@specialised never]) 0
+                   ^
+  Specialised never annotation
+
+  $ syn_doc_name inlining.ml 11 27
+  let () = (f [@specialised never]) 0
+                             ^
+  Specialised never annotation
+
+  $ syn_doc_name inlining.ml 12 17
+  let () = (f [@specialised]) 0
+                   ^
+  Specialised annotation
+
+  $ syn_doc_name inlining.ml 13 18
+  let () = (f [@unrolled 10]) 0
+                    ^
+  unrolled annotation
+
+  $ syn_doc_name inlining.ml 13 24
+  let () = (f [@unrolled 10]) 0
+                          ^
+  unrolled annotation
+
+// module strengthening
+
+  $ cat > module_strengthening.ml << EOF
+  > module type S = sig end
+  > module M = struct end
+  > module type S = S with M
+  > EOF
+
+  $ syntax_errors module_strengthening.ml
+
+  $ syn_doc_name module_strengthening.ml 3 16
+  module type S = S with M
+                  ^
+  No documentation found
+
+  $ syn_doc_name module_strengthening.ml 3 20
+  module type S = S with M
+                      ^
+  with keyword (module strengthening)
+
+  $ syn_doc_name module_strengthening.ml 3 23
+  module type S = S with M
+                         ^
+  No documentation found
