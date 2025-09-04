@@ -663,6 +663,36 @@ end = struct
 
 end
 
+and Find_module_cache : sig
+  (** Without [Find_module_cache.t], [Graph.find_module] would be exponential. In the
+      [Pdot] and [Papply] cases, [Graph.find_module] makes a recursive call to
+      [Graph.find_module] followed by a call to [Module.find_module]. [Module.find_module]
+      then also makes a (mutually) recursive call to [Graph.find_module], often with the
+      exact same input as the first [Graph.find_module] recursive call. This leads to
+      exponential blow up if we don't re-use the output of the first [Graph.find_module]
+      recursive call. [Find_module_cache.t] is used to thread through the result of that
+      first call.
+
+      It's unclear to me (liam923) at the time of writing this whether storing
+      [path_of_last_found_module] is necessary as I am unsure whether the second call to
+      [Graph.find_module] will always pass the exact same path as the first call to
+      [Graph.find_module]. But doing so is cheap and is the safe option.
+
+      One could imagine caching more than just the most recent call to [Graph.find_module]
+      and instead caching every result or using some sort of LRU cache. But it's not clear
+      this would actually result in any performance benefits, so this additional
+      complexity doesn't seem worth it. *)
+  type t = {
+    path_of_last_found_module : Path.t;
+    last_found_module : Module.t;
+  }
+end = struct
+  type t = {
+    path_of_last_found_module : Path.t;
+    last_found_module : Module.t;
+  }
+end
+
 and Module : sig
 
   type t
@@ -703,11 +733,11 @@ and Module : sig
 
   val find_module_type : Graph.t -> t -> string -> Module_type.t
 
-  val find_module : Graph.t -> t -> string -> Module.t
+  val find_module : ?cache:Find_module_cache.t -> Graph.t -> t -> string -> Module.t
 
-  val find_application : Graph.t -> t -> Path.t -> Module.t
+  val find_application : ?cache:Find_module_cache.t -> Graph.t -> t -> Path.t -> Module.t
 
-  val normalize : Graph.t -> t -> normalized
+  val normalize : ?cache:Find_module_cache.t -> Graph.t -> t -> normalized
 
   val unnormalize : normalized -> t
 
@@ -853,11 +883,18 @@ end = struct
         | aliased -> normalize_loop root aliased
       end
 
-  let normalize root t =
+  let normalize ?(cache : Find_module_cache.t option) root t =
     match t with
     | Definition { sort = Sort.Defined } -> normalize_loop root t
     | Definition { sort = Sort.Declared _ } | Declaration _ ->
-        match Graph.find_module root (raw_path t) with
+        let raw_path_of_t = raw_path t in
+        let md =
+          match cache with
+          | Some { path_of_last_found_module; last_found_module }
+            when Path.equal raw_path_of_t path_of_last_found_module -> last_found_module
+          | _ -> Graph.find_module root raw_path_of_t
+        in
+        match md with
         | exception Not_found -> normalize_loop root t
         | t -> normalize_loop root t
 
@@ -877,8 +914,8 @@ end = struct
     | Declaration _ -> Unknown
     | Definition { definition; _ } -> definition
 
-  let force root t =
-    let t = Module.normalize root t in
+  let force ?cache root t =
+    let t = Module.normalize ?cache root t in
     match definition t with
     | Alias _ -> assert false
     | Unknown
@@ -993,8 +1030,8 @@ end = struct
     | Signature { components = Forced { module_types; _ }; _ } ->
         String_map.find name module_types
 
-  let find_module root t name =
-    let t = force root t in
+  let find_module ?cache root t name =
+    let t = force ?cache root t in
     match definition t with
     | Alias _
     | Signature { components = Unforced _ } ->
@@ -1006,8 +1043,8 @@ end = struct
     | Signature { components = Forced { modules; _ }; _ } ->
         String_map.find name modules
 
-  let find_application root t path =
-    let t = Module.normalize root t in
+  let find_application ?cache root t path =
+    let t = Module.normalize ?cache root t in
     match definition t with
     | Alias _ -> assert false
     | Signature _ -> raise Not_found
@@ -1389,10 +1426,14 @@ end = struct
         Ident_map.find id t.modules
     | Path.Pdot(p, name) ->
         let md = find_module t p in
-        Module.find_module t md name
+        Module.find_module
+          ~cache:{ last_found_module = md; path_of_last_found_module = p }
+          t md name
     | Path.Papply(p, arg) ->
         let md = find_module t p in
-        Module.find_application t md arg
+        Module.find_application
+          ~cache:{ last_found_module = md; path_of_last_found_module = p }
+          t md arg
     | Path.Pextra_ty _ ->
         raise Not_found
 
