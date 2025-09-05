@@ -536,14 +536,19 @@ let all_commands =
           | `Ident_at pos, scope ->
             run buffer (Query_protocol.Occurrences (`Ident_at pos, scope))
       end;
-    command "outline" ~spec:[]
+    command "outline"
+      ~spec:
+        [ optional "-include-types" "Don't print"
+            (Marg.bool (fun include_types _ -> include_types))
+        ]
       ~doc:
         "Returns a tree of objects `{'start': position, 'end': position, \
          'name': string, 'kind': string, 'children': subnodes}` describing the \
          content of the buffer."
-      ~default:()
+      ~default:true
       begin
-        fun buffer () -> run buffer Query_protocol.Outline
+        fun buffer include_types ->
+          run buffer (Query_protocol.Outline { include_types })
       end;
     command "path-of-source"
       ~doc:
