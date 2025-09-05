@@ -452,12 +452,12 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 1 40
   type ('a : immediate) t : value mod portable with 'a @@ global
                                           ^
-  Mode (in kind)
+  Mod-bound
 
   $ syn_doc_name kinds.ml 1 47
   type ('a : immediate) t : value mod portable with 'a @@ global
                                                  ^
-  with keyword (kinds)
+  with keyword (in a kind)
 
   $ syn_doc_name kinds.ml 1 51
   type ('a : immediate) t : value mod portable with 'a @@ global
@@ -467,7 +467,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 1 53
   type ('a : immediate) t : value mod portable with 'a @@ global
                                                        ^
-  @@ keyword
+  @@ keyword (in a kind)
 
   $ syn_doc_name kinds.ml 1 57
   type ('a : immediate) t : value mod portable with 'a @@ global
@@ -507,7 +507,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 7 28
   type t : float64 mod everything
                               ^
-  Mode (in kind)
+  Mod-bound
 
 // include functor
 
@@ -681,7 +681,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name zero_alloc.ml 11 44
   external id : 'a -> 'a = "%identity" [@@noalloc]
                                               ^
-  noalloc annotation
+  Noalloc annotation
   $ syn_doc_name zero_alloc.ml 12 10
   let[@zero_alloc assume_unless_opt] f x = x
             ^
@@ -744,7 +744,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name inlining.ml 4 10
   let[@inline] f x = x
             ^
-  Inline annotation
+  Inline always annotation
 
   $ syn_doc_name inlining.ml 5 17
   let () = (f [@inlined always]) 0
@@ -779,7 +779,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name inlining.ml 8 17
   let () = (f [@inlined]) 0
                    ^
-  Inlined annotation
+  Inlined always annotation
 
   $ syn_doc_name inlining.ml 9 17
   let () = (f [@loop always]) 0
@@ -804,7 +804,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name inlining.ml 11 17
   let () = (f [@loop]) 0
                    ^
-  Loop annotation
+  Loop always annotation
 
   $ syn_doc_name inlining.ml 12 18
   let () = (f [@unrolled 10]) 0
@@ -834,7 +834,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name module_strengthening.ml 3 20
   module type S = S with M
                       ^
-  with keyword (module strengthening)
+  Module strengthening
 
   $ syn_doc_name module_strengthening.ml 3 23
   module type S = S with M
