@@ -32,6 +32,109 @@ module Loc_comparison_result = struct
     | Inside -> true
 end
 
+let get_jkind_abbrev_doc abbrev =
+  let open Option.Infix in
+  let open struct
+    type docpage = Kind_syntax | Unboxed_types
+  end in
+  let* description, docpage =
+    match abbrev with
+    | "any" ->
+      Some
+        ("The top of the kind lattice; all types have this kind.", Kind_syntax)
+    | "any_non_null" -> Some ("A synonym for `any mod non_null`.", Kind_syntax)
+    | "value_or_null" ->
+      Some
+        ( "The kind of ordinary OCaml types, but with the possibility that the \
+           type contains `null`.",
+          Kind_syntax )
+    | "value" -> Some ("The kind of ordinary OCaml types", Kind_syntax)
+    | "void" ->
+      Some
+        ( "The layout of types that are represented by 0 bits at runtime; \
+           these types can contain only 1 value.",
+          Kind_syntax )
+    | "immediate64" ->
+      Some
+        ( "On 64-bit platforms, the kind of types inhabited only by tagged \
+           integers.",
+          Kind_syntax )
+    | "immediate" ->
+      Some ("The kind of types inhabited only by tagged integers.", Kind_syntax)
+    | "immediate_or_null" ->
+      Some
+        ( "The kind of types inhabited by tagged integers and the bit pattern \
+           containing all 0s.",
+          Kind_syntax )
+    | "float64" ->
+      Some
+        ( "The layout of types represented by a 64-bit machine float.",
+          Unboxed_types )
+    | "float32" ->
+      Some
+        ( "The layout of types represented by a 32-bit machine float.",
+          Unboxed_types )
+    | "word" ->
+      Some
+        ( "The layout of types represented by a native-width machine word.",
+          Unboxed_types )
+    | "bits8" ->
+      Some
+        ( "The layout of types represented by an 8-bit machine word.",
+          Unboxed_types )
+    | "bits16" ->
+      Some
+        ( "The layout of types represented by a 16-bit machine word.",
+          Unboxed_types )
+    | "bits32" ->
+      Some
+        ( "The layout of types represented by a 32-bit machine word.",
+          Unboxed_types )
+    | "bits64" ->
+      Some
+        ( "The layout of types represented by a 64-bit machine word.",
+          Unboxed_types )
+    | "vec128" ->
+      Some
+        ( "The layout of types represented by a 128-bit machine vector.",
+          Unboxed_types )
+    | "vec256" ->
+      Some
+        ( "The layout of types represented by a 256-bit machine vector.",
+          Unboxed_types )
+    | "vec512" ->
+      Some
+        ( "The layout of types represented by a 512-bit machine vector.",
+          Unboxed_types )
+    | "immutable_data" ->
+      Some
+        ( "The kind of types that contain no mutable parts and no functions.",
+          Kind_syntax )
+    | "sync_data" ->
+      Some
+        ( "The kind of types that contain no mutable parts (except possibly \
+           for atomic fields) and no functions.",
+          Kind_syntax )
+    | "mutable_data" ->
+      Some
+        ( "The kind of types that may have mutable parts but contain no \
+           functions.",
+          Kind_syntax )
+    | _ -> None
+  in
+  let docpage_str =
+    match docpage with
+    | Kind_syntax -> "kinds/syntax/"
+    | Unboxed_types -> "unboxed-types/intro/"
+  in
+  (Some
+     { name = "Kind abbreviation";
+       description;
+       documentation = syntax_doc_url Oxcaml docpage_str;
+       level = Advanced
+     }
+    : syntax_info)
+
 let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   (* Merlin-jst specific: This function gets documentation for oxcaml language
      extensions. *)
@@ -358,13 +461,8 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           level = Advanced
         })
   (* Jkinds *)
-  | Jkind_annotation { pjkind_desc = Abbreviation _; _ } :: _ ->
-    Some
-      { name = "Kind abbreviation";
-        description = "todo";
-        documentation = syntax_doc_url "todo";
-        level = Advanced
-      }
+  | Jkind_annotation { pjkind_desc = Abbreviation abbrev; _ } :: _ ->
+    get_jkind_abbrev_doc abbrev
   | Jkind_annotation { pjkind_desc = Mod _; _ } :: _ ->
     Some
       { name = "mod keyword";
