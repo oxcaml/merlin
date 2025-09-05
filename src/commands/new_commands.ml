@@ -538,7 +538,9 @@ let all_commands =
       end;
     command "outline"
       ~spec:
-        [ optional "-include-types" "Don't print"
+        [ optional "-include-types"
+            "<true|false> (default: true) If false, don't print any types in \
+             the output"
             (Marg.bool (fun include_types _ -> include_types))
         ]
       ~doc:
