@@ -261,8 +261,8 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | { attr_name = { txt = "noalloc"; _ }; _ } ->
       Some
         { name = "Noalloc annotation";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
+          description = "This external does not allocate, does not raise exceptions, and does not release the domain lock. The compiler will optimize uses to a direct C call.";
+          documentation = syntax_doc_url Ocaml "intfc.html#ss:c-direct-call";
           level = Advanced
         }
     (* Inlining annotations *)
