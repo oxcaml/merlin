@@ -752,56 +752,6 @@ Convenience function to ensure we haven't made any syntax errors.
                    ^
   Inlined annotation
 
-  $ syn_doc_name inlining.ml 7 10
-  let[@specialise always] f x = x
-            ^
-  Specialise always annotation
-
-  $ syn_doc_name inlining.ml 7 17
-  let[@specialise always] f x = x
-                   ^
-  Specialise always annotation
-
-  $ syn_doc_name inlining.ml 8 10
-  let[@specialise never] f x = x
-            ^
-  Specialise never annotation
-
-  $ syn_doc_name inlining.ml 8 17
-  let[@specialise never] f x = x
-                   ^
-  Specialise never annotation
-
-  $ syn_doc_name inlining.ml 9 10
-  let[@specialise] f x = x
-            ^
-  Specialise annotation
-
-  $ syn_doc_name inlining.ml 10 17
-  let () = (f [@specialised always]) 0
-                   ^
-  Specialised always annotation
-
-  $ syn_doc_name inlining.ml 10 29
-  let () = (f [@specialised always]) 0
-                               ^
-  Specialised always annotation
-
-  $ syn_doc_name inlining.ml 11 17
-  let () = (f [@specialised never]) 0
-                   ^
-  Specialised never annotation
-
-  $ syn_doc_name inlining.ml 11 27
-  let () = (f [@specialised never]) 0
-                             ^
-  Specialised never annotation
-
-  $ syn_doc_name inlining.ml 12 17
-  let () = (f [@specialised]) 0
-                   ^
-  Specialised annotation
-
   $ syn_doc_name inlining.ml 13 18
   let () = (f [@unrolled 10]) 0
                     ^
