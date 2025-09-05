@@ -168,12 +168,18 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     match attribute with
     (* Zero-alloc annotations *)
     | { attr_name = { txt = "zero_alloc"; _ }; attr_payload; _ } -> (
+      let doc_url =
+        syntax_doc_url "miscellaneous-extensions/zero_alloc_check/"
+      in
       match attr_payload with
       | PStr [] ->
         Some
           { name = "Zero-alloc annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description =
+              "This function does not allocate on the OCaml heap on executions \
+               that return normally. The function may allocate if it raises an \
+               exception.";
+            documentation = doc_url;
             level = Advanced
           }
       | PStr
@@ -198,37 +204,53 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | "opt" ->
           Some
             { name = "Zero-alloc opt annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description = "Same as [@zero_alloc] in optimized builds only.";
+              documentation = doc_url;
               level = Advanced
             }
         | "assume" ->
           Some
             { name = "Zero-alloc assume annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description =
+                "This function is assumed to be \"zero_alloc\" but the \
+                 compiler does not guarantee it.";
+              documentation = doc_url;
+              level = Advanced
+            }
+        | "assume_unless_opt" ->
+          Some
+            { name = "Zero-alloc assume_unless_opt annotation";
+              description =
+                "Same as [@zero_alloc opt]  in optimized builds. Same as \
+                 [@zero_alloc assume] in non-optimized builds.";
+              documentation = doc_url;
               level = Advanced
             }
         | "strict" ->
           Some
             { name = "Zero-alloc strict annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description =
+                "This function does not allocate on the OCaml heap (both \
+                 normal and exception returns).";
+              documentation = doc_url;
               level = Advanced
             }
         | "arity" ->
           Some
             { name = "Zero-alloc arity annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description =
+                "The function does not allocate when applied to [n] arguments. \
+                 This can be used to override the arity inferred based on the \
+                 number of arrows in the type.";
+              documentation = doc_url;
               level = Advanced
             }
         | _ -> None)
       | _ ->
         Some
           { name = "Unrecognized zero-alloc annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description = "This is an unrecognized zero-alloc annotation.";
+            documentation = doc_url;
             level = Advanced
           })
     | { attr_name = { txt = "noalloc"; _ }; _ } ->

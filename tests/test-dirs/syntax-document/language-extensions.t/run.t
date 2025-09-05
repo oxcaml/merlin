@@ -603,6 +603,7 @@ Convenience function to ensure we haven't made any syntax errors.
   >   val[@zero_alloc arity 1] f : t
   > end
   > external id : 'a -> 'a = "%identity" [@@noalloc]
+  > let[@zero_alloc assume_unless_opt] f x = x
   > EOF
 
   $ syntax_errors zero_alloc.ml
@@ -681,6 +682,15 @@ Convenience function to ensure we haven't made any syntax errors.
   external id : 'a -> 'a = "%identity" [@@noalloc]
                                               ^
   noalloc annotation
+  $ syn_doc_name zero_alloc.ml 12 10
+  let[@zero_alloc assume_unless_opt] f x = x
+            ^
+  Zero-alloc assume_unless_opt annotation
+
+  $ syn_doc_name zero_alloc.ml 12 18
+  let[@zero_alloc assume_unless_opt] f x = x
+                    ^
+  Zero-alloc assume_unless_opt annotation
 
 // inlining annotations
 
