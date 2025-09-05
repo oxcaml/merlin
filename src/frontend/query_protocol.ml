@@ -107,7 +107,7 @@ module Syntax_doc_result = struct
   type t =
     { name : string;
       description : string;
-      documentation : string;
+      documentation : string option;
       level : Level.t
     }
 end

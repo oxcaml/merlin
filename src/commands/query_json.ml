@@ -455,7 +455,7 @@ let json_of_response (type a) (query : a t) (response : a) : json =
       `Assoc
         [ ("name", `String name);
           ("description", `String description);
-          ("url", `String documentation);
+          ("url", Json.option (fun s -> `String s) documentation);
           ( "level",
             `String
               (match level with

@@ -10,10 +10,10 @@ end
 let syntax_doc_url (doc_website_base : Doc_website_base.t) endpoint =
   let base_url =
     match doc_website_base with
-    | Ocaml -> "https://v2.ocaml.org/releases/4.14/htmlman/"
+    | Ocaml -> "https://ocaml.org/manual/5.2/"
     | Oxcaml -> "https://oxcaml.org/documentation/"
   in
-  base_url ^ endpoint
+  Some (base_url ^ endpoint)
 
 (** Drop elements from the head of [list] until [f] returns [true]. *)
 let rec drop_until list ~f =
@@ -138,7 +138,6 @@ let get_jkind_abbrev_doc abbrev =
 let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   (* Merlin-jst specific: This function gets documentation for oxcaml language
      extensions. *)
-  let syntax_doc_url = syntax_doc_url Oxcaml in
   let compare_cursor_to_loc loc : Loc_comparison_result.t =
     match Location_aux.compare_pos cursor_loc loc with
     | n when n < 0 -> Before
@@ -162,14 +161,20 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | Inside -> true
         | Before | After -> false)
   in
+  let stack_allocation_url =
+    syntax_doc_url Oxcaml "stack-allocation/reference/"
+  in
   let get_doc_for_attribute (attribute : Parsetree.attribute) : syntax_info =
+    let builtin_attrs_doc_url =
+      syntax_doc_url Ocaml "attributes.html#ss:builtin-attributes"
+    in
     (* See below usage of this function for explanation of why this isn't part of the
        other big match statement. *)
     match attribute with
     (* Zero-alloc annotations *)
     | { attr_name = { txt = "zero_alloc"; _ }; attr_payload; _ } -> (
       let doc_url =
-        syntax_doc_url "miscellaneous-extensions/zero_alloc_check/"
+        syntax_doc_url Oxcaml "miscellaneous-extensions/zero_alloc_check/"
       in
       match attr_payload with
       | PStr [] ->
@@ -257,17 +262,23 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
       Some
         { name = "noalloc annotation";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     (* Inlining annotations *)
     | { attr_name = { txt = "inline"; _ }; attr_payload; _ } -> (
+      let inline_always_desc =
+        "On a function declaration, causes the function to be inlined at all \
+         known call sites (can be overridden by [@inlined]).  In addition it \
+         will be made available for inlining in other source files (with \
+         appropriate build settings permitting .cmx file visibility)"
+      in
       match attr_payload with
       | PStr [] ->
         Some
           { name = "Inline annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description = inline_always_desc;
+            documentation = builtin_attrs_doc_url;
             level = Advanced
           }
       | PStr
@@ -284,32 +295,59 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | "always" ->
           Some
             { name = "Inline always annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description = inline_always_desc;
+              documentation = builtin_attrs_doc_url;
               level = Advanced
             }
         | "never" ->
           Some
             { name = "Inline never annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description =
+                "On a function declaration, causes the function to never be \
+                 inlined at any call site (can be overridden by [@inlined]).  \
+                 Further, this prevents inlining into any other source file \
+                 (even if explicitly requested at a call site in such file; \
+                 call sites within the same source file can use [@inlined] to \
+                 override)";
+              documentation = builtin_attrs_doc_url;
+              level = Advanced
+            }
+        | "available" ->
+          Some
+            { name = "Inline available annotation";
+              description =
+                "Causes the function to be available for inlining in other \
+                 source files, but does not affect actual inlining decisions.  \
+                 Can be used to ensure cross-source-file inlining even in \
+                 cases where it would normally be unavailable e.g. a very \
+                 large function";
+              documentation = None;
               level = Advanced
             }
         | _ -> None)
       | _ ->
         Some
           { name = "Unrecognized inline annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description = "Unrecognized inline annoation";
+            documentation = builtin_attrs_doc_url;
             level = Advanced
           })
     | { attr_name = { txt = "inlined"; _ }; attr_payload; _ } -> (
+      let inlined_always_desc =
+        "On a function call site, causes the function to be inlined.  The \
+         function must be known to the optimizer (i.e. not an indirect call; \
+         and if in another source file, the .cmx for that file must be \
+         available and the function available for inlining e.g. by [@inline \
+         always] or [@inline available] or the decision of the optimizer).  \
+         This attribute can override [@inline never] but only within the same \
+         source file "
+      in
       match attr_payload with
       | PStr [] ->
         Some
           { name = "Inlined annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description = inlined_always_desc;
+            documentation = builtin_attrs_doc_url;
             level = Advanced
           }
       | PStr
@@ -326,38 +364,56 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | "always" ->
           Some
             { name = "Inlined always annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description = inlined_always_desc;
+              documentation = builtin_attrs_doc_url;
               level = Advanced
             }
         | "never" ->
           Some
             { name = "Inlined never annotation";
-              description = "todo";
-              documentation = syntax_doc_url "todo";
+              description =
+                "On a function call site, causes the function to never be \
+                 inlined, overriding any attribute on the function's \
+                 declaration.";
+              documentation = builtin_attrs_doc_url;
+              level = Advanced
+            }
+        | "hint" ->
+          Some
+            { name = "Inlined hint annotation";
+              description =
+                "On a function call site, causes the function to be inlined if \
+                 possible (like [@inlined always]) but suppresses the warning \
+                 when it is not possible.";
+              documentation = None;
               level = Advanced
             }
         | _ -> None)
       | _ ->
         Some
           { name = "Unrecognized inlined annotation";
-            description = "todo";
-            documentation = syntax_doc_url "todo";
+            description = "Unrecognized inlined annotation";
+            documentation = builtin_attrs_doc_url;
             level = Advanced
           })
     | { attr_name = { txt = "unrolled"; _ }; _ } ->
       Some
         { name = "unrolled annotation";
-          description = "todo";
-          documentation = syntax_doc_url "todo";
+          description =
+            "On a recursive function's call site, causes the function body to \
+             be unrolled this many times.  At present this is not supported if \
+             the function was loopified (use [@loop never] to disable).  If in \
+             another source file, the function must be available for inlining \
+             e.g. by [@inline available] with the .cmx file available.";
+          documentation = builtin_attrs_doc_url;
           level = Advanced
         }
     (* Misc *)
     | { attr_name = { txt = "nontail"; _ }; _ } ->
       Some
         { name = "nontail annotation";
-          description = "todo";
-          documentation = syntax_doc_url "todo";
+          description = "Prevent this function call from being tail-called";
+          documentation = stack_allocation_url;
           level = Advanced
         }
     | _ -> None
@@ -370,14 +426,14 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
       Some
         { name = "Mode (in kind)";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     | _ ->
       Some
         { name = "Mode";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         })
   | Modality { txt = Modality _; _ } :: ancestors -> (
@@ -386,14 +442,14 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
       Some
         { name = "Modality (in kind)";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     | _ ->
       Some
         { name = "Modality";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         })
   (* Jkinds *)
@@ -403,7 +459,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     Some
       { name = "mod keyword";
         description = "todo";
-        documentation = syntax_doc_url "todo";
+        documentation = syntax_doc_url Oxcaml "todo";
         level = Advanced
       }
   | Jkind_annotation { pjkind_desc = With (_, with_type, _); _ } :: _ -> (
@@ -412,21 +468,21 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
       Some
         { name = "with keyword (kinds)";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     | Inside ->
       Some
         { name = "with-type";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     | After ->
       Some
         { name = "@@ keyword";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         })
   (* Module Strengthening *)
@@ -438,7 +494,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
       Some
         { name = "with keyword (module strengthening)";
           description = "todo";
-          documentation = syntax_doc_url "todo";
+          documentation = syntax_doc_url Oxcaml "todo";
           level = Advanced
         }
     | Inside | After -> None)
@@ -447,7 +503,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     Some
       { name = "exclave_";
         description = "todo";
-        documentation = syntax_doc_url "todo";
+        documentation = syntax_doc_url Oxcaml "todo";
         level = Advanced
       }
   | Expression { exp_extra; exp_loc; _ } :: _
@@ -467,7 +523,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     Some
       { name = "stack_";
         description = "todo";
-        documentation = syntax_doc_url "todo";
+        documentation = syntax_doc_url Oxcaml "todo";
         level = Advanced
       }
   (* Include functor *)
@@ -479,7 +535,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     Some
       { name = "include functor";
         description = "todo";
-        documentation = syntax_doc_url "todo";
+        documentation = syntax_doc_url Oxcaml "todo";
         level = Advanced
       }
   | nodes ->

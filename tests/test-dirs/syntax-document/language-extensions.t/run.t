@@ -697,16 +697,12 @@ Convenience function to ensure we haven't made any syntax errors.
   $ cat > inlining.ml << EOF
   > let[@inline always] f x = x
   > let[@inline never] f x = x
+  > let[@inline available] f x = x
   > let[@inline] f x = x
   > let () = (f [@inlined always]) 0
   > let () = (f [@inlined never]) 0
+  > let () = (f [@inlined hint]) 0
   > let () = (f [@inlined]) 0
-  > let[@specialise always] f x = x
-  > let[@specialise never] f x = x
-  > let[@specialise] f x = x
-  > let () = (f [@specialised always]) 0
-  > let () = (f [@specialised never]) 0
-  > let () = (f [@specialised]) 0
   > let () = (f [@unrolled 10]) 0
   > EOF
 
@@ -733,41 +729,61 @@ Convenience function to ensure we haven't made any syntax errors.
   Inline never annotation
 
   $ syn_doc_name inlining.ml 3 10
+  let[@inline available] f x = x
+            ^
+  Inline available annotation
+
+  $ syn_doc_name inlining.ml 3 13
+  let[@inline available] f x = x
+               ^
+  Inline available annotation
+
+  $ syn_doc_name inlining.ml 4 10
   let[@inline] f x = x
             ^
   Inline annotation
 
-  $ syn_doc_name inlining.ml 4 17
-  let () = (f [@inlined always]) 0
-                   ^
-  Inlined always annotation
-
-  $ syn_doc_name inlining.ml 4 25
-  let () = (f [@inlined always]) 0
-                           ^
-  Inlined always annotation
-
   $ syn_doc_name inlining.ml 5 17
-  let () = (f [@inlined never]) 0
+  let () = (f [@inlined always]) 0
                    ^
-  Inlined never annotation
+  Inlined always annotation
 
   $ syn_doc_name inlining.ml 5 25
+  let () = (f [@inlined always]) 0
+                           ^
+  Inlined always annotation
+
+  $ syn_doc_name inlining.ml 6 17
+  let () = (f [@inlined never]) 0
+                   ^
+  Inlined never annotation
+
+  $ syn_doc_name inlining.ml 6 25
   let () = (f [@inlined never]) 0
                            ^
   Inlined never annotation
 
-  $ syn_doc_name inlining.ml 6 17
+  $ syn_doc_name inlining.ml 7 17
+  let () = (f [@inlined hint]) 0
+                   ^
+  Inlined hint annotation
+
+  $ syn_doc_name inlining.ml 7 25
+  let () = (f [@inlined hint]) 0
+                           ^
+  Inlined hint annotation
+
+  $ syn_doc_name inlining.ml 8 17
   let () = (f [@inlined]) 0
                    ^
   Inlined annotation
 
-  $ syn_doc_name inlining.ml 13 18
+  $ syn_doc_name inlining.ml 9 18
   let () = (f [@unrolled 10]) 0
                     ^
   unrolled annotation
 
-  $ syn_doc_name inlining.ml 13 24
+  $ syn_doc_name inlining.ml 9 24
   let () = (f [@unrolled 10]) 0
                           ^
   unrolled annotation
