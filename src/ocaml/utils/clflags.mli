@@ -53,3 +53,9 @@ val unboxed_types        : bool ref
 val profile_columns : profile_column list ref
 
 val locations            : bool ref
+
+(* Missing gdwarf config parameters from oxcaml *)
+val gdwarf_config_max_type_to_shape_depth : int ref
+val dwarf_pedantic : bool ref
+val gdwarf_config_shape_eval_depth : int ref
+val gdwarf_config_max_evaluation_steps_per_variable : int option ref

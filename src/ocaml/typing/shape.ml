@@ -16,6 +16,12 @@
 module Layout = Jkind_types.Sort.Const
 type base_layout = Jkind_types.Sort.base
 
+(* Merlin: make Misc_stdlib be Misc.Stdlib *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+end
+
 module Uid = struct
   type t =
     | Compilation_unit of string

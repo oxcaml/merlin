@@ -45,3 +45,9 @@ let unboxed_types       = ref false
 let profile_columns     = ref []
 
 let locations = ref true
+
+(* Missing gdwarf config parameters from oxcaml *)
+let gdwarf_config_max_type_to_shape_depth = ref 10
+let dwarf_pedantic = ref false
+let gdwarf_config_shape_eval_depth = ref 1
+let gdwarf_config_max_evaluation_steps_per_variable = ref (Some 1000)

@@ -17,6 +17,13 @@
 
 open Shape
 
+(* Merlin: make Misc_stdlib be Misc.Stdlib and add Maybe_bounded *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+  module Maybe_bounded = Misc_stdlib.Maybe_bounded
+end
+
 type result =
   | Resolved of Uid.t
   | Resolved_alias of Uid.t * result
@@ -815,9 +822,6 @@ end) = struct
       max_steps_per_variable;
       global_env;
       diagnostics;
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
       reduce_memo_table = reduce_memo_table;
       read_back_memo_table = read_back_memo_table;
       local_env;
@@ -865,9 +869,6 @@ end) = struct
       max_steps_per_variable = Params.max_shape_reduce_steps_per_variable ();
       global_env;
       diagnostics = Diagnostics.no_diagnostics;
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
       reduce_memo_table = reduce_memo_table;
       read_back_memo_table = read_back_memo_table;
       local_env;

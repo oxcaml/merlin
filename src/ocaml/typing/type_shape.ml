@@ -5,6 +5,13 @@ type base_layout = Jkind_types.Sort.base
 
 type path_lookup = Path.t -> args:Shape.t list -> Shape.t option
 
+(* Merlin: make Misc_stdlib be Misc.Stdlib and add Maybe_bounded *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+  module Maybe_bounded = Misc_stdlib.Maybe_bounded
+end
+
 module Recursive_binder : sig
   type t
 
