@@ -72,7 +72,9 @@ let rec summarize ~include_types node =
       match id_of_patt vb.vb_pat with
       | None -> None
       | Some ident ->
-        let typ = outline_type ~include_types ~env:node.t_env vb.vb_pat.pat_type in
+        let typ =
+          outline_type ~include_types ~env:node.t_env vb.vb_pat.pat_type
+        in
         Some (mk ~location ~deprecated `Value typ ident)
     end
   | Value_description vd ->
@@ -171,18 +173,24 @@ and get_class_elements node =
   | _ -> []
 
 and get_mod_children ~include_types node =
-  List.concat_map (Lazy.force node.t_children) ~f:(remove_mod_indir ~include_types)
+  List.concat_map
+    (Lazy.force node.t_children)
+    ~f:(remove_mod_indir ~include_types)
 
 and remove_mod_indir ~include_types node =
   match node.t_node with
   | Module_expr _ | Module_type _ ->
-    List.concat_map (Lazy.force node.t_children) ~f:(remove_mod_indir ~include_types)
+    List.concat_map
+      (Lazy.force node.t_children)
+      ~f:(remove_mod_indir ~include_types)
   | _ -> remove_top_indir ~include_types node
 
 and remove_top_indir ~include_types t =
   match t.t_node with
   | Structure _ | Signature _ ->
-    List.concat_map ~f:(remove_top_indir ~include_types) (Lazy.force t.t_children)
+    List.concat_map
+      ~f:(remove_top_indir ~include_types)
+      (Lazy.force t.t_children)
   | Signature_item _ | Structure_item _ ->
     List.filter_map (Lazy.force t.t_children) ~f:(summarize ~include_types)
   | _ -> []
