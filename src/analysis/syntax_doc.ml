@@ -340,7 +340,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
          available and the function available for inlining e.g. by [@inline \
          always] or [@inline available] or the decision of the optimizer).  \
          This attribute can override [@inline never] but only within the same \
-         source file "
+         source file."
       in
       match attr_payload with
       | PStr [] ->
@@ -394,6 +394,56 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           { name = "Unrecognized inlined annotation";
             description = "Unrecognized inlined annotation";
             documentation = builtin_attrs_doc_url;
+            level = Advanced
+          })
+    | { attr_name = { txt = "loop"; _ }; attr_payload; _ } -> (
+      let loop_always_desc =
+        "Forces the self-tail-recursive call sites, if any, in the given \
+         function to be converted into a loop.  If those are the only uses of \
+         the recursively-defined function variable, no closure will be \
+         generated, and the function can then be inlined as a loop.  This \
+         transformation is not yet supported for mutually-recursive functions."
+      in
+      match attr_payload with
+      | PStr [] ->
+        Some
+          { name = "Loop annotation";
+            description = loop_always_desc;
+            documentation = None;
+            level = Advanced
+          }
+      | PStr
+          [ { pstr_desc =
+                Pstr_eval
+                  ( { pexp_desc = Pexp_ident { txt = Lident loop_flag_name; _ };
+                      _
+                    },
+                    _ );
+              _
+            }
+          ] -> (
+        match loop_flag_name with
+        | "always" ->
+          Some
+            { name = "Loop always annotation";
+              description = loop_always_desc;
+              documentation = None;
+              level = Advanced
+            }
+        | "never" ->
+          Some
+            { name = "Loop never annotation";
+              description =
+                "Prevents the given function from being turned into a loop.";
+              documentation = None;
+              level = Advanced
+            }
+        | _ -> None)
+      | _ ->
+        Some
+          { name = "Unrecognized loop annotation";
+            description = "Unrecognized loop annotation";
+            documentation = None;
             level = Advanced
           })
     | { attr_name = { txt = "unrolled"; _ }; _ } ->

@@ -703,6 +703,9 @@ Convenience function to ensure we haven't made any syntax errors.
   > let () = (f [@inlined never]) 0
   > let () = (f [@inlined hint]) 0
   > let () = (f [@inlined]) 0
+  > let () = (f [@loop always]) 0
+  > let () = (f [@loop never]) 0
+  > let () = (f [@loop]) 0
   > let () = (f [@unrolled 10]) 0
   > EOF
 
@@ -778,12 +781,37 @@ Convenience function to ensure we haven't made any syntax errors.
                    ^
   Inlined annotation
 
-  $ syn_doc_name inlining.ml 9 18
+  $ syn_doc_name inlining.ml 9 17
+  let () = (f [@loop always]) 0
+                   ^
+  Loop always annotation
+
+  $ syn_doc_name inlining.ml 9 22
+  let () = (f [@loop always]) 0
+                        ^
+  Loop always annotation
+
+  $ syn_doc_name inlining.ml 10 17
+  let () = (f [@loop never]) 0
+                   ^
+  Loop never annotation
+
+  $ syn_doc_name inlining.ml 10 22
+  let () = (f [@loop never]) 0
+                        ^
+  Loop never annotation
+
+  $ syn_doc_name inlining.ml 11 17
+  let () = (f [@loop]) 0
+                   ^
+  Loop annotation
+
+  $ syn_doc_name inlining.ml 12 18
   let () = (f [@unrolled 10]) 0
                     ^
   unrolled annotation
 
-  $ syn_doc_name inlining.ml 9 24
+  $ syn_doc_name inlining.ml 12 24
   let () = (f [@unrolled 10]) 0
                           ^
   unrolled annotation
