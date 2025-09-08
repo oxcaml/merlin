@@ -152,26 +152,14 @@ let get_mod_bound_doc mod_bound =
   in
   let* description =
     match parsed with
-    | Axis_pair (Modal (Comonadic Areality), Local) -> Some ""
-    | Axis_pair (Modal (Comonadic Areality), Regional) -> None
-    | Axis_pair (Modal (Comonadic Areality), Global) -> Some ""
-    | Axis_pair (Modal (Monadic Contention), Contended) -> Some ""
-    | Axis_pair (Modal (Monadic Contention), Shared) -> Some ""
-    | Axis_pair (Modal (Monadic Contention), Uncontended) -> Some ""
-    | Axis_pair (Modal (Comonadic Portability), Nonportable) -> Some ""
-    | Axis_pair (Modal (Comonadic Portability), Portable) -> Some ""
-    | Axis_pair (Modal (Monadic Uniqueness), Aliased) -> Some ""
-    | Axis_pair (Modal (Monadic Uniqueness), Unique) -> Some ""
-    | Axis_pair (Modal (Comonadic Linearity), Once) -> Some ""
-    | Axis_pair (Modal (Comonadic Linearity), Many) -> Some ""
-    | Axis_pair (Modal (Comonadic Yielding), Yielding) -> Some ""
-    | Axis_pair (Modal (Comonadic Yielding), Unyielding) -> Some ""
-    | Axis_pair (Modal (Monadic Visibility), Immutable) -> Some ""
-    | Axis_pair (Modal (Monadic Visibility), Read) -> Some ""
-    | Axis_pair (Modal (Monadic Visibility), Read_write) -> Some ""
-    | Axis_pair (Modal (Comonadic Statefulness), Stateful) -> Some ""
-    | Axis_pair (Modal (Comonadic Statefulness), Observing) -> Some ""
-    | Axis_pair (Modal (Comonadic Statefulness), Stateless) -> Some ""
+    | Axis_pair (Modal (Comonadic _), _) ->
+      Some
+        (Format.asprintf
+           "Values of this type can cross to `%s` from weaker modes." mod_bound)
+    | Axis_pair (Modal (Monadic _), _) ->
+      Some
+        (Format.asprintf
+           "Values of this type can cross from `%s` to stronger modes" mod_bound)
     | Axis_pair (Nonmodal Externality, Internal) ->
       Some "Values of types of this kind might be pointers to the OCaml heap"
     | Axis_pair (Nonmodal Externality, External64) ->
@@ -220,20 +208,6 @@ module Modal_axis_pair = struct
     | P (Nonmodal _, _) -> None
 end
 
-let get_url_for_mode_axis (type a) (axis : a Mode.Value.Axis.t) =
-  let subpage =
-    match axis with
-    | Comonadic Areality -> "stack-allocation/intro/"
-    | Monadic Contention -> "parallelism/01-intro/"
-    | Comonadic Portability -> "parallelism/01-intro/"
-    | Monadic Uniqueness -> "uniqueness/intro/"
-    | Comonadic Linearity -> "uniqueness/intro/"
-    | Comonadic Yielding -> "todo"
-    | Monadic Visibility -> "todo"
-    | Comonadic Statefulness -> "todo"
-  in
-  syntax_doc_url Oxcaml subpage
-
 let get_mode_doc mode =
   let open Option.Infix in
   let* (P (axis, mode)) = Modal_axis_pair.of_string mode in
@@ -246,11 +220,11 @@ let get_mode_doc mode =
     | Monadic Contention, Contended ->
       Some
         "This usage of the value cannot read or write the mutable parts of the \
-         value"
+         value (unless they are atomic)"
     | Monadic Contention, Shared ->
       Some
         "This usage of the value can read but not write the mutable parts of \
-         the value"
+         the value (unless they are atomic)"
     | Monadic Contention, Uncontended ->
       Some
         "This usage of the value can read and write the mutable parts of the \
@@ -267,21 +241,44 @@ let get_mode_doc mode =
       Some "This usage of the value is the only usage of the value."
     | Comonadic Linearity, Once -> Some "This value can be used at most once"
     | Comonadic Linearity, Many -> Some "This value can be used many times"
-    | Comonadic Yielding, Yielding -> Some "todo"
-    | Comonadic Yielding, Unyielding -> Some "todo"
-    | Monadic Visibility, Immutable -> Some "todo"
-    | Monadic Visibility, Read -> Some "todo"
-    | Monadic Visibility, Read_write -> Some "todo"
-    | Comonadic Statefulness, Stateful -> Some "todo"
-    | Comonadic Statefulness, Observing -> Some "todo"
-    | Comonadic Statefulness, Stateless -> Some "todo"
+    | Comonadic Yielding, Yielding -> Some "This value can perform an effect"
+    | Comonadic Yielding, Unyielding ->
+      Some "This value cannot perform an effect"
+    | Monadic Visibility, Immutable ->
+      Some
+        "This usage of the value cannot read or write the mutable parts of the \
+         value"
+    | Monadic Visibility, Read ->
+      Some
+        "This usage of the value can read but not write the mutable parts of \
+         the value"
+    | Monadic Visibility, Read_write ->
+      Some
+        "This usage of the value can read and write the mutable parts of the \
+         value"
+    | Comonadic Statefulness, Stateful ->
+      Some "This value can read and write mutable data"
+    | Comonadic Statefulness, Observing ->
+      Some "This value can read but not write mutable data"
+    | Comonadic Statefulness, Stateless ->
+      Some "This value cannot read or write mutable data"
+  in
+  let doc_url =
+    let subpage =
+      match axis with
+      | Comonadic Areality -> "stack-allocation/intro/"
+      | Monadic Contention -> "parallelism/01-intro/"
+      | Comonadic Portability -> "parallelism/01-intro/"
+      | Monadic Uniqueness -> "uniqueness/intro/"
+      | Comonadic Linearity -> "uniqueness/intro/"
+      | Comonadic Yielding -> "modes/intro/"
+      | Monadic Visibility -> "modes/intro/"
+      | Comonadic Statefulness -> "modes/intro/"
+    in
+    syntax_doc_url Oxcaml subpage
   in
   (Some
-     { name = "Mode";
-       description;
-       documentation = get_url_for_mode_axis axis;
-       level = Advanced
-     }
+     { name = "Mode"; description; documentation = doc_url; level = Advanced }
     : syntax_info)
 
 let get_modality_doc modality =
@@ -294,19 +291,19 @@ let get_modality_doc modality =
     match axis with
     | Comonadic _ ->
       Format.asprintf
-        "This value is always stronger than %s, even if the container has a \
-         weaker mode."
+        "This value is always at least as strong as `%s`, even if the \
+         container has a weaker mode."
         modality
     | Monadic _ ->
       Format.asprintf
-        "This value is always weaker than %s, even if the container has a \
-         stronger mode."
+        "This value is always at least as weak as `%s`, even if the container \
+         has a stronger mode."
         modality
   in
   (Some
      { name = "Modality";
        description;
-       documentation = get_url_for_mode_axis axis;
+       documentation = syntax_doc_url Oxcaml "modes/syntax/";
        level = Advanced
      }
     : syntax_info)
