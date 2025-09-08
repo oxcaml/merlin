@@ -447,7 +447,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 1 33
   type ('a : immediate) t : value mod portable with 'a @@ global
                                    ^
-  mod keyword
+  `mod` keyword (in a kind)
 
   $ syn_doc_name kinds.ml 1 40
   type ('a : immediate) t : value mod portable with 'a @@ global
@@ -457,7 +457,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 1 47
   type ('a : immediate) t : value mod portable with 'a @@ global
                                                  ^
-  with keyword (in a kind)
+  `with` keyword (in a kind)
 
   $ syn_doc_name kinds.ml 1 51
   type ('a : immediate) t : value mod portable with 'a @@ global
@@ -467,12 +467,12 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_name kinds.ml 1 53
   type ('a : immediate) t : value mod portable with 'a @@ global
                                                        ^
-  @@ keyword (in a kind)
+  `@@` keyword (in a kind)
 
   $ syn_doc_name kinds.ml 1 57
   type ('a : immediate) t : value mod portable with 'a @@ global
                                                            ^
-  Modality (in kind)
+  Modality
 
   $ syn_doc_name kinds.ml 3 20
     val id : ('a : value). 'a -> 'a

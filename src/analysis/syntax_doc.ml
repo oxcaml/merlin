@@ -135,6 +135,182 @@ let get_jkind_abbrev_doc abbrev =
      }
     : syntax_info)
 
+let get_mod_bound_doc mod_bound =
+  let open Option.Infix in
+  let open struct
+    type parse_result =
+      | Axis_pair : 'a Jkind_axis.Axis.t * 'a -> parse_result
+      | Everything
+  end in
+  let* parsed =
+    match Typemode.Axis_pair.of_string mod_bound with
+    | exception Not_found -> (
+      match mod_bound with
+      | "everything" -> Some Everything
+      | __ -> None)
+    | P (axis, bound) -> Some (Axis_pair (axis, bound))
+  in
+  let* description =
+    match parsed with
+    | Axis_pair (Modal (Comonadic Areality), Local) -> Some ""
+    | Axis_pair (Modal (Comonadic Areality), Regional) -> None
+    | Axis_pair (Modal (Comonadic Areality), Global) -> Some ""
+    | Axis_pair (Modal (Monadic Contention), Contended) -> Some ""
+    | Axis_pair (Modal (Monadic Contention), Shared) -> Some ""
+    | Axis_pair (Modal (Monadic Contention), Uncontended) -> Some ""
+    | Axis_pair (Modal (Comonadic Portability), Nonportable) -> Some ""
+    | Axis_pair (Modal (Comonadic Portability), Portable) -> Some ""
+    | Axis_pair (Modal (Monadic Uniqueness), Aliased) -> Some ""
+    | Axis_pair (Modal (Monadic Uniqueness), Unique) -> Some ""
+    | Axis_pair (Modal (Comonadic Linearity), Once) -> Some ""
+    | Axis_pair (Modal (Comonadic Linearity), Many) -> Some ""
+    | Axis_pair (Modal (Comonadic Yielding), Yielding) -> Some ""
+    | Axis_pair (Modal (Comonadic Yielding), Unyielding) -> Some ""
+    | Axis_pair (Modal (Monadic Visibility), Immutable) -> Some ""
+    | Axis_pair (Modal (Monadic Visibility), Read) -> Some ""
+    | Axis_pair (Modal (Monadic Visibility), Read_write) -> Some ""
+    | Axis_pair (Modal (Comonadic Statefulness), Stateful) -> Some ""
+    | Axis_pair (Modal (Comonadic Statefulness), Observing) -> Some ""
+    | Axis_pair (Modal (Comonadic Statefulness), Stateless) -> Some ""
+    | Axis_pair (Nonmodal Externality, Internal) ->
+      Some "Values of types of this kind might be pointers to the OCaml heap"
+    | Axis_pair (Nonmodal Externality, External64) ->
+      Some
+        "On 64-bit systems, values of types of this kind are never pointers to \
+         the OCaml heap"
+    | Axis_pair (Nonmodal Externality, External) ->
+      Some "Values of types of this kind are never pointers to the OCaml heap"
+    | Axis_pair (Nonmodal Nullability, Maybe_null) ->
+      Some
+        "Values of types of this kind might be the bit pattern containing all \
+         0s"
+    | Axis_pair (Nonmodal Nullability, Non_null) ->
+      Some
+        "Values of types of this kind that are also a subkind of `value` are \
+         never the bit pattern containing all 0s"
+    | Axis_pair (Nonmodal Separability, Non_float) ->
+      Some "Values of types of this kind are never pointers to floats."
+    | Axis_pair (Nonmodal Separability, Separable) ->
+      Some
+        "No type of this kind includes both pointers to a float and other \
+         values."
+    | Axis_pair (Nonmodal Separability, Maybe_separable) ->
+      Some "Types of this kind may mix pointers to floats with other values."
+    | Everything ->
+      Some
+        "Synonym for \"global aliased many contended portable unyielding \
+         immutable stateless external_\", convenient for describing \
+         immediates."
+  in
+  (Some
+     { name = "Mod-bound";
+       description;
+       documentation = syntax_doc_url Oxcaml "kinds/intro/";
+       level = Advanced
+     }
+    : syntax_info)
+
+module Modal_axis_pair = struct
+  type t = P : 'a Mode.Value.Axis.t * 'a -> t
+
+  let of_string s =
+    match Typemode.Axis_pair.of_string s with
+    | exception Not_found -> None
+    | P (Modal axis, mode) -> Some (P (axis, mode))
+    | P (Nonmodal _, _) -> None
+end
+
+let get_url_for_mode_axis (type a) (axis : a Mode.Value.Axis.t) =
+  let subpage =
+    match axis with
+    | Comonadic Areality -> "stack-allocation/intro/"
+    | Monadic Contention -> "parallelism/01-intro/"
+    | Comonadic Portability -> "parallelism/01-intro/"
+    | Monadic Uniqueness -> "uniqueness/intro/"
+    | Comonadic Linearity -> "uniqueness/intro/"
+    | Comonadic Yielding -> "todo"
+    | Monadic Visibility -> "todo"
+    | Comonadic Statefulness -> "todo"
+  in
+  syntax_doc_url Oxcaml subpage
+
+let get_mode_doc mode =
+  let open Option.Infix in
+  let* (P (axis, mode)) = Modal_axis_pair.of_string mode in
+  let* description =
+    match (axis, mode) with
+    | Comonadic Areality, Local ->
+      Some "This value cannot escape the current region"
+    | Comonadic Areality, Regional -> None
+    | Comonadic Areality, Global -> Some "This value can escape any region"
+    | Monadic Contention, Contended ->
+      Some
+        "This usage of the value cannot read or write the mutable parts of the \
+         value"
+    | Monadic Contention, Shared ->
+      Some
+        "This usage of the value can read but not write the mutable parts of \
+         the value"
+    | Monadic Contention, Uncontended ->
+      Some
+        "This usage of the value can read and write the mutable parts of the \
+         value"
+    | Comonadic Portability, Nonportable ->
+      Some
+        "This value cannot be sent to other threads, in order to avoid data \
+         races."
+    | Comonadic Portability, Portable ->
+      Some "This value can be sent to other threads without causing data races"
+    | Monadic Uniqueness, Aliased ->
+      Some "This usage of the value might not be the only usage of the value"
+    | Monadic Uniqueness, Unique ->
+      Some "This usage of the value is the only usage of the value."
+    | Comonadic Linearity, Once -> Some "This value can be used at most once"
+    | Comonadic Linearity, Many -> Some "This value can be used many times"
+    | Comonadic Yielding, Yielding -> Some "todo"
+    | Comonadic Yielding, Unyielding -> Some "todo"
+    | Monadic Visibility, Immutable -> Some "todo"
+    | Monadic Visibility, Read -> Some "todo"
+    | Monadic Visibility, Read_write -> Some "todo"
+    | Comonadic Statefulness, Stateful -> Some "todo"
+    | Comonadic Statefulness, Observing -> Some "todo"
+    | Comonadic Statefulness, Stateless -> Some "todo"
+  in
+  (Some
+     { name = "Mode";
+       description;
+       documentation = get_url_for_mode_axis axis;
+       level = Advanced
+     }
+    : syntax_info)
+
+let get_modality_doc modality =
+  let open Option.Infix in
+  let* (P (axis, _)) = Modal_axis_pair.of_string modality in
+  let description =
+    (* CR-someday: Detect the context that the modality is within to make this message
+       more detailed. Ex: "This field is always stronger than _, even if the record has a
+       weaker mode." *)
+    match axis with
+    | Comonadic _ ->
+      Format.asprintf
+        "This value is always stronger than %s, even if the container has a \
+         weaker mode."
+        modality
+    | Monadic _ ->
+      Format.asprintf
+        "This value is always weaker than %s, even if the container has a \
+         stronger mode."
+        modality
+  in
+  (Some
+     { name = "Modality";
+       description;
+       documentation = get_url_for_mode_axis axis;
+       level = Advanced
+     }
+    : syntax_info)
+
 let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   (* Merlin-jst specific: This function gets documentation for oxcaml language
      extensions. *)
@@ -261,7 +437,10 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | { attr_name = { txt = "noalloc"; _ }; _ } ->
       Some
         { name = "Noalloc annotation";
-          description = "This external does not allocate, does not raise exceptions, and does not release the domain lock. The compiler will optimize uses to a direct C call.";
+          description =
+            "This external does not allocate, does not raise exceptions, and \
+             does not release the domain lock. The compiler will optimize uses \
+             to a direct C call.";
           documentation = syntax_doc_url Ocaml "intfc.html#ss:c-direct-call";
           level = Advanced
         }
@@ -454,69 +633,53 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   in
   match nodes with
   (* Modes and modalities *)
-  | Mode { txt = Mode _; _ } :: ancestors -> (
+  | Mode { txt = Mode mode; _ } :: ancestors -> (
+    match ancestors with
+    | Jkind_annotation _ :: _ -> get_mod_bound_doc mode
+    | _ -> get_mode_doc mode)
+  | Modality { txt = Modality modality; _ } :: ancestors -> (
     match ancestors with
     | Jkind_annotation _ :: _ ->
-      Some
-        { name = "Mod-bound";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
-          level = Advanced
-        }
-    | _ ->
-      Some
-        { name = "Mode";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
-          level = Advanced
-        })
-  | Modality { txt = Modality _; _ } :: ancestors -> (
-    match ancestors with
-    | Jkind_annotation _ :: _ ->
-      Some
-        { name = "Modality (in kind)";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
-          level = Advanced
-        }
-    | _ ->
-      Some
-        { name = "Modality";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
-          level = Advanced
-        })
+      (* CR-someday: Provide separate documatation for modalities within a jkind *)
+      get_modality_doc modality
+    | _ -> get_modality_doc modality)
   (* Jkinds *)
   | Jkind_annotation { pjkind_desc = Abbreviation abbrev; _ } :: _ ->
     get_jkind_abbrev_doc abbrev
   | Jkind_annotation { pjkind_desc = Mod _; _ } :: _ ->
     Some
-      { name = "mod keyword";
-        description = "todo";
-        documentation = syntax_doc_url Oxcaml "todo";
+      { name = "`mod` keyword (in a kind)";
+        description = "Types of this kind will cross the following modes";
+        documentation = syntax_doc_url Oxcaml "kinds/intro/";
         level = Advanced
       }
   | Jkind_annotation { pjkind_desc = With (_, with_type, _); _ } :: _ -> (
     match compare_cursor_to_loc with_type.ptyp_loc with
     | Before ->
       Some
-        { name = "with keyword (in a kind)";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
+        { name = "`with` keyword (in a kind)";
+          description =
+            "Mark a type as structurally included within another; if the \
+             with-type does not cross a certain mode, neither does its \
+             containing type";
+          documentation = syntax_doc_url Oxcaml "kinds/intro/";
           level = Advanced
         }
     | Inside ->
       Some
         { name = "with-type";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
+          description =
+            "Mark a type as structurally included within another; if the \
+             with-type does not cross a certain mode, neither does its \
+             containing type";
+          documentation = syntax_doc_url Oxcaml "kinds/intro/";
           level = Advanced
         }
     | After ->
       Some
-        { name = "@@ keyword (in a kind)";
-          description = "todo";
-          documentation = syntax_doc_url Oxcaml "todo";
+        { name = "`@@` keyword (in a kind)";
+          description = "Mark a type as included under a modality";
+          documentation = syntax_doc_url Oxcaml "kinds/intro/";
           level = Advanced
         })
   (* Module Strengthening *)
