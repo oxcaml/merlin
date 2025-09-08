@@ -50,7 +50,10 @@ module Reduce_conf (Loaded_shapes : sig
   val shapes : (Compilation_unit.t, Shape.t) Hashtbl.t
 end) =
 struct
-  let fuel = 10
+  let fuel () = 10
+  let fuel_for_compilation_units () = 1000_000_000
+  let max_shape_reduce_steps_per_variable () = Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
+  let max_compilation_unit_depth () = 1000_000_000
 
   let try_load ~unit_name () =
     match
@@ -83,7 +86,7 @@ struct
       | Some artifact -> Merlin_analysis.Locate.Artifact.impl_shape artifact
     end
 
-  let read_unit_shape ~unit_name =
+  let read_unit_shape ~diagnostics:_ ~unit_name =
     Log.debug "Read unit shape: %s\n%!" unit_name;
     try_load ~unit_name ()
 end

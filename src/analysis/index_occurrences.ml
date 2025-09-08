@@ -91,9 +91,12 @@ let iterator ~current_buffer_path ~index ~stamp ~reduce_for_uid =
 
 let items ~index ~stamp (config : Mconfig.t) items =
   let module Shape_reduce = Shape_reduce.Make (struct
-    let fuel = 10
+    let fuel () = 10
+    let fuel_for_compilation_units () = 1000_000_000
+    let max_shape_reduce_steps_per_variable () = Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
+    let max_compilation_unit_depth () = 1000_000_000
 
-    let read_unit_shape ~unit_name =
+    let read_unit_shape ~diagnostics:_ ~unit_name =
       log ~title:"read_unit_shape" "inspecting %s" unit_name;
       let read unit_name =
         let cms = Format.sprintf "%s.cms" unit_name in
