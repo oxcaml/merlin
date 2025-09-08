@@ -52,7 +52,8 @@ end) =
 struct
   let fuel () = 10
   let fuel_for_compilation_units () = 1000_000_000
-  let max_shape_reduce_steps_per_variable () = Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
+  let max_shape_reduce_steps_per_variable () =
+    Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
   let max_compilation_unit_depth () = 1000_000_000
 
   let try_load ~unit_name () =

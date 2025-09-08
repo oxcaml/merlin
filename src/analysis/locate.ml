@@ -882,7 +882,8 @@ let find_definition_uid ~config ~env ~(decl : Env_lookup.item) path =
   let module Reduce = Shape_reduce.Make (struct
     let fuel () = 10
     let fuel_for_compilation_units () = 1000_000_000
-    let max_shape_reduce_steps_per_variable () = Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
+    let max_shape_reduce_steps_per_variable () =
+      Ocaml_utils.Misc_stdlib.Maybe_bounded.Unbounded
     let max_compilation_unit_depth () = 1000_000_000
     let read_unit_shape ~diagnostics:_ ~unit_name =
       log ~title:"read_unit_shape" "inspecting %s" unit_name;

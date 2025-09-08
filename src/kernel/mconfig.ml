@@ -710,7 +710,17 @@ let ocaml_ignored_parametrized_flags =
     "-shape-format";
     "-gdwarf-compression";
     "-gdwarf-fission";
-    "-cfg-prologue-shrink-wrap-threshold"
+    "-cfg-prologue-shrink-wrap-threshold";
+    (* CR sspies: Figure out whether we want to use the value of these also
+       for Merlin. *)
+    "-gdwarf-config-shape-reduce-depth";
+    "-gdwarf-config-shape-eval-depth";
+    "-gdwarf-config-max-cms-files-per-unit";
+    "-gdwarf-config-max-cms-files-per-variable";
+    "-gdwarf-config-max-type-to-shape-depth";
+    "-gdwarf-config-max-shape-reduce-steps-per-variable";
+    "-gdwarf-config-max-evaluation-steps-per-variable";
+    "-gdwarf-fidelity"
   ]
 
 let ocaml_warnings_spec ~error =
