@@ -686,7 +686,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | Before ->
       Some
         { name = "Module strengthening";
-          description = "";
+          description = "Mark each type in this module type as equal to the corresponding type in the given module";
           documentation =
             syntax_doc_url Oxcaml
               "miscellaneous-extensions/module-strengthening/";
