@@ -155,7 +155,7 @@ let get_mod_bound_doc mod_bound =
     | Axis_pair (Modal (Comonadic _), _) ->
       Some
         (Format.asprintf
-           "Values of this type can cross to `%s` from weaker modes." mod_bound)
+           "Values of types of this kind can cross to `%s` from weaker modes." mod_bound)
     | Axis_pair (Modal (Monadic _), _) ->
       Some
         (Format.asprintf
