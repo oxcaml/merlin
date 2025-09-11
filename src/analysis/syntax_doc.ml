@@ -295,13 +295,13 @@ let get_modality_doc modality =
     match axis with
     | Comonadic _ ->
       Format.asprintf
-        "The annotated value's mode is always at least as strong as `%s`, even if its \
-         container's mode is weaker."
+        "The annotated value's mode is always at least as strong as `%s`, even \
+         if its container's mode is weaker."
         modality
     | Monadic _ ->
       Format.asprintf
-        "The annotated value's mode is always at least as weak as `%s`, even if its \
-         container's mode is a stronger."
+        "The annotated value's mode is always at least as weak as `%s`, even \
+         if its container's mode is a stronger."
         modality
   in
   (Some
@@ -386,7 +386,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | "opt" ->
           Some
             { name = "Zero-alloc opt annotation";
-              description = "Same as [@zero_alloc], but checks during optimized builds only.";
+              description =
+                "Same as [@zero_alloc], but checks during optimized builds \
+                 only.";
               documentation = doc_url;
               level = Advanced
             }
@@ -394,8 +396,8 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Zero-alloc assume annotation";
               description =
-                "This function is assumed to be zero-alloc, but the \
-                 compiler does not guarantee it.";
+                "This function is assumed to be zero-alloc, but the compiler \
+                 does not guarantee it.";
               documentation = doc_url;
               level = Advanced
             }
@@ -478,7 +480,8 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Inline never annotation";
               description =
-                "This function will not be inlined. In this file (only), this can be overridden at call sites with [@inlined].";
+                "This function will not be inlined. In this file (only), this \
+                 can be overridden at call sites with [@inlined].";
               documentation = builtin_attrs_doc_url;
               level = Advanced
             }
@@ -507,13 +510,13 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         Some
           { name = "Inlined always annotation";
             description =
-              "If possible, this function call will be inlined.  \
-               The function must be known to the optimizer (i.e. not an \
-               indirect call; and if in another source file, the .cmx for that \
-               file must be available and the function available for inlining \
-               e.g. by [@inline always] or [@inline available] or the decision \
-               of the optimizer).  This attribute can override [@inline never] \
-               but only within the same source file.";
+              "If possible, this function call will be inlined.  The function \
+               must be known to the optimizer (i.e. not an indirect call; and \
+               if in another source file, the .cmx for that file must be \
+               available and the function available for inlining e.g. by \
+               [@inline always] or [@inline available] or the decision of the \
+               optimizer).  This attribute can override [@inline never] but \
+               only within the same source file.";
             documentation = builtin_attrs_doc_url;
             level = Advanced
           }
@@ -536,9 +539,8 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Inlined never annotation";
               description =
-                "This function call will not be \
-                 inlined, overriding any attribute on the function's \
-                 declaration.";
+                "This function call will not be inlined, overriding any \
+                 attribute on the function's declaration.";
               documentation = builtin_attrs_doc_url;
               level = Advanced
             }
@@ -546,9 +548,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Inlined hint annotation";
               description =
-                "If possible, this function call will be inlined, like [@inlined always]. \
-                 However, no warning is emitted \
-                 when inlining is not possible.";
+                "If possible, this function call will be inlined, like \
+                 [@inlined always]. However, no warning is emitted when \
+                 inlining is not possible.";
               documentation = None;
               level = Advanced
             }
@@ -621,7 +623,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | { attr_name = { txt = "nontail"; _ }; _ } ->
       Some
         { name = "nontail annotation";
-          description = "This function call will be called normally (with a fresh stack frame), despite appearing in tail position";
+          description =
+            "This function call will be called normally (with a fresh stack \
+             frame), despite appearing in tail position";
           documentation = stack_allocation_url;
           level = Advanced
         }
@@ -686,7 +690,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | Before ->
       Some
         { name = "Module strengthening";
-          description = "Mark each type in this module type as equal to the corresponding type in the given module";
+          description =
+            "Mark each type in this module type as equal to the corresponding \
+             type in the given module";
           documentation =
             syntax_doc_url Oxcaml
               "miscellaneous-extensions/module-strengthening/";
@@ -697,7 +703,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   | Expression { exp_desc = Texp_exclave _; _ } :: _ ->
     Some
       { name = "exclave_";
-        description = "Delete the current region and excute the following code";
+        description =
+          "End the current region; the following code allocates in the outer \
+           region";
         documentation = stack_allocation_url;
         level = Advanced
       }
