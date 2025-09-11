@@ -295,8 +295,8 @@ let get_modality_doc modality =
     match axis with
     | Comonadic _ ->
       Format.asprintf
-        "This value is always at least as strong as `%s`, even if the \
-         container has a weaker mode."
+        "The annotated value's mode is always at least as strong as `%s`, even if its \
+         container's mode is weaker."
         modality
     | Monadic _ ->
       Format.asprintf
