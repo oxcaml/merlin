@@ -243,7 +243,7 @@ let get_mode_doc mode =
     | Monadic Uniqueness, Aliased ->
       Some "There may be multiple pointers to values with this mode"
     | Monadic Uniqueness, Unique ->
-      Some "This usage of the value is the only usage of the value."
+      Some "It is guaranteed that there is only one pointer to values with this mode"
     | Comonadic Linearity, Once ->
       Some "Values with this mode can be used at most once"
     | Comonadic Linearity, Many ->
