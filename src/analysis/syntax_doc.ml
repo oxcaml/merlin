@@ -546,9 +546,9 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Inlined hint annotation";
               description =
-                "On a function call site, causes the function to be inlined if \
-                 possible (like [@inlined always]) but suppresses the warning \
-                 when it is not possible.";
+                "If possible, this function call will be inlined, like [@inlined always]. \
+                 However, no warning is emitted \
+                 when inlining is not possible.";
               documentation = None;
               level = Advanced
             }
