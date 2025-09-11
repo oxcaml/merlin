@@ -222,16 +222,14 @@ let get_mode_doc mode =
       Some "Values with this mode can escape any region"
     | Monadic Contention, Contended ->
       Some
-        "This usage of the value cannot read or write the mutable parts of the \
-         value (unless they are atomic)"
+        "The mutable parts of values of this mode cannot be accessed (unless \
+         they are atomic)"
     | Monadic Contention, Shared ->
       Some
-        "This usage of the value can read but not write the mutable parts of \
-         the value (unless they are atomic)"
+        "The mutable parts of values of this mode can be read, but not written \
+         (unless they are atomic)"
     | Monadic Contention, Uncontended ->
-      Some
-        "This usage of the value can read and write the mutable parts of the \
-         value"
+      Some "The mutable parts of values of this mode can be fully accessed"
     | Comonadic Portability, Nonportable ->
       Some
         "Values with this mode cannot be sent to other threads, in order to \
@@ -243,33 +241,30 @@ let get_mode_doc mode =
     | Monadic Uniqueness, Aliased ->
       Some "There may be multiple pointers to values with this mode"
     | Monadic Uniqueness, Unique ->
-      Some "It is guaranteed that there is only one pointer to values with this mode"
-    | Comonadic Linearity, Once ->
-      Some "Values with this mode can be used at most once"
-    | Comonadic Linearity, Many ->
-      Some "Values with this mode can be used many times"
-    | Comonadic Yielding, Yielding ->
-      Some "Values with this mode can perform an effect"
-    | Comonadic Yielding, Unyielding ->
-      Some "Values with this mode cannot perform an effect"
-    | Monadic Visibility, Immutable ->
       Some
-        "This usage of the value cannot read or write the mutable parts of the \
-         value"
+        "It is guaranteed that there is only one pointer to values with this \
+         mode"
+    | Comonadic Linearity, Once ->
+      Some "Functions with this mode can only be called once"
+    | Comonadic Linearity, Many ->
+      Some "Functions with this mode can be called any number of times"
+    | Comonadic Yielding, Yielding ->
+      Some "Functions with this mode can jump to effect handlers"
+    | Comonadic Yielding, Unyielding ->
+      Some "Functions within this value will never jump to an effect handler"
+    | Monadic Visibility, Immutable ->
+      Some "The mutable parts of values of this mode cannot be accessed"
     | Monadic Visibility, Read ->
       Some
-        "This usage of the value can read but not write the mutable parts of \
-         the value"
+        "The mutable parts of values of this mode can be read, but not written"
     | Monadic Visibility, Read_write ->
-      Some
-        "This usage of the value can read and write the mutable parts of the \
-         value"
+      Some "The mutable parts of values of this mode can be fully accessed"
     | Comonadic Statefulness, Stateful ->
-      Some "Values with this mode can read and write mutable data"
+      Some "Functions with this mode can read and write mutable data"
     | Comonadic Statefulness, Observing ->
-      Some "Values with this mode can read but not write mutable data"
+      Some "Functions with this mode can read but not write mutable data"
     | Comonadic Statefulness, Stateless ->
-      Some "Values with this mode cannot read or write mutable data"
+      Some "Functions with this mode cannot access mutable data"
   in
   let doc_url =
     let subpage =
