@@ -155,11 +155,13 @@ let get_mod_bound_doc mod_bound =
     | Axis_pair (Modal (Comonadic _), _) ->
       Some
         (Format.asprintf
-           "Values of types of this kind can cross to `%s` from weaker modes." mod_bound)
+           "Values of types of this kind can cross to `%s` from weaker modes."
+           mod_bound)
     | Axis_pair (Modal (Monadic _), _) ->
       Some
         (Format.asprintf
-           "Values of types of this kind can cross from `%s` to stronger modes" mod_bound)
+           "Values of types of this kind can cross from `%s` to stronger modes"
+           mod_bound)
     | Axis_pair (Nonmodal Externality, Internal) ->
       Some "Values of types of this kind might be pointers to the OCaml heap"
     | Axis_pair (Nonmodal Externality, External64) ->
@@ -214,9 +216,10 @@ let get_mode_doc mode =
   let* description =
     match (axis, mode) with
     | Comonadic Areality, Local ->
-      Some "This value cannot escape the current region"
+      Some "Values with this mode cannot escape the current region"
     | Comonadic Areality, Regional -> None
-    | Comonadic Areality, Global -> Some "This value can escape any region"
+    | Comonadic Areality, Global ->
+      Some "Values with this mode can escape any region"
     | Monadic Contention, Contended ->
       Some
         "This usage of the value cannot read or write the mutable parts of the \
@@ -231,19 +234,24 @@ let get_mode_doc mode =
          value"
     | Comonadic Portability, Nonportable ->
       Some
-        "This value cannot be sent to other threads, in order to avoid data \
-         races."
+        "Values with this mode cannot be sent to other threads, in order to \
+         avoid data races."
     | Comonadic Portability, Portable ->
-      Some "This value can be sent to other threads without causing data races"
+      Some
+        "Values with this mode can be sent to other threads without causing \
+         data races"
     | Monadic Uniqueness, Aliased ->
       Some "This usage of the value might not be the only usage of the value"
     | Monadic Uniqueness, Unique ->
       Some "This usage of the value is the only usage of the value."
-    | Comonadic Linearity, Once -> Some "This value can be used at most once"
-    | Comonadic Linearity, Many -> Some "This value can be used many times"
-    | Comonadic Yielding, Yielding -> Some "This value can perform an effect"
+    | Comonadic Linearity, Once ->
+      Some "Values with this mode can be used at most once"
+    | Comonadic Linearity, Many ->
+      Some "Values with this mode can be used many times"
+    | Comonadic Yielding, Yielding ->
+      Some "Values with this mode can perform an effect"
     | Comonadic Yielding, Unyielding ->
-      Some "This value cannot perform an effect"
+      Some "Values with this mode cannot perform an effect"
     | Monadic Visibility, Immutable ->
       Some
         "This usage of the value cannot read or write the mutable parts of the \
@@ -257,11 +265,11 @@ let get_mode_doc mode =
         "This usage of the value can read and write the mutable parts of the \
          value"
     | Comonadic Statefulness, Stateful ->
-      Some "This value can read and write mutable data"
+      Some "Values with this mode can read and write mutable data"
     | Comonadic Statefulness, Observing ->
-      Some "This value can read but not write mutable data"
+      Some "Values with this mode can read but not write mutable data"
     | Comonadic Statefulness, Stateless ->
-      Some "This value cannot read or write mutable data"
+      Some "Values with this mode cannot read or write mutable data"
   in
   let doc_url =
     let subpage =
