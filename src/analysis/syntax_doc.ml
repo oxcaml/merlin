@@ -241,7 +241,7 @@ let get_mode_doc mode =
         "Values with this mode can be sent to other threads without causing \
          data races"
     | Monadic Uniqueness, Aliased ->
-      Some "This usage of the value might not be the only usage of the value"
+      Some "There may be multiple pointers to values with this mode"
     | Monadic Uniqueness, Unique ->
       Some "This usage of the value is the only usage of the value."
     | Comonadic Linearity, Once ->
