@@ -386,7 +386,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         | "opt" ->
           Some
             { name = "Zero-alloc opt annotation";
-              description = "Same as [@zero_alloc] in optimized builds only.";
+              description = "Same as [@zero_alloc], but checks during optimized builds only.";
               documentation = doc_url;
               level = Advanced
             }
