@@ -394,7 +394,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Zero-alloc assume annotation";
               description =
-                "This function is assumed to be zero_alloc but the \
+                "This function is assumed to be zero-alloc, but the \
                  compiler does not guarantee it.";
               documentation = doc_url;
               level = Advanced
@@ -403,7 +403,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Zero-alloc assume_unless_opt annotation";
               description =
-                "Same as [@zero_alloc opt]  in optimized builds. Same as \
+                "Same as [@zero_alloc opt] in optimized builds. Same as \
                  [@zero_alloc assume] in non-optimized builds.";
               documentation = doc_url;
               level = Advanced
@@ -413,7 +413,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
             { name = "Zero-alloc strict annotation";
               description =
                 "This function does not allocate on the OCaml heap (both \
-                 normal and exception returns).";
+                 normal and exceptional returns).";
               documentation = doc_url;
               level = Advanced
             }
