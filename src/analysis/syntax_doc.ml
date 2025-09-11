@@ -300,8 +300,8 @@ let get_modality_doc modality =
         modality
     | Monadic _ ->
       Format.asprintf
-        "This value is always at least as weak as `%s`, even if the container \
-         has a stronger mode."
+        "The annotated value's mode is always at least as weak as `%s`, even if its \
+         container's mode is a stronger."
         modality
   in
   (Some
