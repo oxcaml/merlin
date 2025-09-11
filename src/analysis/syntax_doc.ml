@@ -222,14 +222,14 @@ let get_mode_doc mode =
       Some "Values with this mode can escape any region"
     | Monadic Contention, Contended ->
       Some
-        "The mutable parts of values of this mode cannot be accessed (unless \
+        "The mutable parts of values with this mode cannot be accessed (unless \
          they are atomic)"
     | Monadic Contention, Shared ->
       Some
-        "The mutable parts of values of this mode can be read, but not written \
-         (unless they are atomic)"
+        "The mutable parts of values with this mode can be read, but not \
+         written (unless they are atomic)"
     | Monadic Contention, Uncontended ->
-      Some "The mutable parts of values of this mode can be fully accessed"
+      Some "The mutable parts of values with this mode can be fully accessed"
     | Comonadic Portability, Nonportable ->
       Some
         "Values with this mode cannot be sent to other threads, in order to \
@@ -253,12 +253,13 @@ let get_mode_doc mode =
     | Comonadic Yielding, Unyielding ->
       Some "Functions within this value will never jump to an effect handler"
     | Monadic Visibility, Immutable ->
-      Some "The mutable parts of values of this mode cannot be accessed"
+      Some "The mutable parts of values with this mode cannot be accessed"
     | Monadic Visibility, Read ->
       Some
-        "The mutable parts of values of this mode can be read, but not written"
+        "The mutable parts of values with this mode can be read, but not \
+         written"
     | Monadic Visibility, Read_write ->
-      Some "The mutable parts of values of this mode can be fully accessed"
+      Some "The mutable parts of values with this mode can be fully accessed"
     | Comonadic Statefulness, Stateful ->
       Some "Functions with this mode can read and write mutable data"
     | Comonadic Statefulness, Observing ->
