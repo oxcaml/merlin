@@ -507,7 +507,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
         Some
           { name = "Inlined always annotation";
             description =
-              "On a function call site, causes the function to be inlined.  \
+              "If possible, this function call will be inlined.  \
                The function must be known to the optimizer (i.e. not an \
                indirect call; and if in another source file, the .cmx for that \
                file must be available and the function available for inlining \
