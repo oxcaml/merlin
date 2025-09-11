@@ -159,7 +159,7 @@ let get_mod_bound_doc mod_bound =
     | Axis_pair (Modal (Monadic _), _) ->
       Some
         (Format.asprintf
-           "Values of this type can cross from `%s` to stronger modes" mod_bound)
+           "Values of types of this kind can cross from `%s` to stronger modes" mod_bound)
     | Axis_pair (Nonmodal Externality, Internal) ->
       Some "Values of types of this kind might be pointers to the OCaml heap"
     | Axis_pair (Nonmodal Externality, External64) ->
