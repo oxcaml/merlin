@@ -273,10 +273,11 @@ on (module S : Set.S with type elt = s)
   > -filename ./first-class-modules.ml < ./first-class-modules.ml | jq '.value.name'
   "First class module"
 
-  $ syn_doc_name () {
+  $ call_syntax_doc_and_extract_field () {
   >   file="$1"
   >   line="$2"
   >   col="$3"
+  >   field="$4"
   >   
   >   # Print the line, with a ^ underneath pointing at the character
   >   sed -n "${line}p" "$file"
@@ -284,7 +285,15 @@ on (module S : Set.S with type elt = s)
   >   
   >   # Call merlin on the position
   >   "$MERLIN" single syntax-document -position  "$line:$col" -filename "$file" < "$file" \
-  >     | jq 'if (.value | type) == "string" then .value else .value.name end' -r
+  >     | jq "if (.value | type) == \"string\" then .value else .value.$field end" -r
+  > }
+
+  $ syn_doc_name () {
+  >   call_syntax_doc_and_extract_field "$1" "$2" "$3" name
+  > }
+
+  $ syn_doc_desc () {
+  >   call_syntax_doc_and_extract_field "$1" "$2" "$3" description
   > }
 
 Convenience function to ensure we haven't made any syntax errors.
@@ -367,6 +376,11 @@ Convenience function to ensure we haven't made any syntax errors.
                    ^
   No documentation found
 
+  $ syn_doc_desc modes.ml 5 17
+  let x : int @ local = 10
+                   ^
+  No documentation found
+
 // Modalities
 # CR-someday: Add raw modalities (and @@?) to typedtree so this information can be recovered
 
@@ -419,6 +433,11 @@ Convenience function to ensure we haven't made any syntax errors.
   type t = { foo : int @@ contended }
                               ^
   Record Type
+
+  $ syn_doc_desc modalities.ml 5 28
+  type t = { foo : int @@ contended }
+                              ^
+  Defines variants with a fixed set of fields
 
 // Kinds
 
@@ -508,6 +527,21 @@ Convenience function to ensure we haven't made any syntax errors.
   type t : float64 mod everything
                               ^
   Mod-bound
+
+  $ syn_doc_desc kinds.ml 7 13
+  type t : float64 mod everything
+               ^
+  The layout of types represented by a 64-bit machine float.
+
+  $ syn_doc_desc kinds.ml 7 28
+  type t : float64 mod everything
+                              ^
+  Synonym for "global aliased many contended portable unyielding immutable stateless external_", convenient for describing immediates.
+
+  $ syn_doc_desc kinds.ml 1 40
+  type ('a : immediate) t : value mod portable with 'a @@ global
+                                          ^
+  Values of this type can cross to `portable` from weaker modes.
 
 // include functor
 
@@ -840,3 +874,26 @@ Convenience function to ensure we haven't made any syntax errors.
   module type S = S with M
                          ^
   No documentation found
+
+Validate that docstrings, URLs, and levels are being created correctly
+
+  $ cat > validate.ml << EOF
+  > let rec name1 = 1 :: name2 and name2 = 2 :: name1
+  > type t : value
+  > EOF
+
+  $ $MERLIN single syntax-document -position 1:6 -filename validate.ml < validate.ml | jq .value
+  {
+    "name": "Recursive value definition",
+    "description": "Supports a certain class of recursive definitions of non-functional values.",
+    "url": "https://ocaml.org/manual/5.2/letrecvalues.html",
+    "level": "simple"
+  }
+
+  $ $MERLIN single syntax-document -position 2:11 -filename validate.ml < validate.ml | jq .value
+  {
+    "name": "Kind abbreviation",
+    "description": "The kind of ordinary OCaml types",
+    "url": "https://oxcaml.org/documentation/kinds/syntax/",
+    "level": "advanced"
+  }
