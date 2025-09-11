@@ -434,6 +434,8 @@ Convenience function to ensure we haven't made any syntax errors.
                               ^
   Record Type
 
+# CR-someday: Since modalities aren't yet supported, this is falling through to the record
+# case
   $ syn_doc_desc modalities.ml 5 28
   type t = { foo : int @@ contended }
                               ^
