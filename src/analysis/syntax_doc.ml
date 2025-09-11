@@ -394,7 +394,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Zero-alloc assume annotation";
               description =
-                "This function is assumed to be \"zero_alloc\" but the \
+                "This function is assumed to be zero_alloc but the \
                  compiler does not guarantee it.";
               documentation = doc_url;
               level = Advanced
