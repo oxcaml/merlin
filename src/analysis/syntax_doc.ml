@@ -621,7 +621,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | { attr_name = { txt = "nontail"; _ }; _ } ->
       Some
         { name = "nontail annotation";
-          description = "Prevent this function call from being tail-called";
+          description = "This function call will be called normally (with a fresh stack frame), despite appearing in tail position";
           documentation = stack_allocation_url;
           level = Advanced
         }
