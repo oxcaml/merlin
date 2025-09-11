@@ -541,7 +541,7 @@ Convenience function to ensure we haven't made any syntax errors.
   $ syn_doc_desc kinds.ml 1 40
   type ('a : immediate) t : value mod portable with 'a @@ global
                                           ^
-  Values of this type can cross to `portable` from weaker modes.
+  Values of types of this kind can cross to `portable` from weaker modes.
 
 // include functor
 
