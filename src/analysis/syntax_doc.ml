@@ -536,7 +536,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
           Some
             { name = "Inlined never annotation";
               description =
-                "On a function call site, causes the function to never be \
+                "This function call will not be \
                  inlined, overriding any attribute on the function's \
                  declaration.";
               documentation = builtin_attrs_doc_url;
