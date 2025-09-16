@@ -103,6 +103,18 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
     needs to be a way to store sort vars on [Tconstr]s. That means
     either introducing a [Tpoly_constr], allow type parameters with
     sort info, or do something else. *)
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+   and this function should be removed at some point. To do that, there
+   needs to be a way to store sort vars on [Tconstr]s. That means
+   either introducing a [Tpoly_constr], allow type parameters with
+   sort info, or do something else. *)
+=======
+   and this function should be removed at some point. To do that, there
+   needs to be a way to store sort vars on [Tconstr]s. That means
+   either introducing a [Tpoly_constr], allow type parameters with
+   sort info, or do something else. Internal ticket 5093. *)
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
 (* CR layouts v3.0: have a better error message
    for nullable jkinds.*)
 let type_sort ~why env _loc ty =
@@ -583,7 +595,7 @@ let rec value_kind env ~loc ~visited ~depth ~num_nodes_visited ty
          by the parameters of the declaration. The code below loses this
          connection and will continue processing with e.g. ['a : value]
          instead of [string] when looking at a [string list]. This should
-         probably just call a [type_jkind] function. *)
+         probably just call a [type_jkind] function. Internal ticket 5101. *)
       let decl =
         try Env.find_type p env with Not_found -> raise Missing_cmi_fallback
       in

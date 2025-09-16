@@ -201,6 +201,14 @@ let in_comment state = state.comment_start_loc <> []
 
 let at_beginning_of_line pos = (pos.pos_cnum = pos.pos_bol)
 
+(* Syntax mode configuration for the #syntax directive *)
+module Syntax_mode = struct
+  let quotations = ref Config.syntax_quotations
+end
+
+let reset_syntax_mode () =
+  Syntax_mode.quotations := Config.syntax_quotations
+
 (* See the comment on the [directive] lexer. *)
 type directive_lexing_already_consumed =
    | Hash
@@ -478,6 +486,24 @@ let int ~maybe_hash lit modifier =
   | unexpected -> fatal_error ("expected # or empty string: " ^ unexpected)
 ;;
 
+let produce_and_backtrack lexbuf token back =
+  lexbuf.lex_curr_pos <- lexbuf.lex_curr_pos - back;
+  let curpos = lexbuf.lex_curr_p in
+  lexbuf.lex_curr_p <- { curpos with pos_cnum = curpos.pos_cnum - back };
+  token
+
+let char ~maybe_hash lit =
+  match maybe_hash with
+  | "#" -> HASH_CHAR (lit)
+  | "" -> CHAR (lit)
+  | unexpected -> fatal_error ("expected # or empty string: " ^ unexpected)
+
+let skip_hash ~maybe_hash =
+  match maybe_hash with
+  | "#" -> 1
+  | "" -> 0
+  | unexpected -> fatal_error ("expected # or empty string: " ^ unexpected)
+
 (* Error report *)
 
 open Format
@@ -710,6 +736,65 @@ rule token state = parse
         return (STRING (str, loc, Some delim)) }
   | "{%" (extattrident as id) "|"
       { let orig_loc = Location.curr lexbuf in
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+        let s, loc = wrap_string_lexer (quoted_string delim) lexbuf in
+        let idloc = compute_quoted_string_idloc orig_loc 3 id in
+        QUOTED_STRING_ITEM (id, idloc, s, loc, Some delim) }
+  | "\'" newline "\'"
+      { update_loc lexbuf None 1 false 1;
+        (* newline is ('\013'* '\010') *)
+        CHAR '\n' }
+  | "\'" ([^ '\\' '\'' '\010' '\013'] as c) "\'"
+      { CHAR c }
+  | "\'\\" (['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] as c) "\'"
+      { CHAR (char_for_backslash c) }
+  | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
+      { CHAR(char_for_decimal_code lexbuf 2) }
+  | "\'\\" 'o' ['0'-'7'] ['0'-'7'] ['0'-'7'] "\'"
+      { CHAR(char_for_octal_code lexbuf 3) }
+  | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
+      { CHAR(char_for_hexadecimal_code lexbuf 3) }
+  | "\'" ("\\" [^ '#'] as esc)
+      { error lexbuf (Illegal_escape (esc, None)) }
+  | "\'\'"
+      { error lexbuf Empty_character_literal }
+  | "(*"
+      { let s, loc = wrap_comment_lexer comment lexbuf in
+=======
+        let s, loc = wrap_string_lexer (quoted_string delim) lexbuf in
+        let idloc = compute_quoted_string_idloc orig_loc 3 id in
+        QUOTED_STRING_ITEM (id, idloc, s, loc, Some delim) }
+  | ('#'? as maybe_hash)
+    "\'" newline "\'"
+      { update_loc lexbuf None 1 false 1;
+        (* newline is ('\013'* '\010') *)
+        char ~maybe_hash '\n' }
+  | ('#'? as maybe_hash)
+    "\'" ([^ '\\' '\'' '\010' '\013'] as c) "\'"
+      { char ~maybe_hash c }
+  | ('#'? as maybe_hash)
+    "\'\\" (['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] as c) "\'"
+      { char ~maybe_hash (char_for_backslash c) }
+  | ('#'? as maybe_hash)
+    "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
+      { char ~maybe_hash
+          (char_for_decimal_code lexbuf (2 + skip_hash ~maybe_hash)) }
+  | ('#'? as maybe_hash)
+    "\'\\" 'o' ['0'-'7'] ['0'-'7'] ['0'-'7'] "\'"
+      { char ~maybe_hash
+        (char_for_octal_code lexbuf (3 + skip_hash ~maybe_hash)) }
+  | ('#'? as maybe_hash)
+    "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
+      { char ~maybe_hash
+        (char_for_hexadecimal_code lexbuf (3 + skip_hash ~maybe_hash)) }
+  | '#'? "\'" ("\\" [^ '#'] as esc)
+      { error lexbuf (Illegal_escape (esc, None)) }
+  | '#'? "\'\'"
+      { error lexbuf Empty_character_literal }
+  | "(*"
+      { let s, loc = wrap_comment_lexer comment lexbuf in
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
         wrap_string_lexer (quoted_string "") state lexbuf
         >>= fun (str, loc) ->
         let idloc = compute_quoted_string_idloc orig_loc 2 id in
@@ -762,6 +847,7 @@ rule token state = parse
       { let loc = Location.curr lexbuf in
         Location.prerr_warning loc Warnings.Comment_start;
         state.comment_start_loc <- [loc];
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
         Buffer.reset state.buffer;
         comment state lexbuf >>= fun end_loc ->
         let s = Buffer.contents state.buffer in
@@ -776,13 +862,58 @@ rule token state = parse
         lexbuf.lex_curr_p <- { curpos with pos_cnum = curpos.pos_cnum - 1 };
         return STAR
       }
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+          DOCSTRING(Docstrings.docstring "" (Location.curr lexbuf))
+        else
+          COMMENT (stars, Location.curr lexbuf) }
+  | "*)"
+      { let loc = Location.curr lexbuf in
+        Location.prerr_warning loc Warnings.Comment_not_end;
+        lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_curr_pos - 1;
+        let curpos = lexbuf.lex_curr_p in
+        lexbuf.lex_curr_p <- { curpos with pos_cnum = curpos.pos_cnum - 1 };
+        STAR
+      }
+=======
+          DOCSTRING(Docstrings.docstring "" (Location.curr lexbuf))
+        else
+          COMMENT (stars, Location.curr lexbuf) }
+  | "*)" {
+      let loc = Location.curr lexbuf in
+      Location.prerr_warning loc Warnings.Comment_not_end;
+      produce_and_backtrack lexbuf STAR 1
+    }
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | "#"
       { if not (at_beginning_of_line lexbuf.lex_start_p)
         then return HASH
         else try directive state Hash lexbuf with Failure _ -> return HASH
       }
   | "#"  { return HASH }
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
   | "&"  { return AMPERSAND }
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+  | "*"  { STAR }
+  | ","  { COMMA }
+  | "->" { MINUSGREATER }
+  | "$"  { DOLLAR }
+  | "."  { DOT }
+  | ".." { DOTDOT }
+  | ".#" { DOTHASH }
+=======
+  | "*"  { STAR }
+  | ","  { COMMA }
+  | "->" { MINUSGREATER }
+  | "$" {
+      if !(Syntax_mode.quotations) then
+        DOLLAR
+      else
+        INFIXOP0 "$"
+    }
+  | "."  { DOT }
+  | ".." { DOTDOT }
+  | ".#" { DOTHASH }
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | "&&" { return AMPERAMPER }
   | "`"  { return BACKQUOTE }
   | "\'" { return QUOTE }
@@ -794,7 +925,31 @@ rule token state = parse
   | ","  { return COMMA }
   | "->" { return MINUSGREATER }
   | "$"  { return DOLLAR }
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
   | "."  { return DOT }
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+  | ";"  { SEMI }
+  | ";;" { SEMISEMI }
+  | "<"  { LESS }
+  | "<[" { LESSLBRACKET }
+  | "<-" { LESSMINUS }
+  | "="  { EQUAL }
+  | "["  { LBRACKET }
+=======
+  | ";"  { SEMI }
+  | ";;" { SEMISEMI }
+  | "<"  { LESS }
+  | "<[" {
+      if !(Syntax_mode.quotations) then
+        LESSLBRACKET
+      else
+        (* Put back the '[' and return just LESS *)
+        produce_and_backtrack lexbuf LESS 1
+    }
+  | "<-" { LESSMINUS }
+  | "="  { EQUAL }
+  | "["  { LBRACKET }
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | ".." { return DOTDOT }
   | ".#" { return DOTHASH }
   | "." (dotsymbolchar symbolchar* as op) { return (DOTOP op) }
@@ -803,7 +958,31 @@ rule token state = parse
   | ":=" { return COLONEQUAL }
   | ":>" { return COLONGREATER }
   | ";"  { return SEMI }
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
   | ";;" { return SEMISEMI }
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+  | "[<" { LBRACKETLESS }
+  | "[>" { LBRACKETGREATER }
+  | "]"  { RBRACKET }
+  | "]>" { RBRACKETGREATER }
+  | "{"  { LBRACE }
+  | "{<" { LBRACELESS }
+  | "|"  { BAR }
+=======
+  | "[<" { LBRACKETLESS }
+  | "[>" { LBRACKETGREATER }
+  | "]"  { RBRACKET }
+  | "]>" {
+      if !(Syntax_mode.quotations) then
+        RBRACKETGREATER
+      else
+        (* Put back the '>' and return just RBRACKET *)
+        produce_and_backtrack lexbuf RBRACKET 1
+    }
+  | "{"  { LBRACE }
+  | "{<" { LBRACELESS }
+  | "|"  { BAR }
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | "<"  { return LESS }
   | "<[" { return LESSLBRACKET }
   | "<-" { return LESSMINUS }
@@ -880,13 +1059,17 @@ rule token state = parse
    the line was already consumed, either just the '#' or the '#4'. That's
    indicated by the [already_consumed] argument. The caller is responsible
    for checking that the '#' appears in column 0.
-
-   The [directive] lexer always attempts to read the line number from the
-   lexbuf. It expects to receive a line number from exactly one source (either
-   the lexbuf or the [already_consumed] argument, but not both) and will fail if
-   this isn't the case.
 *)
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
 and directive state already_consumed = parse
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+and directive already_consumed = parse
+=======
+and directive already_consumed = parse
+  (* Expects to receive a line number from exactly one source (either the lexbuf or
+     the [already_consumed] argument, but not both) and will fail if this isn't
+     the case. *)
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | ([' ' '\t']* (['0'-'9']+? as line_num_opt) [' ' '\t']*
      ("\"" ([^ '\010' '\013' '\"' ] * as name) "\"") as directive)
         [^ '\010' '\013'] *
@@ -913,6 +1096,36 @@ and directive state already_consumed = parse
             update_loc lexbuf (Some name) (line_num - 1) true 0;
             token state lexbuf
       }
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
+||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
+and comment = parse
+    "(*"
+      { comment_start_loc := (Location.curr lexbuf) :: !comment_start_loc;
+=======
+  | "syntax" [' ' '\t']+ (lowercase identchar* as mode) [' ' '\t']+
+    (lowercase identchar* as toggle) [^ '\010' '\013']*
+      { let toggle =
+          match toggle with
+          | "on" -> true
+          | "off" -> false
+          | _ ->
+              directive_error lexbuf
+                ("syntax directive can only be toggled on or off; "
+                 ^ toggle ^ " not recognized")
+                ~already_consumed ~directive:"syntax"
+        in
+        match mode with
+        | "quotations" ->
+            Syntax_mode.quotations := toggle;
+            token lexbuf
+        | _ ->
+            directive_error lexbuf ("unknown syntax mode " ^ mode)
+              ~already_consumed ~directive:"syntax"
+      }
+and comment = parse
+    "(*"
+      { comment_start_loc := (Location.curr lexbuf) :: !comment_start_loc;
+>>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
 
 and comment state = parse
     "(*"
