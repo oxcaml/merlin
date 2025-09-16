@@ -5757,7 +5757,7 @@ let create_merlin_type_error_node loc env ty_expected ~attributes =
               val_attributes = [];
               val_uid = Uid.internal_not_actually_unique;
               val_zero_alloc = Zero_alloc.default;
-              val_modalities = Modality.Value.id;
+              val_modalities = Modality.id;
             },
             Id_value,
             (Uniqueness.disallow_left Uniqueness.legacy,
@@ -8100,10 +8100,7 @@ and type_function_
                     body;
                     ret_mode;
                     ret_sort;
-                    alloc_mode =
-                      { mode = alloc_mode;
-                        locality_context = expected_mode.locality_context
-                      };
+                    alloc_mode;
                     zero_alloc=Zero_alloc.default
                   });
               exp_loc = loc;
@@ -8294,11 +8291,8 @@ and type_function_
                 in
                 Texp_function
                   { params; body; ret_mode; ret_sort;
-                    alloc_mode = {
-                      mode = Alloc.disallow_left alloc_mode;
-                      locality_context = expected_mode.locality_context
-                    };
-                    zero_alloc=Zero_alloc.default });
+                    alloc_mode = Alloc.disallow_left alloc_mode;
+                    zero_alloc = Zero_alloc.default });
               exp_loc = loc;
               exp_extra = [];
               exp_type;
@@ -8498,7 +8492,7 @@ and type_label_access
         lbl_res = ty_exp;
         lbl_arg = newvar arg_kind;
         lbl_mut = Mutable { mode = Mode.Value.Comonadic.legacy; atomic = Nonatomic };
-        lbl_modalities = Mode.Modality.Value.Const.id;
+        lbl_modalities = Mode.Modality.Const.id;
         lbl_pos = 0;
         lbl_all = [||];
         lbl_repres =
@@ -10048,10 +10042,7 @@ and type_function_cases_expect
                   body = Tfunction_cases cases;
                   ret_mode = Alloc.disallow_right ret_mode;
                   ret_sort;
-                  alloc_mode = {
-                    mode = Alloc.disallow_left alloc_mode;
-                    locality_context = expected_mode.locality_context
-                  };
+                  alloc_mode = Alloc.disallow_left alloc_mode;
                   zero_alloc = Zero_alloc.default;
                 };
             exp_loc = loc;

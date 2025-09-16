@@ -15,6 +15,13 @@
 (* warn on fragile matches *)
 [@@@warning "+4"]
 
+(* Merlin-specific: change some module paths to match the compiler *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+  include Misc_stdlib
+end
+
 open Allowance
 open Solver
 open Mode_intf
@@ -164,11 +171,6 @@ module Hint_for_solver (* : Solver_intf.Hint *) = struct
          | Module_allocated_on_heap -> Module_allocated_on_heap
     end)
   end
-end
-
-module Misc = struct
-  let fatal_error = Misc.fatal_error
-  include Misc_stdlib
 end
 
 type nonrec allowed = allowed

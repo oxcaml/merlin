@@ -13,6 +13,13 @@
 (*                                                                        *)
 (**************************************************************************)
 
+(* Merlin-specific: change some module paths to match the compiler *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+  include Misc_stdlib
+end
+
 module Layout = Jkind_types.Sort.Const
 type base_layout = Jkind_types.Sort.base
 
