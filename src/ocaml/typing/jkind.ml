@@ -420,8 +420,9 @@ let relevant_axes_of_modality ~relevant_for_shallow ~modality =
   Axis_set.create ~f:(fun ~axis:(Pack axis) ->
       match axis with
       | Modal axis ->
-        let modality = Mode.Modality.Value.Const.proj axis modality in
-        not (Mode.Modality.Atom.is_constant modality)
+        let (P axis) = Mode.Modality.Axis.of_value (P axis) in
+        let modality = Mode.Modality.Const.proj axis modality in
+        not (Mode.Modality.Per_axis.is_constant axis modality)
       (* The kind-inference.md document (in the repo) discusses both constant
          modalities and identity modalities. Of course, reality has modalities
          (such as [shared]) that are neither constants nor identities. Here, we
@@ -1334,7 +1335,7 @@ end
 
 (* CR layouts v2.8: This should sometimes be for type schemes, not types
    (which print weak variables like ['_a] correctly), but this works better
-   for the common case. When we re-do printing, fix. *)
+   for the common case. When we re-do printing, fix. Internal ticket 4435. *)
 let outcometree_of_type = ref (fun _ -> assert false)
 
 let set_outcometree_of_type p = outcometree_of_type := p
@@ -1828,7 +1829,7 @@ module Const = struct
 
     let get_modal_bound (type a) ~(axis : a Axis.t) ~(base : a) (actual : a) =
       let (module A) = Axis.get axis in
-      (* CR layouts v2.8: Fix printing! *)
+      (* CR layouts v2.8: Fix printing! Internal ticket 5096. *)
       let less_or_equal a b =
         let (module Axis_ops) = Axis.get axis in
         Axis_ops.less_or_equal a b
@@ -1894,20 +1895,21 @@ module Const = struct
         (fun acc (Axis.Pack axis) ->
           match axis with
           | Modal axis ->
-            let t : _ Modality.Atom.t =
+            let (P (type a) (axis : a Mode.Modality.Axis.t)) =
+              Mode.Modality.Axis.of_value (P axis)
+            in
+            let t : a =
               match axis with
               | Monadic ax ->
-                Monadic
-                  (ax, Join_with (Mode.Value.Monadic.Const.Per_axis.max ax))
+                Join_with (Mode.Value.Monadic.Const.Per_axis.max ax)
               | Comonadic ax ->
-                Comonadic
-                  (ax, Meet_with (Mode.Value.Comonadic.Const.Per_axis.min ax))
+                Meet_with (Mode.Value.Comonadic.Const.Per_axis.min ax)
             in
-            Modality.Value.Const.set t acc
+            Modality.Const.set axis t acc
           | Nonmodal _ ->
             (* TODO: don't know how to print *)
             acc)
-        Modality.Value.Const.id
+        Modality.Const.id
         (Axis_set.to_list axes_to_ignore)
 
     (** Write [actual] in terms of [base] *)
@@ -1965,7 +1967,7 @@ module Const = struct
           (* CR layouts v2.8: sometimes there is no valid way to build a jkind
              from a built-in abbreviation. For now, we just pretend that the
              layout name is a valid jkind abbreviation whose modal bounds are
-             all max, even though this is a lie. *)
+             all max, even though this is a lie. Internal ticket 3284. *)
           let out_jkind_verbose =
             convert_with_base
               ~base:
@@ -2047,7 +2049,7 @@ module Const = struct
    fun context jkind ->
     match jkind.pjkind_desc with
     | Abbreviation name ->
-      (* CR layouts v2.8: move this to predef *)
+      (* CR layouts v2.8: move this to predef. Internal ticket 3339. *)
       (match name with
       | "any" -> Builtin.any.jkind
       | "value_or_null" -> Builtin.value_or_null.jkind
@@ -2144,7 +2146,7 @@ module Desc = struct
 
   (* CR layouts v2.8: This will probably need to be overhauled with
      [with]-types. See also [Printtyp.out_jkind_of_desc], which uses the same
-     algorithm. *)
+     algorithm. Internal ticket 5096. *)
   let format ppf t =
     let open Format in
     let rec format_desc ~nested ppf (desc : _ t) =
@@ -2496,11 +2498,22 @@ let of_type_decl_default ~context ~transl_type ~default
   | Some (t, _) -> t
   | None -> default
 
-let has_mutable_label lbls =
-  List.exists
-    (fun (lbl : Types.label_declaration) ->
-      match lbl.ld_mutable with Immutable -> false | Mutable _ -> true)
-    lbls
+let combine_mutability mut1 mut2 =
+  match mut1, mut2 with
+  | (Mutable { atomic = Nonatomic; mode = _ } as x), _
+  | _, (Mutable { atomic = Nonatomic; mode = _ } as x) ->
+    x
+  | (Mutable { atomic = Atomic; mode = _ } as x), _
+  | _, (Mutable { atomic = Atomic; mode = _ } as x) ->
+    x
+  | (Immutable as x), Immutable -> x
+
+let jkind_of_mutability mutability ~why =
+  (match mutability with
+  | Immutable -> Builtin.immutable_data
+  | Mutable { atomic = Atomic; _ } -> Builtin.sync_data
+  | Mutable { atomic = Nonatomic; _ } -> Builtin.mutable_data)
+    ~why
 
 let all_void_labels lbls =
   List.for_all
@@ -2517,10 +2530,11 @@ let for_boxed_record lbls =
   if all_void_labels lbls
   then Builtin.immediate ~why:Empty_record
   else
-    let is_mutable = has_mutable_label lbls in
     let base =
-      (if is_mutable then Builtin.mutable_data else Builtin.immutable_data)
-        ~why:Boxed_record
+      lbls
+      |> List.map (fun (ld : Types.label_declaration) -> ld.ld_mutable)
+      |> List.fold_left combine_mutability Immutable
+      |> jkind_of_mutability ~why:Boxed_record
       |> mark_best
     in
     add_labels_as_with_bounds lbls base
@@ -2568,7 +2582,7 @@ let for_or_null_argument ident =
     ~annotation:None ~why:(Value_creation why)
 
 let for_abbreviation ~type_jkind_purely ~modality ty =
-  (* CR layouts v2.8: This should really use layout_of *)
+  (* CR layouts v2.8: This should really use layout_of. Internal ticket 2912. *)
   let jkind = type_jkind_purely ty in
   let with_bounds_types =
     let relevant_axes =
@@ -2630,17 +2644,17 @@ let for_boxed_variant ~loc cstrs =
             (Warnings.Incompatible_with_upstream Warnings.Immediate_void_variant);
         Builtin.immediate ~why:Enumeration)
       else
-        let is_mutable =
-          List.exists
-            (fun cstr ->
-              match cstr.cd_args with
-              | Cstr_tuple _ -> false
-              | Cstr_record lbls -> has_mutable_label lbls)
-            cstrs
-        in
-        if is_mutable
-        then Builtin.mutable_data ~why:Boxed_variant
-        else Builtin.immutable_data ~why:Boxed_variant
+        List.concat_map
+          (fun cstr ->
+            match cstr.cd_args with
+            | Cstr_tuple _ -> [Immutable]
+            | Cstr_record lbls ->
+              List.map
+                (fun (ld : Types.label_declaration) -> ld.ld_mutable)
+                lbls)
+          cstrs
+        |> List.fold_left combine_mutability Immutable
+        |> jkind_of_mutability ~why:Boxed_variant
     in
     let base = mark_best base in
     let add_cstr_args cstr jkind =
@@ -2657,7 +2671,7 @@ let for_boxed_variant ~loc cstrs =
 let for_boxed_tuple elts =
   List.fold_right
     (fun (_, type_expr) ->
-      add_with_bounds ~modality:Mode.Modality.Value.Const.id ~type_expr)
+      add_with_bounds ~modality:Mode.Modality.Const.id ~type_expr)
     elts
     (Builtin.immutable_data ~why:Tuple |> mark_best)
 
@@ -2679,14 +2693,13 @@ let for_boxed_row row =
   then
     if not (Btype.static_row row)
     then
-      (* CR layouts v2.8: We can probably do a fair bit better here in most cases *)
+      (* CR layouts v2.8: We can probably do a fair bit better here in most cases. Internal ticket 5097 and 5098. *)
       for_open_boxed_row
     else
       let base = Builtin.immutable_data ~why:Polymorphic_variant in
       Btype.fold_row
         (fun jkind type_expr ->
-          add_with_bounds ~modality:Mode.Modality.Value.Const.id ~type_expr
-            jkind)
+          add_with_bounds ~modality:Mode.Modality.Const.id ~type_expr jkind)
         base row
       |> mark_best
   else Builtin.immediate ~why:Immediate_polymorphic_variant
@@ -2978,7 +2991,7 @@ let decompose_product ({ jkind; _ } as jk) =
    the jkind, if there is one. But actually the output seems better without
    doing so, because it teaches the user that e.g. [value mod local] is better
    off spelled [value]. Possibly remove [jkind.annotation], but only after
-   we have a proper printing story. *)
+   we have a proper printing story. Internal ticket 5096. *)
 let format ppf jkind = Desc.format ppf (Jkind_desc.get jkind.jkind)
 
 let printtyp_path = ref (fun _ _ -> assert false)
@@ -3640,7 +3653,7 @@ let equate_or_equal ~allow_mutation
     } =
   Jkind_desc.equate_or_equal ~allow_mutation jkind1 jkind2
 
-(* CR layouts v2.8: Switch this back to ~allow_mutation:false *)
+(* CR layouts: Switch this back to ~allow_mutation:false. Internal ticket 5099. *)
 let equal t1 t2 = equate_or_equal ~allow_mutation:true t1 t2
 
 let equate t1 t2 = equate_or_equal ~allow_mutation:true t1 t2
@@ -3769,7 +3782,7 @@ let sub_jkind_l ~type_equal ~context ?(allow_any_crossing = false) sub super =
               overly complex. *)
            (* CR layouts v2.8: It would be useful report to the user why this
               violation occurred, specifically which axes the violation is
-              along. *)
+              along. Internal ticket 5100. *)
            let best_sub = normalize ~mode:Require_best ~context sub in
            Violation.of_ ~context
              (Not_a_subjkind (best_sub, super, Nonempty_list.to_list reasons)))
@@ -3827,7 +3840,7 @@ let sub_jkind_l ~type_equal ~context ?(allow_any_crossing = false) sub super =
                it on the right; if so, we union together the relevant axes. *)
             right_bounds_seq
             (* CR layouts v2.8: maybe it's worth memoizing using a best-effort
-               type map? *)
+               type map? Internal ticket 5086. *)
             |> Seq.fold_left
                  (fun acc (ty2, ti) ->
                    match type_equal ty ty2 with
