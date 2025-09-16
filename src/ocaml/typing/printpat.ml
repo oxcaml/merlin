@@ -20,6 +20,12 @@ open Typedtree
 open Types
 open Format
 
+(* Merlin-specific: change some module paths to match the compiler *)
+module Misc = struct
+  include Misc
+  include Misc_stdlib
+end
+
 let is_cons = function
 | {cstr_name = "::"} -> true
 | _ -> false
@@ -31,18 +37,10 @@ let pretty_const c = match c with
 | Const_string (s, _, _) -> Printf.sprintf "%S" s
 | Const_float f -> Printf.sprintf "%s" f
 | Const_float32 f -> Printf.sprintf "%s" f
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-| Const_unboxed_float f -> Printf.sprintf "%s" (Misc_stdlib.format_as_unboxed_literal f)
-| Const_unboxed_float32 f -> Printf.sprintf "%ss" (Misc_stdlib.format_as_unboxed_literal f)
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-| Const_unboxed_float f -> Printf.sprintf "%s" (Misc.format_as_unboxed_literal f)
-| Const_unboxed_float32 f -> Printf.sprintf "%ss" (Misc.format_as_unboxed_literal f)
-=======
 | Const_unboxed_float f -> Printf.sprintf "%s" (Misc.format_as_unboxed_literal f)
 | Const_unboxed_float32 f -> Printf.sprintf "%ss" (Misc.format_as_unboxed_literal f)
 | Const_int8 i -> Printf.sprintf "%ds" i
 | Const_int16 i -> Printf.sprintf "%dS" i
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
 | Const_int32 i -> Printf.sprintf "%ldl" i
 | Const_int64 i -> Printf.sprintf "%LdL" i
 | Const_nativeint i -> Printf.sprintf "%ndn" i

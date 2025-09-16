@@ -27,10 +27,11 @@ open Typedtree
 open Btype
 open Ctype
 
-(* Merlin: make Misc_stdlib be  Misc.Stdlib *)
+(* Merlin-specific: change some module paths to match the compiler *)
 module Misc = struct
   include Misc
   module Stdlib = Misc_stdlib
+  include Misc_stdlib
 end
 
 let raise_error = Msupport.raise_error
@@ -749,24 +750,8 @@ let submode ~loc ~env ?(reason = Other) ?shared_context mode expected_mode =
   match res with
   | Ok () -> ()
   | Error failure_reason ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-      let locality_context = expected_mode.locality_context in
-      let contention_context = expected_mode.contention_context in
-      let visibility_context = expected_mode.visibility_context in
       let err =
-        Submode_failed(failure_reason, reason, locality_context,
-          contention_context, visibility_context, shared_context)
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-      let locality_context = expected_mode.locality_context in
-      let contention_context = expected_mode.contention_context in
-      let visibility_context = expected_mode.visibility_context in
-      let error =
-        Submode_failed(failure_reason, reason, locality_context,
-          contention_context, visibility_context, shared_context)
-=======
-      let error =
         Submode_failed(failure_reason, reason, shared_context)
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
       in
       raise (error(loc, env, err))
 
@@ -1020,17 +1005,9 @@ let constant : Parsetree.constant -> (Typedtree.constant, error) result =
       | Error Int32_literal_overflow -> Error (Literal_overflow "int32#")
       | Error Int64_literal_overflow -> Error (Literal_overflow "int64#")
       | Error Nativeint_literal_overflow -> Error (Literal_overflow "nativeint#")
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-      | Error Unknown_constant_literal ->
-          Error (Unknown_literal (Misc.Stdlib.format_as_unboxed_literal i, suffix))
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-      | Error Unknown_constant_literal ->
-          Error (Unknown_literal (Misc.format_as_unboxed_literal i, suffix))
-=======
       | Error Int_literal_overflow -> Error (Literal_overflow "int#")
       | Error Unknown_constant_literal suffix ->
           Error (Unknown_literal (Misc.format_as_unboxed_literal i, suffix))
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
       end
 
 let constant_or_raise env loc cst =
@@ -5431,38 +5408,10 @@ let unique_use ~loc ~env mode_l mode_r  =
     (* if unique extension is not enabled, we will not run uniqueness analysis;
        instead, we force all uses to be aliased and many. This is equivalent to
        running a UA which forces everything *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-    (match Uniqueness.submode Uniqueness.aliased uniqueness with
-    | Ok () -> ()
-    | Error e ->
-        let e : Mode.Value.error = Error (Monadic Uniqueness, e) in
-        raise (error(loc, env, Submode_failed(e, Other, None, None, None, None)))
-    );
-    (match Linearity.submode linearity Linearity.many with
-    | Ok () -> ()
-    | Error e ->
-        let e : Mode.Value.error = Error (Comonadic Linearity, e) in
-        raise (error (loc, env, Submode_failed(e, Other, None, None, None, None)))
-    );
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-    (match Uniqueness.submode Uniqueness.aliased uniqueness with
-    | Ok () -> ()
-    | Error e ->
-        let e : Mode.Value.error = Error (Monadic Uniqueness, e) in
-        raise (Error(loc, env, Submode_failed(e, Other, None, None, None, None)))
-    );
-    (match Linearity.submode linearity Linearity.many with
-    | Ok () -> ()
-    | Error e ->
-        let e : Mode.Value.error = Error (Comonadic Linearity, e) in
-        raise (Error (loc, env, Submode_failed(e, Other, None, None, None, None)))
-    );
-=======
     submode ~loc ~env Value.(of_const {Const.min with uniqueness = Aliased})
       (mode_default mode_r);
     submode ~loc ~env mode_l (mode_default Value.(of_const
       {Const.max with linearity = Many}));
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
     (Uniqueness.disallow_left Uniqueness.aliased,
      Linearity.disallow_right Linearity.many)
   end
@@ -7574,17 +7523,9 @@ and type_expect_
               { Const.min with areality = Local }) alloc_mode
           with
           | Ok () -> ()
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-          | Error _ -> raise (error (e.pexp_loc, env,
-              Cannot_stack_allocate alloc_mode.locality_context))
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-          | Error _ -> raise (Error (e.pexp_loc, env,
-              Cannot_stack_allocate alloc_mode.locality_context))
-=======
           | Error err ->
-              raise (Error (exp.exp_loc, exp.exp_env,
+              raise (error (exp.exp_loc, exp.exp_env,
                 Submode_failed_alloc err))
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
         end
       | Texp_list_comprehension _ -> unsupported List_comprehension
       | Texp_array_comprehension _ -> unsupported Array_comprehension

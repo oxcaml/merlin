@@ -1060,16 +1060,10 @@ rule token state = parse
    indicated by the [already_consumed] argument. The caller is responsible
    for checking that the '#' appears in column 0.
 *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
 and directive state already_consumed = parse
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-and directive already_consumed = parse
-=======
-and directive already_consumed = parse
   (* Expects to receive a line number from exactly one source (either the lexbuf or
      the [already_consumed] argument, but not both) and will fail if this isn't
      the case. *)
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | ([' ' '\t']* (['0'-'9']+? as line_num_opt) [' ' '\t']*
      ("\"" ([^ '\010' '\013' '\"' ] * as name) "\"") as directive)
         [^ '\010' '\013'] *

@@ -701,17 +701,7 @@ end) = struct
       fuel_for_compilation_units;
       max_steps_per_variable;
       global_env;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
-=======
       diagnostics;
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
       reduce_memo_table = reduce_memo_table;
       read_back_memo_table = read_back_memo_table;
       local_env;
@@ -759,17 +749,7 @@ end) = struct
       fuel_for_compilation_units = Params.fuel_for_compilation_units ();
       max_steps_per_variable = Params.max_shape_reduce_steps_per_variable ();
       global_env;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
-=======
       diagnostics = Diagnostics.no_diagnostics;
-      reduce_memo_table = !reduce_memo_table;
-      read_back_memo_table = !read_back_memo_table;
-      local_env;
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
       reduce_memo_table = reduce_memo_table;
       read_back_memo_table = read_back_memo_table;
       local_env;

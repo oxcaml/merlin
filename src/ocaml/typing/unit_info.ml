@@ -181,19 +181,13 @@ let is_cmi f = Filename.check_suffix (Artifact.filename f) ".cmi"
 let find_normalized_cmi f =
   let filename = (modname f |> Compilation_unit.name_as_string) ^ ".cmi" in
   let filename = Load_path.find_normalized filename in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-  { Artifact.filename; modname = modname f; source_file = Some f.source_file  }
-
-(* Merlin-only *)
-
-let modify_kind t ~f = { t with kind = f t.kind }
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-  { Artifact.filename; modname = modname f; source_file = Some f.source_file  }
-=======
   {
     Artifact.filename;
     modname = modname f;
     original_source_file = Some f.original_source_file;
     raw_source_file = Some f.raw_source_file;
   }
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
+
+(* Merlin-only *)
+
+let modify_kind t ~f = { t with kind = f t.kind }

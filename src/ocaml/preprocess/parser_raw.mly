@@ -974,23 +974,6 @@ let with_sign sign num =
 let unboxed_int sloc int_loc sign (n, m) =
   match m with
   | Some m -> Pconst_unboxed_integer (with_sign sign n, m)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-%token BARRBRACKET            "|]"
-%token BEGIN                  "begin"
-%token <char> CHAR            "'a'" (* just an example *)
-%token CLASS                  "class"
-%token COLON                  ":"
-%token COLONCOLON             "::"
-=======
-%token BARRBRACKET            "|]"
-%token BEGIN                  "begin"
-%token <char> CHAR            "'a'" (* just an example *)
-%token <char> HASH_CHAR       "#'a'" (* just an example *)
-%token CLASS                  "class"
-%token COLON                  ":"
-%token COLONCOLON             "::"
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | None ->
       if Language_extension.is_enabled unboxed_literals_extension then
         (raise_error Syntaxerr.(Error(Missing_unboxed_literal_suffix (make_loc int_loc)));
@@ -1089,6 +1072,7 @@ let merloc startpos ?endpos x =
 %token BARRBRACKET [@symbol "|]"]
 %token BEGIN [@symbol "begin"]
 %token <char> CHAR [@cost 2] [@recovery '_']
+%token <char> HASH_CHAR [@cost 2] [@recovery '_']
 %token CLASS [@symbol "class"]
 %token COLON [@symbol ":"]
 %token COLONCOLON [@symbol "::"]

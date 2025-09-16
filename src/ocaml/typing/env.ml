@@ -3165,22 +3165,8 @@ let initial () =
         Type_shape.Type_decl_shape.of_type_declaration type_ident decl
           (shape_for_constr env)
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-      Uid.Tbl.add Type_shape.all_type_decls decl.type_uid type_decl_shape;
-      let shape = Shape.leaf' None in
-      (* CR sspies: This will be replaced by an actual shape computation in
-         the future. *)
-      add_type type_ident ~shape decl env ~check:false ~predef:true ~long_path:false
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-      Uid.Tbl.add Type_shape.all_type_decls decl.type_uid type_decl_shape;
-      let shape = Shape.leaf' None in
-      (* CR sspies: This will be replaced by an actual shape computation in
-         the future. *)
-      add_type type_ident ~shape decl env ~check:false
-=======
       Uid.Tbl.add Type_shape.all_type_decls decl.type_uid shape;
-      add_type type_ident ~shape decl env ~check:false
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
+      add_type type_ident ~shape decl env ~check:false ~predef:true ~long_path:false
   in
   let initial_env =
     Predef.build_initial_env add_type_and_remember_decl
@@ -4808,13 +4794,7 @@ let sharedness_hint ppf : shared_context -> _ = function
           because it is defined outside of the probe.@]"
 
 let print_lock_item ppf (item, lid) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-19
-  match (item : lock_item) with
-||||||| ocaml-flambda/flambda-backend:dec889241a60580e1390742671f8dc1ce679cf33
-  match item with
-=======
   match (item : Mode.Hint.lock_item) with
->>>>>>> ocaml-flambda/flambda-backend:951524cd4f4e960f3107b6ad3f27ce721750eecb
   | Module ->
       fprintf ppf "The module %a is"
         (Style.as_inline_code !print_longident) lid
