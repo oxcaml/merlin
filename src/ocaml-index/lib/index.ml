@@ -50,7 +50,7 @@ module Reduce_conf (Loaded_shapes : sig
   val shapes : (Compilation_unit.t, Shape.t) Hashtbl.t
 end) =
 struct
-  let fuel () : Misc_stdlib.Maybe_bounded.t = Bounded { bound = 10 }
+  let fuel () = Misc_stdlib.Maybe_bounded.of_int 10
 
   let try_load ~unit_name () =
     match

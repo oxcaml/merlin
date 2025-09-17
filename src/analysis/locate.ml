@@ -880,7 +880,7 @@ let get_linked_uids ~config ~comp_unit decl_uid =
 let find_definition_uid ~config ~env ~(decl : Env_lookup.item) path =
   let namespace = decl.namespace in
   let module Reduce = Shape_reduce.Make (struct
-    let fuel () : Misc_stdlib.Maybe_bounded.t = Bounded { bound = 10 }
+    let fuel () = Misc_stdlib.Maybe_bounded.of_int 10
     let read_unit_shape ~diagnostics:_ ~unit_name =
       log ~title:"read_unit_shape" "inspecting %s" unit_name;
       match

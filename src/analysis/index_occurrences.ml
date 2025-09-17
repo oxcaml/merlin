@@ -91,7 +91,7 @@ let iterator ~current_buffer_path ~index ~stamp ~reduce_for_uid =
 
 let items ~index ~stamp (config : Mconfig.t) items =
   let module Shape_reduce = Shape_reduce.Make (struct
-    let fuel () : Misc_stdlib.Maybe_bounded.t = Bounded { bound = 10 }
+    let fuel () = Misc_stdlib.Maybe_bounded.of_int 10
 
     let read_unit_shape ~diagnostics:_ ~unit_name =
       log ~title:"read_unit_shape" "inspecting %s" unit_name;
