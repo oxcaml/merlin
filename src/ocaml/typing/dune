@@ -8,7 +8,7 @@
   Ocaml_parsing
   -open
   Merlin_utils
-  (:standard -w -9))
+  (:standard -w -9-47))
  (modules_without_implementation
   annot
   outcometree
