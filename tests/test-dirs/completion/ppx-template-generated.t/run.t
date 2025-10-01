@@ -62,7 +62,7 @@ Function to list all the completion candidates from a module
   ]
 
 # CR-someday: The attribute doesn't propogate through when it comes from an .ml file and
-# isn't on a type. The same is true with the 
+# isn't on a type. The same is true with the [@@deprecated] attribute.
   $ complete_in_module Bar
   [
     {
