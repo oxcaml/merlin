@@ -677,7 +677,8 @@ let of_jkind_annotation_desc : Parsetree.jkind_annotation_desc -> _ =
   in
   function
   | Pjk_default | Pjk_abbreviation _ -> id_fold
-  | Pjk_mod (jkind, modes) -> of_jkind_annotation jkind ** list_fold of_mode modes
+  | Pjk_mod (jkind, modes) ->
+    of_jkind_annotation jkind ** list_fold of_mode modes
   | Pjk_with (jkind, ct, modalities) ->
     of_jkind_annotation jkind ** of_core_type ct
     ** list_fold of_modality modalities
