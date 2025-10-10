@@ -19,8 +19,6 @@ And that it also works outside of the current buffer:
 
   $ $OCAMLC -c -bin-annot -w +50 test.ml
   File "test.ml", line 1, characters 14-42:
-  1 | let foo x y = (** incorrect doc for foo *)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   Warning 50 [unexpected-docstring]: unattached documentation comment (ignored)
 
   $ $MERLIN single document -position 1:18 -filename outside.ml << EOF

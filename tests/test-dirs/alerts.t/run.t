@@ -52,8 +52,6 @@
 The compiler accept both
   $ $OCAMLC -c main.ml
   File "main.ml", line 2, characters 8-12:
-  2 | let x = sqrt 3.
-              ^^^^
   Alert deprecated: Lib.sqrt
   I am deprecated
 
