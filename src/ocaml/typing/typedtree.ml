@@ -318,10 +318,10 @@ and expression_desc =
   | Texp_src_pos
   | Texp_overwrite of expression * expression
   | Texp_hole of unique_use
-  | Texp_typed_hole
   | Texp_quotation of expression
   | Texp_antiquotation of expression
   | Texp_eval of core_type * Jkind.sort
+  | Texp_typed_hole
 
 and ident_kind =
   | Id_value
@@ -1490,6 +1490,7 @@ let rec fold_antiquote_exp f  acc exp =
       fold_antiquote_exp (fold_antiquote_exp f) acc exp
   | Texp_antiquotation exp -> f acc exp
   | Texp_eval _ -> acc
+  | Texp_typed_hole -> acc
 
 and fold_antiquote_exp_opt f acc = function
   | None -> acc
@@ -1554,4 +1555,3 @@ and fold_antiquote_comprehension_clauses f acc ccs =
 
 and fold_antiquote_binding_op f acc op =
   fold_antiquote_exp f acc op.bop_exp
->>>>>>> oxcaml/oxcaml:main

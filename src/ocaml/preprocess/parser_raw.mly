@@ -305,11 +305,9 @@ let removed_string_set loc =
 let not_expecting loc nonterm =
   raise_error Syntaxerr.(Error(Not_expecting(make_loc loc, nonterm)))
 
-(*
 let unclosed opening_name opening_loc closing_name closing_loc =
   raise(Syntaxerr.Error(Syntaxerr.Unclosed(make_loc opening_loc, opening_name,
                                            make_loc closing_loc, closing_name)))
-*)
 
 let unspliceable loc =
   raise(Syntaxerr.Error(Syntaxerr.Unspliceable (make_loc loc)))
@@ -3388,6 +3386,7 @@ block_access:
           mkexp_attrs ~loc:($startpos($3), $endpos)
             (Pexp_constraint (ghexp ~loc:$sloc (Pexp_pack $6), Some $8, [])) $5 in
         Pexp_open(od, modexp) }
+  (*
   | mod_longident DOT
     LPAREN MODULE ext_attributes module_expr COLON error
       { unclosed "(" $loc($3) ")" $loc($8) }

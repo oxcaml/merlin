@@ -201,7 +201,6 @@ let array_kind_of_elt ~elt_sort env loc ty =
       Jkind.Sort.default_for_transl_and_get
         (type_sort ~why:Array_element env loc ty)
   in
-  let elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
   let classify_product ty _sorts =
     if Ctype.is_always_gc_ignorable env ty then
       Pgcignorableproductarray ()

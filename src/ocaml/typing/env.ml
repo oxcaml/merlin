@@ -664,8 +664,6 @@ type type_descr_kind =
 
 type type_descriptions = type_descr_kind
 
-let in_signature_flag = 0x01
-
 let stamped_changelog =
   s_table Stamped_hashtable.create_changelog ()
 
@@ -4045,7 +4043,7 @@ let add_components slot root env0 comps locks =
     IdTbl.add_open slot w root comps ([] : empty list) env0
   in
   let add_types w comps env0 additions =
-    let types = add w comps env0 in
+    let types = add_v w comps env0 in
     let additions = short_paths_type_open root comps additions in
     types, additions
   in
@@ -4055,7 +4053,7 @@ let add_components slot root env0 comps locks =
     cltypes, additions
   in
   let add_modtypes w comps env0 additions =
-    let modtypes = add w comps env0 in
+    let modtypes = add_v w comps env0 in
     let additions = short_paths_module_type_open root comps additions in
     modtypes, additions
   in

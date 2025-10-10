@@ -354,6 +354,8 @@ let deep_copy () =
         | Tpoly (t,tl) -> Tpoly (copy t, List.map copy tl)
         | Tpackage (p,ltl) ->
           Tpackage (p, List.map (fun (l, tl) -> l, copy tl) ltl)
+        | Tquote t -> Tquote (copy t)
+        | Tsplice t -> Tsplice (copy t)
         | Tlink _ | Tsubst _ -> assert false
       in
       Transient_expr.(set_desc (repr ty') desc);
