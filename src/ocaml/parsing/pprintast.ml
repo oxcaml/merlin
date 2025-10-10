@@ -2540,8 +2540,10 @@ let prepare_error err =
         "Syntax error: `%s` is reserved for use in runtime metaprogramming."
         symb
   | Unspliceable loc ->
-      Location.errorf ~source ~loc
-        "Syntax error: This expression cannot be spliced."
+      Location.errorf ~loc
+        "Syntax error: expression cannot be spliced.\n\
+         @{<hint>Hint@}: consider putting parentheses around the \
+         expression."
   | Let_mutable_not_allowed_at_structure_level loc ->
       Location.errorf ~source ~loc
         "Syntax error: Mutable let bindings are not allowed \

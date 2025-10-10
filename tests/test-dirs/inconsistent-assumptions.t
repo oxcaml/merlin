@@ -68,8 +68,8 @@ Do an update that breaks the build:
   $ $OCAMLC -c -w @a-40-41-42-49-70 -short-paths -open My_lib__ -o my_lib__Bar bar.ml
   $ $OCAMLC -c -w @a-40-41-42-49-70 -short-paths -open My_lib__ -o my_lib__Foo foo.ml 2>&1 | head -n 3
   File "foo.ml", line 4, characters 11-12:
-  Error: This expression has type char but an expression was expected of type
-           int
+  4 | let x, _ = x + 1, Bar.b
+                 ^
   $ cd ..
 
 Go to the file, and ask merlin to move you to the error:
