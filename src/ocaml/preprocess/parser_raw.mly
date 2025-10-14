@@ -3073,19 +3073,19 @@ spliceable_expr:
       { mkexp ~loc:$sloc (Pexp_quote ($2)) }
   | LPAREN seq_expr RPAREN
       { reloc_exp ~loc:$sloc $2 }
-  (*
+  /* BEGIN AVOID */
   | LPAREN seq_expr error
       { unclosed "(" $loc($1) ")" $loc($3) }
-  *)
+  /* END AVOID */
   | LPAREN seq_expr type_constraint_with_modes RPAREN
       { let (t, m) = $3 in
         mkexp_type_constraint_with_modes ~ghost:true ~loc:$sloc ~modes:m $2 t }
   | mkrhs(val_longident)
       { mkexp ~loc:$sloc (Pexp_ident ($1)) }
-  (*
+  /* BEGIN AVOID */
   | error
       { unspliceable $sloc }
-  *)
+  /* END AVOID */
 ;
 
 %public simple_expr:
@@ -3401,10 +3401,10 @@ block_access:
       { Pexp_splice $2 }
   | LESSLBRACKET seq_expr RBRACKETGREATER
       { Pexp_quote $2 }
-  (*
+  /* BEGIN AVOID */
   | LESSLBRACKET seq_expr error
       { unclosed "<[" $loc($1) "]>" $loc($3) }
-  *)
+  /* END AVOID */
 ;
 labeled_simple_expr:
     simple_expr %prec below_HASH
