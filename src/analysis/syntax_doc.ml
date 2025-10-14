@@ -260,9 +260,9 @@ let get_mode_doc mode =
     | Comonadic Statefulness, Stateless ->
       Some "Functions with this mode cannot access mutable data"
     | Comonadic Forkable, Forkable ->
-      Some "Values with this mode can be forked to other threads"
+      Some "Functions with this mode may be executed concurrently."
     | Comonadic Forkable, Unforkable ->
-      Some "Values with this mode cannot be forked to other threads"
+      Some "Functions with this mode cannot be executed concurrently."
   in
   let doc_url =
     let subpage =
