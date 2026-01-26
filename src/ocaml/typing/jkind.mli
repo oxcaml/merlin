@@ -679,19 +679,9 @@ type sub_or_intersect =
   | Sub  (** The first jkind is a subjkind of the second. *)
   | Disjoint of Sub_failure_reason.t Misc_stdlib.Nonempty_list.t
       (** The two jkinds have no common ground. *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
   | Has_intersection of Sub_failure_reason.t Misc_stdlib.Nonempty_list.t
-      (** The first jkind is not a subjkind of the second, but the two jkinds have an
-          intersection: try harder. *)
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-  | Has_intersection of Sub_failure_reason.t Misc.Nonempty_list.t
-      (** The first jkind is not a subjkind of the second, but the two jkinds have an
-          intersection: try harder. *)
-=======
-  | Has_intersection of Sub_failure_reason.t Misc.Nonempty_list.t
       (** The first jkind is not a subjkind of the second, but the two jkinds
           have an intersection: try harder. *)
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
 
 (** [sub_or_intersect t1 t2] does a subtype check, returning a
     [sub_or_intersect]; see comments there for more info. *)
@@ -769,7 +759,7 @@ end
 
 module Error : sig
   type t
-  
+
   exception User_error of Location.t * t
 end
 

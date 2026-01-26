@@ -888,16 +888,11 @@ and print_simple_out_module_type ppf =
        print_simple_out_module_type mty
        print_ident id
        (if unaliasable then " [@unaliasable]" else "")
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
-
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-=======
 and print_simple_out_module_type_with_modes ppf (mty, mm) =
   match mm with
   | [] -> print_simple_out_module_type ppf mty
   | _ :: _ ->
       fprintf ppf "%a%a" print_simple_out_module_type mty print_out_modes mm
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
 and print_out_signature ppf =
   function
     [] -> ()

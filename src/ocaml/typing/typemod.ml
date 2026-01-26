@@ -3524,19 +3524,9 @@ and type_open_decl_aux ?used_slot ?toplevel funct_body names env od =
    module).  We don't want the typing tweaks that occur for the toplevel, so we need an
    extra argument (sig_acc), but leave `toplevel` alone to minimize the diff *)
 and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor env
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
   sig_acc ?expected_mode sstr =
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-
-and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
-  sstr =
-=======
-
-and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
-  sstr =
   (* CR implicit-types: implement implicit variable jkinds in structures. *)
   let env = Env.clear_implicit_jkinds env in
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
   let names = Signature_names.create () in
   let _, md_mode = register_allocation () in
   Option.iter (fun x -> Value.submode md_mode x |> ignore)

@@ -8871,20 +8871,8 @@ and type_label_access
   let label, ambiguity =
     wrap_disambiguate "This expression has" (mk_expected ty_exp)
       (label_disambiguate record_form usage lid env expected_type) labels in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
-  (record, record_sort, Mode.Value.disallow_right mode, label, expected_type)
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-  (record, record_sort, Mode.Value.disallow_right mode, label, expected_type)
-
-(* Typing format strings for printing or reading.
-   These formats are used by functions in modules Printf, Format, and Scanf.
-=======
   (record, record_sort, Mode.Value.disallow_right mode,
    label, expected_type, ambiguity)
-
-(* Typing format strings for printing or reading.
-   These formats are used by functions in modules Printf, Format, and Scanf.
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
   with exn ->
     raise_error exn;
     let arg_kind, _ =
@@ -10470,16 +10458,9 @@ and type_function_cases_expect
           }
     in
     cases, ty_fun, alloc_mode,
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
-    { ret_sort; ret_mode = Alloc.disallow_right ret_mode }
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-      { ret_sort;
-        ret_mode = Alloc.disallow_right ret_mode }
-=======
       { ret_sort;
         ret_mode =
           {mode_modes = Alloc.disallow_right ret_mode; mode_desc = []} }
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
   end
 
 (* Typing of let bindings *)

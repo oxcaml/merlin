@@ -4132,7 +4132,7 @@ let add_components slot root env0 comps (locks : locks) =
     IdTbl.add_open slot w root comps ([] : empty list) env0
   in
   let add_types w comps env0 additions =
-    let types = add_v w comps env0 in
+    let types = add_s w comps env0 in
     let additions = short_paths_type_open root comps additions in
     types, additions
   in
@@ -4142,7 +4142,7 @@ let add_components slot root env0 comps (locks : locks) =
     cltypes, additions
   in
   let add_modtypes w comps env0 additions =
-    let modtypes = add_v w comps env0 in
+    let modtypes = add_s w comps env0 in
     let additions = short_paths_module_type_open root comps additions in
     modtypes, additions
   in
@@ -4164,29 +4164,13 @@ let add_components slot root env0 comps (locks : locks) =
   let values =
     add_v (fun x -> `Value x) comps.comp_values env0.values
   in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
   let types, additions =
     add_types (fun x -> `Type x)
       comps.comp_types env0.types env0.short_paths_additions
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-  let types =
-    add_v (fun x -> `Type x) comps.comp_types env0.types
-=======
-  let types =
-    add_s (fun x -> `Type x) comps.comp_types env0.types
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
   in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-27
   let modtypes, additions =
     add_modtypes (fun x -> `Module_type x)
       comps.comp_modtypes env0.modtypes additions
-||||||| oxcaml/oxcaml:d6e630469425e02d8d45f8f10392e046689de2c5
-  let modtypes =
-    add_v (fun x -> `Module_type x) comps.comp_modtypes env0.modtypes
-=======
-  let modtypes =
-    add_s (fun x -> `Module_type x) comps.comp_modtypes env0.modtypes
->>>>>>> oxcaml/oxcaml:977afdd4ebd2c9cf0d4756d7b37d0d9a76ca73ef
   in
   let classes =
     add_v (fun x -> `Class x) comps.comp_classes env0.classes
