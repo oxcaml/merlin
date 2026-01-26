@@ -8383,7 +8383,7 @@ and type_function
              ~attributes:(Msupport.recovery_attributes []))
       in
       let ret_info =
-        { ret_mode = Alloc.newvar ();
+        { ret_mode = { mode_modes = Alloc.newvar (); mode_desc = [] };
           ret_sort = Jkind.Sort.new_var ~level:(Ctype.get_current_level ());
         }
       in
@@ -8450,7 +8450,7 @@ and type_function_
                   match ret_info with
                   | Some { ret_mode; ret_sort } -> ret_mode, ret_sort
                   | None ->
-                    (Alloc.newvar (),
+                    ({ mode_modes = Alloc.newvar (); mode_desc = [] },
                      Jkind.Sort.new_var ~level:(Ctype.get_current_level ()))
                 in
                 let alloc_mode = Alloc.disallow_left @@
@@ -8655,7 +8655,9 @@ and type_function_
                 let ret_mode, ret_sort =
                   match ret_info with
                   | Some { ret_mode; ret_sort } -> ret_mode, ret_sort
-                  | None -> Alloc.disallow_right ret_mode, ret_sort
+                  | None ->
+                    ( { mode_modes = Alloc.disallow_right ret_mode; mode_desc = [] }
+                    , ret_sort )
                 in
                 Texp_function
                   { params; body; ret_mode; ret_sort;
@@ -10445,7 +10447,8 @@ and type_function_cases_expect
               Texp_function
                 { params = [];
                   body = Tfunction_cases cases;
-                  ret_mode = Alloc.disallow_right ret_mode;
+                  ret_mode =
+                    { mode_modes = Alloc.disallow_right ret_mode; mode_desc = []};
                   ret_sort;
                   alloc_mode = Alloc.disallow_left alloc_mode;
                   zero_alloc = Zero_alloc.default;

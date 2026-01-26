@@ -382,7 +382,7 @@ let rec make_aliases_absent ~aliased pres mty =
   | Mty_functor(arg, res, mres) ->
       let _, res = make_aliases_absent ~aliased:false Mp_present res in
       pres, Mty_functor(arg, res, mres)
-  | Mty_ident _, Mty_for_hole ->
+  | Mty_ident _ | Mty_for_hole ->
       pres, mty
   | Mty_strengthen (mty,p,a) ->
       let aliased = aliased || Aliasability.is_aliasable a in
