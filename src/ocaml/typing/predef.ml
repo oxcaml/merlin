@@ -23,6 +23,7 @@ end
 open Path
 open Types
 open Btype
+module Jkind = Btype.Jkind0
 
 let builtin_idents = ref []
 
@@ -335,7 +336,7 @@ and ident_some = ident_create "Some"
 and ident_null = ident_create "Null"
 and ident_this = ident_create "This"
 
-let option_argument_sort = Jkind.Sort.Const.value
+let option_argument_sort = Jkind_types.Sort.Const.value
 let option_argument_jkind = Jkind.Builtin.value_or_null ~why:(
   Type_argument {parent_path = path_option; position = 1; arity = 1})
 
@@ -344,8 +345,8 @@ let list_jkind param =
   Jkind.add_with_bounds ~modality:Mode.Modality.Const.id ~type_expr:param |>
   Jkind.mark_best
 
-let list_sort = Jkind.Sort.Const.value
-let list_argument_sort = Jkind.Sort.Const.value
+let list_sort = Jkind_types.Sort.Const.value
+let list_argument_sort = Jkind_types.Sort.Const.value
 let list_argument_jkind = Jkind.Builtin.value_or_null ~why:(
   Type_argument {parent_path = path_list; position = 1; arity = 1})
 
@@ -458,7 +459,7 @@ let mk_add_type2 add_type type_ident ~jkind ~param1_jkind ~param2_jkind
     { type_params = [param1; param2];
       type_arity = 2;
       type_kind = Type_abstract Definition;
-      type_jkind = Jkind.mark_best (jkind);
+      type_jkind = Jkind.mark_best jkind;
       type_loc = Location.none;
       type_private = Asttypes.Public;
       type_manifest = None;
@@ -479,7 +480,7 @@ let mk_add_extension add_extension id args =
       let raise_error () = Misc.fatal_error
           "sanity check failed: non-value jkind in predef extension \
             constructor; should this have Constructor_mixed shape?" in
-      match (sort : Jkind.Sort.Const.t) with
+      match (sort : Jkind_types.Sort.Const.t) with
       | Base Value -> ()
       | Base (Void | Untagged_immediate | Float32 | Float64 | Word | Bits8 |
              Bits16 | Bits32 | Bits64 | Vec128 | Vec256 | Vec512)
@@ -564,7 +565,8 @@ let build_initial_env add_type add_extension empty_env =
   |> add_type ident_char ~jkind:Jkind.Const.Builtin.immediate
        ~unboxed_jkind:Jkind.Const.Builtin.kind_of_unboxed_int8
   |> add_type ident_exn ~kind:Type_open ~jkind:Jkind.Const.Builtin.exn
-  |> add_type ident_extension_constructor ~jkind:Jkind.Const.Builtin.immutable_data
+  |> add_type ident_extension_constructor
+       ~jkind:Jkind.Const.Builtin.immutable_data
   |> add_type_with_jkind ident_float ~jkind:(Jkind.for_float ident_float)
       ~unboxed_jkind:Jkind.Const.Builtin.kind_of_unboxed_float
   |> add_type ident_floatarray ~jkind:Jkind.Const.Builtin.mutable_data
@@ -653,7 +655,7 @@ let build_initial_env add_type add_extension empty_env =
                ld_mutable=Immutable;
                ld_modalities=Mode.Modality.Const.id;
                ld_type=field_type;
-               ld_sort=Jkind.Sort.Const.value;
+               ld_sort=Jkind_types.Sort.Const.value;
                ld_loc=Location.none;
                ld_attributes=[];
                ld_uid=Uid.of_predef_id id;
@@ -707,26 +709,26 @@ let build_initial_env add_type add_extension empty_env =
   (* Predefined exceptions - alphabetical order *)
   |> add_extension ident_assert_failure
        [newgenty (Ttuple[None, type_string; None, type_int; None, type_int]),
-        Jkind.Sort.Const.value]
+        Jkind_types.Sort.Const.value]
   |> add_extension ident_division_by_zero []
   |> add_extension ident_end_of_file []
   |> add_extension ident_failure [type_string,
-       Jkind.Sort.Const.value]
+       Jkind_types.Sort.Const.value]
   |> add_extension ident_invalid_argument [type_string,
-       Jkind.Sort.Const.value]
+       Jkind_types.Sort.Const.value]
   |> add_extension ident_match_failure
        [newgenty (Ttuple[None, type_string; None, type_int; None, type_int]),
-       Jkind.Sort.Const.value]
+       Jkind_types.Sort.Const.value]
   |> add_extension ident_not_found []
   |> add_extension ident_out_of_memory []
   |> add_extension ident_out_of_fibers []
   |> add_extension ident_stack_overflow []
   |> add_extension ident_sys_blocked_io []
   |> add_extension ident_sys_error [type_string,
-       Jkind.Sort.Const.value]
+       Jkind_types.Sort.Const.value]
   |> add_extension ident_undefined_recursive_module
        [newgenty (Ttuple[None, type_string; None, type_int; None, type_int]),
-       Jkind.Sort.Const.value]
+       Jkind_types.Sort.Const.value]
 
 let add_simd_stable_extension_types add_type env =
   let _, add_type = mk_add_type add_type in
@@ -793,7 +795,7 @@ let add_small_number_extension_types add_type env =
 let add_small_number_beta_extension_types _add_type env =
   env
 
-let or_null_argument_sort = Jkind.Sort.Const.value
+let or_null_argument_sort = Jkind_types.Sort.Const.value
 
 let or_null_kind tvar =
   let cstrs =
