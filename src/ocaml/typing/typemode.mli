@@ -57,3 +57,11 @@ val transl_mod_bounds : Parsetree.modes -> Jkind.Mod_bounds.t
 val untransl_mod_bounds : Jkind.Mod_bounds.t -> Parsetree.modes
 
 val idx_expected_modalities : mut:bool -> Mode.Modality.Const.t
+
+(* Merlin-only: This is exposed for Merlin (for syntax_doc.ml). *)
+
+module Modifier_axis_pair : sig
+  type t = P : 'a Jkind_axis.Axis.t * 'a -> t
+
+  val of_string : string -> t
+end

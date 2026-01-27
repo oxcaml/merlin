@@ -5905,11 +5905,12 @@ let create_merlin_type_error_node loc env ty_expected ~attributes =
               val_attributes = [];
               val_uid = Uid.internal_not_actually_unique;
               val_zero_alloc = Zero_alloc.default;
-              val_modalities = Modality.id;
+              val_modalities = Modality.of_const Modality.Const.id;
             },
             Id_value,
             (Uniqueness.disallow_left Uniqueness.legacy,
-             Linearity.disallow_right Linearity.legacy));
+             Linearity.disallow_right Linearity.legacy),
+            Mode.Value.disallow_right Mode.Value.legacy);
       exp_loc = loc;
       exp_extra = [];
       exp_type = ty_expected;
@@ -8901,7 +8902,7 @@ and type_label_access
       }
     in
     (record, record_sort, Mode.Value.disallow_right mode,
-     make_fake_label record_form, expected_type)
+     make_fake_label record_form, expected_type, Unambiguous)
 
 (* Typing format strings for printing or reading.
    These formats are used by functions in modules Printf, Format, and Scanf.

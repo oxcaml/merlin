@@ -314,3 +314,9 @@ val rewrite_double_underscore_longidents: Env.t -> Longident.t -> Longident.t
 (** [printed_signature sourcefile ppf sg] print the signature [sg] of
     [sourcefile] with potential warnings for name collisions *)
 val printed_signature: string -> formatter -> signature -> unit
+
+(* Merlin-only: these functions are exposed for use by Merlin (in ptyp_of_type.ml). *)
+
+val tree_of_modes : Mode.Alloc.Const.t -> out_mode list
+
+val tree_of_modalities : mutability -> Mode.Modality.Const.t -> out_modality list

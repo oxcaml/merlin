@@ -86,9 +86,12 @@ type node =
   | Module_binding_name of module_binding
   | Module_declaration_name of module_declaration
   | Module_type_declaration_name of module_type_declaration
-  | Mode of Parsetree.mode Location.loc
-  | Modality of Parsetree.modality Location.loc
+  | Mode of Mode.Alloc.atom Location.loc
+  | Modes : _ Typedtree.modes -> node
+  | Modality of Mode.Modality.atom Location.loc
+  | Modalities of Typedtree.modalities
   | Jkind_annotation of Parsetree.jkind_annotation
+  | Mod_bound of Parsetree.mode Location.loc
   | Attribute of attribute
 
 let node_update_env env0 = function
@@ -140,8 +143,11 @@ let node_update_env env0 = function
   | Open_declaration _
   | Binding_op _
   | Mode _
+  | Modes _
   | Modality _
+  | Modalities _
   | Jkind_annotation _
+  | Mod_bound _
   | Attribute _ -> env0
 
 let node_real_loc loc0 = function
@@ -178,6 +184,7 @@ let node_real_loc loc0 = function
   | Mode { loc }
   | Modality { loc }
   | Jkind_annotation { pjkind_loc = loc }
+  | Mod_bound { loc }
   | Attribute { attr_name = { loc } } -> loc
   | Module_type_declaration_name { mtd_name = loc } -> loc.Location.loc
   | Module_declaration_name { md_name = loc }
@@ -194,6 +201,8 @@ let node_real_loc loc0 = function
   | Type_kind _
   | Class_signature _
   | Package_type _
+  | Modes _
+  | Modalities _
   | Dummy -> loc0
 
 let node_attributes = function
@@ -297,6 +306,20 @@ let option_fold f' o env (f : _ f0) acc =
 
 let of_core_type ct = app (Core_type ct)
 
+let of_mod_bound mod_bound = app (Mod_bound mod_bound)
+
+let of_mode mode = app (Mode mode)
+
+let of_modes_desc modes = list_fold of_mode modes
+
+let of_modes modes = app (Modes modes)
+
+let of_modality modality = app (Modality modality)
+
+let of_modalities_desc modalities = list_fold of_modality modalities
+
+let of_modalities modalities = app (Modalities modalities)
+
 let of_jkind_annotation jkind = app (Jkind_annotation jkind)
 
 let of_jkind_annotation_opt jkind = option_fold of_jkind_annotation jkind
@@ -307,13 +330,14 @@ let of_exp_extra (exp, _, _) =
   | Texp_coerce (cto, ct) -> of_core_type ct ** option_fold of_core_type cto
   | Texp_poly cto -> option_fold of_core_type cto
   | Texp_newtype (_, _, jkind, _) -> of_jkind_annotation_opt jkind
-  | Texp_stack | Texp_mode _ -> id_fold
+  | Texp_mode modes -> of_modes modes
+  | Texp_stack | Texp_inspected_type _ -> id_fold
 let of_expression e = app (Expression e) ** list_fold of_exp_extra e.exp_extra
 
 let of_pat_extra (pat, _, _) =
   match pat with
-  | Tpat_constraint ct -> of_core_type ct
-  | Tpat_type _ | Tpat_unpack | Tpat_open _ -> id_fold
+  | Tpat_constraint (ct, modes) -> of_core_type ct ** of_modes modes
+  | Tpat_type _ | Tpat_unpack | Tpat_open _ | Tpat_inspected_type _ -> id_fold
 
 let of_pattern (type k) (p : k general_pattern) =
   app (Pattern p) ** list_fold of_pat_extra p.pat_extra
@@ -562,8 +586,8 @@ and of_module_expr_desc = function
   | Tmod_ident _ -> id_fold
   | Tmod_structure str -> app (Structure str)
   | Tmod_functor (Unit, me) -> of_module_expr me
-  | Tmod_functor (Named (_, _, mt), me) ->
-    of_module_type mt ** of_module_expr me
+  | Tmod_functor (Named (_, _, mt, modes), me) ->
+    of_module_type mt ** of_module_expr me ** of_modes modes
   | Tmod_apply (me1, me2, _) -> of_module_expr me1 ** of_module_expr me2
   | Tmod_apply_unit me1 -> of_module_expr me1
   | Tmod_constraint (me, _, mtc, _) ->
@@ -593,9 +617,10 @@ and of_module_type_desc = function
   (* CR module strengthening: need to also fold on the module expression *)
   | Tmty_strengthen (mty, _, _) -> of_module_type mty
   | Tmty_signature sg -> app (Signature sg)
-  | Tmty_functor (Named (_, _, mt1), mt2) ->
-    of_module_type mt1 ** of_module_type mt2
-  | Tmty_functor (Unit, mt) -> of_module_type mt
+  | Tmty_functor (Named (_, _, mt1, modes1), mt2, modes2) ->
+    of_module_type mt1 ** of_module_type mt2 ** of_modes modes1
+    ** of_modes modes2
+  | Tmty_functor (Unit, mt, modes) -> of_module_type mt ** of_modes modes
   | Tmty_with (mt, wcs) ->
     list_fold (fun (_, _, wc) -> app (With_constraint wc)) wcs
     ** of_module_type mt
@@ -630,7 +655,8 @@ and of_core_type_desc = function
   | Ttyp_call_pos -> id_fold
   | Ttyp_of_kind jkind -> of_jkind_annotation jkind
   | Ttyp_open (_, _, ct) -> of_core_type ct
-  | Ttyp_arrow (_, ct1, ct2) -> of_core_type ct1 ** of_core_type ct2
+  | Ttyp_arrow (_, ct1, modes1, ct2, modes2) ->
+    of_core_type ct1 ** of_core_type ct2 ** of_modes modes1 ** of_modes modes2
   | Ttyp_tuple cts -> list_fold (fun (_, ty) -> of_core_type ty) cts
   | Ttyp_unboxed_tuple cts -> list_fold (fun (_, ty) -> of_core_type ty) cts
   | Ttyp_constr (_, _, cts) | Ttyp_class (_, _, cts) ->
@@ -663,10 +689,6 @@ and of_class_type_field_desc = function
   | Tctf_constraint (ct1, ct2) -> of_core_type ct1 ** of_core_type ct2
   | Tctf_attribute _ -> id_fold
 
-let of_mode mode = app (Mode mode)
-
-let of_modality modality = app (Modality modality)
-
 let of_jkind_annotation_desc : Parsetree.jkind_annotation_desc -> _ =
   let of_core_type (_ : Parsetree.core_type) =
     (* CR-someday: Replace [Parsetree.jkind_annotation] with a version where types are
@@ -677,11 +699,15 @@ let of_jkind_annotation_desc : Parsetree.jkind_annotation_desc -> _ =
   in
   function
   | Pjk_default | Pjk_abbreviation _ -> id_fold
-  | Pjk_mod (jkind, modes) ->
-    of_jkind_annotation jkind ** list_fold of_mode modes
+  | Pjk_mod (jkind, mod_bounds) ->
+    of_jkind_annotation jkind ** list_fold of_mod_bound mod_bounds
   | Pjk_with (jkind, ct, modalities) ->
-    of_jkind_annotation jkind ** of_core_type ct
-    ** list_fold of_modality modalities
+    (* Todo: The compiler should get updated so that the translated modalities are
+       included in the typed tree. *)
+    let modalities =
+      Typemode.transl_modalities ~maturity:Stable Immutable modalities
+    in
+    of_jkind_annotation jkind ** of_core_type ct ** of_modalities modalities
   | Pjk_kind_of ct -> of_core_type ct
   | Pjk_product jkinds -> list_fold of_jkind_annotation jkinds
 
@@ -715,7 +741,8 @@ let of_node node =
     | Class_field_kind (Tcfk_concrete (_, e)) -> of_expression e
     | Module_expr { mod_desc } -> of_module_expr_desc mod_desc
     | Module_type_constraint Tmodtype_implicit -> id_fold
-    | Module_type_constraint (Tmodtype_explicit mt) -> of_module_type mt
+    | Module_type_constraint (Tmodtype_explicit (mt, modes)) ->
+      of_module_type mt ** of_modes modes
     | Structure { str_items; str_final_env } ->
       list_fold_with_next
         (fun next item ->
@@ -806,8 +833,11 @@ let of_node node =
     | Include_description i -> of_module_type i.incl_mod
     | Binding_op { bop_exp = _ } -> id_fold
     | Mode _ -> id_fold
+    | Modes { mode_desc } -> of_modes_desc mode_desc
     | Modality _ -> id_fold
+    | Modalities { moda_desc } -> of_modalities_desc moda_desc
     | Jkind_annotation { pjkind_desc } -> of_jkind_annotation_desc pjkind_desc
+    | Mod_bound _ -> id_fold
     | Attribute _ -> id_fold
   in
   without_attributes ** list_fold of_attribute (node_attributes node)
@@ -867,8 +897,11 @@ let string_of_node = function
   | Include_description _ -> "include_description"
   | Include_declaration _ -> "include_declaration"
   | Mode _ -> "mode"
+  | Modes _ -> "modes"
   | Modality _ -> "modality"
+  | Modalities _ -> "modalities"
   | Jkind_annotation _ -> "jkind_annotation"
+  | Mod_bound _ -> "mod_bound"
   | Attribute _ -> "attribute"
 
 let mkloc = Location.mkloc
@@ -909,7 +942,7 @@ let pattern_paths (type k) { Typedtree.pat_desc; pat_extra; _ } =
 let module_expr_paths { Typedtree.mod_desc } =
   match mod_desc with
   | Tmod_ident (path, loc) -> [ (reloc path loc, Some loc.txt) ]
-  | Tmod_functor (Named (Some id, loc, _), _) ->
+  | Tmod_functor (Named (Some id, loc, _, _), _) ->
     [ (reloc (Path.Pident id) loc, Option.map ~f:mk_lident loc.txt) ]
   | _ -> []
 
@@ -921,7 +954,7 @@ let bindop_path { bop_op_name; bop_op_path } =
 let expression_paths { Typedtree.exp_desc; exp_extra; _ } =
   let init =
     match exp_desc with
-    | Texp_ident (path, loc, _, _, _) -> [ (reloc path loc, Some loc.txt) ]
+    | Texp_ident (path, loc, _, _, _, _) -> [ (reloc path loc, Some loc.txt) ]
     | Texp_letop { let_; ands } ->
       bindop_path let_ :: List.map ~f:bindop_path ands
     | Texp_new (path, loc, _, _) -> [ (reloc path loc, Some loc.txt) ]
@@ -999,7 +1032,7 @@ let module_type_paths { Typedtree.mty_desc } =
   match mty_desc with
   | Tmty_ident (path, loc) | Tmty_alias (path, loc) ->
     [ (reloc path loc, Some loc.txt) ]
-  | Tmty_functor (Named (Some id, loc, _), _) ->
+  | Tmty_functor (Named (Some id, loc, _, _), _, _) ->
     [ (reloc (Path.Pident id) loc, Option.map ~f:mk_lident loc.txt) ]
   | Tmty_with (_, ls) ->
     List.map ~f:(fun (p, l, _) -> (reloc p l, Some l.txt)) ls

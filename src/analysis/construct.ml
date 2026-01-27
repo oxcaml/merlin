@@ -223,11 +223,11 @@ module Gen = struct
     | Mty_signature sig_items ->
       let env = Env.add_signature sig_items env in
       Mod.structure @@ structure env sig_items
-    | Mty_functor (param, out) ->
+    | Mty_functor (param, out, _) ->
       let param =
         match param with
         | Unit -> Parsetree.Unit
-        | Named (id, in_) ->
+        | Named (id, in_, _) ->
           Parsetree.Named
             ( Location.mknoloc (Option.map ~f:Ident.name id),
               Ptyp_of_type.module_type in_,
