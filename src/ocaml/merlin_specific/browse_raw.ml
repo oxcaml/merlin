@@ -87,9 +87,7 @@ type node =
   | Module_declaration_name of module_declaration
   | Module_type_declaration_name of module_type_declaration
   | Mode of Mode.Alloc.atom Location.loc
-  | Modes : _ Typedtree.modes -> node
   | Modality of Mode.Modality.atom Location.loc
-  | Modalities of Typedtree.modalities
   | Jkind_annotation of Parsetree.jkind_annotation
   | Mod_bound of Parsetree.mode Location.loc
   | Attribute of attribute
@@ -143,9 +141,7 @@ let node_update_env env0 = function
   | Open_declaration _
   | Binding_op _
   | Mode _
-  | Modes _
   | Modality _
-  | Modalities _
   | Jkind_annotation _
   | Mod_bound _
   | Attribute _ -> env0
@@ -201,8 +197,6 @@ let node_real_loc loc0 = function
   | Type_kind _
   | Class_signature _
   | Package_type _
-  | Modes _
-  | Modalities _
   | Dummy -> loc0
 
 let node_attributes = function
@@ -310,15 +304,15 @@ let of_mod_bound mod_bound = app (Mod_bound mod_bound)
 
 let of_mode mode = app (Mode mode)
 
-let of_modes_desc modes = list_fold of_mode modes
-
-let of_modes modes = app (Modes modes)
+let of_modes modes = list_fold of_mode modes.mode_desc
 
 let of_modality modality = app (Modality modality)
 
-let of_modalities_desc modalities = list_fold of_modality modalities
+let of_modalities modalities = list_fold of_modality modalities.moda_desc
 
-let of_modalities modalities = app (Modalities modalities)
+let of_value_description_modal_info = function
+  | Valmi_sig_value modalities -> of_modalities modalities
+  | Valmi_str_primitive modes -> of_modes modes
 
 let of_jkind_annotation jkind = app (Jkind_annotation jkind)
 
@@ -348,7 +342,8 @@ let of_value_binding vb = app (Value_binding vb)
 let of_module_type mt = app (Module_type mt)
 let of_module_expr me = app (Module_expr me)
 let of_typ_param (ct, _) = of_core_type ct
-let of_constructor_arg arg = of_core_type arg.ca_type
+let of_constructor_arg arg =
+  of_core_type arg.ca_type ** of_modalities arg.ca_modalities
 let of_constructor_arguments = function
   | Cstr_tuple cts -> list_fold of_constructor_arg cts
   | Cstr_record lbls -> list_fold of_label_declaration lbls
@@ -429,8 +424,9 @@ let rec of_expression_desc loc = function
   | Texp_new _ | Texp_src_pos | Texp_typed_hole -> id_fold
   | Texp_let (_, vbs, e) -> of_expression e ** list_fold of_value_binding vbs
   | Texp_letmutable (vb, e) -> of_expression e ** of_value_binding vb
-  | Texp_function { params; body; _ } ->
+  | Texp_function { params; body; ret_mode; _ } ->
     list_fold of_function_param params ** of_function_body body
+    ** of_modes ret_mode
   | Texp_apply (e, ls, _, _, _) ->
     of_expression e
     ** list_fold
@@ -544,6 +540,7 @@ and of_function_param fp =
   ** list_fold
        (fun (_, _, jkind, _) -> of_jkind_annotation_opt jkind)
        fp.fp_newtypes
+  ** of_modes fp.fp_mode
 
 and of_function_param_kind = function
   | Tparam_pat pat -> of_pattern pat
@@ -636,7 +633,8 @@ and of_signature_item_desc = function
   | Tsig_module md -> app (Module_declaration md)
   | Tsig_recmodule mds -> list_fold (fun md -> app (Module_declaration md)) mds
   | Tsig_modtype mtd -> app (Module_type_declaration mtd)
-  | Tsig_include (i, _modality) -> app (Include_description i)
+  | Tsig_include (i, modalities) ->
+    app (Include_description i) ** of_modalities modalities
   | Tsig_class cds -> list_fold (fun cd -> app (Class_description cd)) cds
   | Tsig_class_type ctds ->
     list_fold (fun ctd -> app (Class_type_declaration ctd)) ctds
@@ -756,16 +754,18 @@ let of_node node =
     | Value_binding { vb_pat; vb_expr } ->
       of_pattern vb_pat ** of_expression vb_expr
     | Module_type { mty_desc } -> of_module_type_desc mty_desc
-    | Signature { sig_items; sig_final_env } ->
+    | Signature { sig_items; sig_final_env; sig_modalities } ->
       list_fold_with_next
         (fun next item ->
           match next with
           | None -> app (Signature_item (item, sig_final_env))
           | Some item' -> app (Signature_item (item, item'.sig_env)))
         sig_items
+      ** of_modalities sig_modalities
     | Signature_item ({ sig_desc }, _) -> of_signature_item_desc sig_desc
     | Module_declaration md ->
       of_module_type md.md_type ** app (Module_declaration_name md)
+      ** of_modalities md.md_modalities
     | Module_type_declaration mtd ->
       option_fold of_module_type mtd.mtd_type
       ** app (Module_type_declaration_name mtd)
@@ -782,7 +782,8 @@ let of_node node =
       | Ttag (_, _, cts) -> list_fold of_core_type cts
       | Tinherit ct -> of_core_type ct
     end
-    | Value_description { val_desc } -> of_core_type val_desc
+    | Value_description { val_desc; val_modal_info } ->
+      of_core_type val_desc ** of_value_description_modal_info val_modal_info
     | Type_declaration
         { typ_params; typ_cstrs; typ_kind; typ_manifest; typ_jkind_annotation }
       ->
@@ -806,7 +807,8 @@ let of_node node =
       ** of_constructor_arguments carg
       ** list_fold (fun (_, jkind) -> of_jkind_annotation_opt jkind) cvars
     | Extension_constructor { ext_kind = Text_rebind _ } -> id_fold
-    | Label_declaration { ld_type } -> of_core_type ld_type
+    | Label_declaration { ld_type; ld_modalities } ->
+      of_core_type ld_type ** of_modalities ld_modalities
     | Constructor_declaration { cd_args; cd_res; cd_vars } ->
       option_fold of_core_type cd_res
       ** of_constructor_arguments cd_args
@@ -833,9 +835,7 @@ let of_node node =
     | Include_description i -> of_module_type i.incl_mod
     | Binding_op { bop_exp = _ } -> id_fold
     | Mode _ -> id_fold
-    | Modes { mode_desc } -> of_modes_desc mode_desc
     | Modality _ -> id_fold
-    | Modalities { moda_desc } -> of_modalities_desc moda_desc
     | Jkind_annotation { pjkind_desc } -> of_jkind_annotation_desc pjkind_desc
     | Mod_bound _ -> id_fold
     | Attribute _ -> id_fold
@@ -897,9 +897,7 @@ let string_of_node = function
   | Include_description _ -> "include_description"
   | Include_declaration _ -> "include_declaration"
   | Mode _ -> "mode"
-  | Modes _ -> "modes"
   | Modality _ -> "modality"
-  | Modalities _ -> "modalities"
   | Jkind_annotation _ -> "jkind_annotation"
   | Mod_bound _ -> "mod_bound"
   | Attribute _ -> "attribute"

@@ -100,9 +100,7 @@ type node =
   | Module_declaration_name of module_declaration
   | Module_type_declaration_name of module_type_declaration
   | Mode of Mode.Alloc.atom Location.loc
-  | Modes : _ Typedtree.modes -> node
   | Modality of Mode.Modality.atom Location.loc
-  | Modalities of Typedtree.modalities
   | Jkind_annotation of Parsetree.jkind_annotation
   | Mod_bound of Parsetree.mode Location.loc
   | Attribute of attribute
