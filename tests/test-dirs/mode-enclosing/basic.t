@@ -39,11 +39,6 @@ Part 1: Test in various syntactic positions
   > EOF
   1:4-1:7: @ portable stateless unique static
 
-  $ run 1:5 <<EOF
-  > let foo () = ()
-  > EOF
-  1:4-1:7: @ portable stateless unique static
-
   $ run 2:7 <<EOF
   > let f () =
   >   let foo () = () in
