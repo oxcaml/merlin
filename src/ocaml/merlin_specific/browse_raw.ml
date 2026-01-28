@@ -425,8 +425,8 @@ let rec of_expression_desc loc = function
   | Texp_let (_, vbs, e) -> of_expression e ** list_fold of_value_binding vbs
   | Texp_letmutable (vb, e) -> of_expression e ** of_value_binding vb
   | Texp_function { params; body; ret_mode; _ } ->
-    list_fold of_function_param params ** of_function_body body
-    ** of_modes ret_mode
+    list_fold of_function_param params
+    ** of_function_body body ** of_modes ret_mode
   | Texp_apply (e, ls, _, _, _) ->
     of_expression e
     ** list_fold
@@ -764,7 +764,8 @@ let of_node node =
       ** of_modalities sig_modalities
     | Signature_item ({ sig_desc }, _) -> of_signature_item_desc sig_desc
     | Module_declaration md ->
-      of_module_type md.md_type ** app (Module_declaration_name md)
+      of_module_type md.md_type
+      ** app (Module_declaration_name md)
       ** of_modalities md.md_modalities
     | Module_type_declaration mtd ->
       option_fold of_module_type mtd.mtd_type
