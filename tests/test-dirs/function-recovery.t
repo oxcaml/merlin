@@ -33,7 +33,8 @@
                   pattern (test.ml[3,104+6]..test.ml[3,104+8])
                     extra
                       Tpat_inspected_type
-                        Label_disambiguation Unambiguous
+                        Label_disambiguation
+                          Unambiguous
                     Tpat_construct \"()\"
                     []
                     None
@@ -136,7 +137,8 @@
                     []
                   extra
                     Texp_inspected_type
-                      Label_disambiguation Unambiguous
+                      Label_disambiguation
+                        Unambiguous
                   Texp_construct \"()\"
                   []
       ]
@@ -330,7 +332,8 @@
                                     "kind": "pattern (test.ml[2,27+4]..test.ml[2,27+8])
     extra
       Tpat_inspected_type
-        Label_disambiguation Unambiguous
+        Label_disambiguation
+          Unambiguous
     Tpat_construct \"None\"
     []
     None
@@ -395,7 +398,8 @@
                                     "kind": "pattern (test.ml[3,41+4]..test.ml[3,41+10])
     extra
       Tpat_inspected_type
-        Label_disambiguation Unambiguous
+        Label_disambiguation
+          Unambiguous
     Tpat_construct \"Some\"
     [
       pattern (test.ml[3,41+9]..test.ml[3,41+10])
@@ -481,7 +485,8 @@
                                     "kind": "pattern (test.ml[4,57+4]..test.ml[4,57+12])
     extra
       Tpat_inspected_type
-        Label_disambiguation Unambiguous
+        Label_disambiguation
+          Unambiguous
     Tpat_construct \"Some\"
     [
       pattern (test.ml[4,57+9]..test.ml[4,57+12])

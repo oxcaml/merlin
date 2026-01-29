@@ -131,7 +131,8 @@
                       pattern (test.ml[4,46+4]..test.ml[4,46+5])
                         extra
                           Tpat_inspected_type
-                            Label_disambiguation Unambiguous
+                            Label_disambiguation
+                              Unambiguous
                         Tpat_construct \"A\"
                         []
                         None
@@ -140,7 +141,8 @@
                         []
                       extra
                         Texp_inspected_type
-                          Label_disambiguation Unambiguous
+                          Label_disambiguation
+                            Unambiguous
                       Texp_construct \"()\"
                       []
                   <case>
@@ -149,7 +151,8 @@
                       pattern (test.ml[5,58+4]..test.ml[5,58+5])
                         extra
                           Tpat_inspected_type
-                            Label_disambiguation Unambiguous
+                            Label_disambiguation
+                              Unambiguous
                         Tpat_construct \"B\"
                         []
                         None
