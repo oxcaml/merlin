@@ -41,6 +41,15 @@ val sort_dedup_modalities : Mode.Modality.atom list -> Mode.Modality.atom list
 (** Get the default modalities implied by the mutability of a field. *)
 val mutable_modalities : Types.mutability -> Mode.Modality.Const.t
 
+(** Similar to [transl_modalities] but takes an explicit [default] modality
+    instead of computing it from mutability. Used when merging explicit
+    modalities with existing signature default modalities. *)
+val transl_modalities_with_default :
+  maturity:Language_extension.maturity ->
+  default:Mode.Modality.Const.t ->
+  Parsetree.modalities ->
+  modalities
+
 val let_mutable_modalities : Mode.Modality.Const.t
 
 (** The (default) modalities for an atomic mutable field *)
@@ -54,6 +63,8 @@ val untransl_modalities : modalities -> Parsetree.modalities
 (** Interpret a mod-bounds. *)
 val transl_mod_bounds : Parsetree.modes -> Jkind.Mod_bounds.t
 
-val untransl_mod_bounds : Jkind.Mod_bounds.t -> Parsetree.modes
+(** Translate an algebraic representation of mod bounds into user syntax. If
+    [verbose] is true, redundant annotations are included. *)
+val untransl_mod_bounds : ?verbose:bool -> Jkind.Mod_bounds.t -> Parsetree.modes
 
 val idx_expected_modalities : mut:bool -> Mode.Modality.Const.t

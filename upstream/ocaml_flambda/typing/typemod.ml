@@ -1272,7 +1272,8 @@ let transl_modalities ?(default_modalities = Mode.Modality.Const.id)
   match modalities with
   | [] -> { moda_modalities = default_modalities; moda_desc = [] }
   | _ :: _ ->
-    Typemode.transl_modalities ~maturity:Stable Immutable modalities
+    Typemode.transl_modalities_with_default
+      ~default:default_modalities ~maturity:Stable modalities
 
 let apply_pmd_modalities env ~default_modalities pmd_modalities mty =
   let modalities = transl_modalities ~default_modalities pmd_modalities in
@@ -1496,7 +1497,7 @@ and approx_sig_items env ssg=
                 | [] -> sg
                 | _ ->
                   let {moda_modalities = modalities} =
-                    Typemode.transl_modalities ~maturity:Stable Immutable moda
+                    transl_modalities moda
                   in
                   let recursive =
                     not @@ Builtin_attributes.has_attribute "no_recursive_modalities" attrs
@@ -2046,7 +2047,7 @@ and transl_signature env {psg_items; psg_modalities; psg_loc} =
           extract_sig_functor_open false env smty.pmty_loc mty sig_acc md_mode
         in
         let zap_modality =
-          Ctype.zap_modalities_to_floor_if_modes_enabled_at Alpha
+          Ctype.zap_modalities_to_floor_if_modes_enabled_at Stable
         in
         let sg =
           sg
