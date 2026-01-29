@@ -1399,6 +1399,8 @@ module Jkind0 = struct
           name = "void mod everything"
         }
 
+      let kind_of_unboxed_unit = void_mod_everything
+
       let immediate =
         { jkind =
             mk_jkind (Base Value) ~crossing:cross_all_except_staticity

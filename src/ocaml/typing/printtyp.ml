@@ -1435,6 +1435,17 @@ type modal =
     (** In other cases, the caller has already printed the modes (as the
         constructor argument) on the type. *)
 
+type typobject_repr = { fields : (string * type_expr) list; open_row : bool }
+
+type typvariant_repr = {
+  fields : (string * bool * type_expr list) list;
+  name : (Path.t * type_expr list) option;
+  closed : bool;
+  present : (string * row_field) list;
+  all_present : bool;
+  tags : string list option
+}
+
 let rec tree_of_modal_typexp mode modal ty =
   let not_arrow tree =
     match modal with
@@ -1495,6 +1506,7 @@ let rec tree_of_modal_typexp mode modal ty =
             Otyp_constr (tree_of_path (Some Type) p', tree_of_typlist mode tyl')
       end
     | Tvariant row ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
       let Row {fields; name; closed; _} = row_repr row in
       let fields =
           if closed then
@@ -1509,6 +1521,26 @@ let rec tree_of_modal_typexp mode modal ty =
                | _ -> false)
             fields in
         let all_present = List.length present = List.length fields in
+||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
+        let Row {fields; name; closed; _} = row_repr row in
+        let fields =
+          if closed then
+            List.filter (fun (_, f) -> row_field_repr f <> Rabsent)
+              fields
+          else fields in
+        let present =
+          List.filter
+            (fun (_, f) ->
+               match row_field_repr f with
+               | Rpresent _ -> true
+               | _ -> false)
+            fields in
+        let all_present = List.length present = List.length fields in
+=======
+        let { fields; name; closed; present; all_present; tags } =
+          tree_of_typvariant_repr row
+        in
+>>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
         begin match name with
         | Some(p, tyl) when nameable_row row ->
             let out_variant =
@@ -1526,10 +1558,23 @@ let rec tree_of_modal_typexp mode modal ty =
                 if all_present then None else Some (List.map fst present) in
               Otyp_variant (Ovar_typ out_variant, closed, tags)
         | _ ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
             let fields = List.map (tree_of_row_field mode) fields in
             let tags =
               if all_present then None else Some (List.map fst present) in
               Otyp_variant (Ovar_fields fields, closed, tags)
+||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
+            let fields = List.map (tree_of_row_field mode) fields in
+            let tags =
+              if all_present then None else Some (List.map fst present) in
+            Otyp_variant (Ovar_fields fields, closed, tags)
+=======
+            let fields =
+              List.map
+                (fun (l, c, tyl) -> (l, c, tree_of_typlist mode tyl)) fields
+            in
+            Otyp_variant (Ovar_fields fields, closed, tags)
+>>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
         end
     | Tobject (fi, nm) ->
         tree_of_typobject mode fi !nm
@@ -1616,15 +1661,55 @@ and tree_of_qtvs qtvs =
   in
   List.filter_map tree_of_qtv qtvs
 
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
 and tree_of_row_field mode (l, f) =
     match row_field_repr f with
+||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
+and tree_of_row_field mode (l, f) =
+  match row_field_repr f with
+=======
+and tree_of_row_field (l, f) =
+  match row_field_repr f with
+>>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
   | Rpresent None | Reither(true, [], _) -> (l, false, [])
-  | Rpresent(Some ty) -> (l, false, [tree_of_typexp mode Alloc.Const.legacy ty])
+  | Rpresent(Some ty) -> (l, false, [ty])
   | Reither(c, tyl, _) ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
         if c (* contradiction: constant constructor with an argument *)
       then (l, true, tree_of_typlist mode tyl)
       else (l, false, tree_of_typlist mode tyl)
     | Rabsent -> (l, false, [] (* actually, an error *))
+||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
+      if c (* contradiction: constant constructor with an argument *)
+      then (l, true, tree_of_typlist mode tyl)
+      else (l, false, tree_of_typlist mode tyl)
+  | Rabsent -> (l, false, [] (* actually, an error *))
+=======
+      if c (* contradiction: constant constructor with an argument *)
+      then (l, true, tyl)
+      else (l, false, tyl)
+  | Rabsent -> (l, false, [] (* actually, an error *))
+>>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+
+and tree_of_typvariant_repr row =
+  let Row {fields; name; closed; _} = row_repr row in
+  let fields =
+    if closed then
+      List.filter (fun (_, f) -> row_field_repr f <> Rabsent)
+        fields
+    else fields in
+  let present =
+    List.filter
+      (fun (_, f) ->
+          match row_field_repr f with
+          | Rpresent _ -> true
+          | _ -> false)
+      fields in
+  let all_present = List.length present = List.length fields in
+  let fields = List.map tree_of_row_field fields in
+  let tags =
+    if all_present then None else Some (List.map fst present) in
+  { fields; name; closed; present; all_present; tags }
 
 and tree_of_typlist mode tyl =
   List.map (tree_of_typexp mode Alloc.Const.legacy) tyl
@@ -1656,23 +1741,30 @@ and tree_of_ret_typ_mutating acc_mode m ty=
     let m = Alloc.zap_to_legacy m in
     (Orm_any (tree_of_modes m), m)
 
+and tree_of_typobject_repr fi =
+  let (fields, rest) = flatten_fields fi in
+  let present_fields =
+    List.fold_right
+      (fun (n, k, t) l ->
+          match field_kind_repr k with
+          | Fpublic -> (n, t) :: l
+          | _ -> l)
+      fields [] in
+  let sorted_fields =
+    List.sort
+      (fun (n, _) (n', _) -> String.compare n n') present_fields in
+  let fields, open_row = tree_of_typfields rest sorted_fields in
+  { fields; open_row }
+
 and tree_of_typobject mode fi nm =
   begin match nm with
   | None ->
-      let pr_fields fi =
-        let (fields, rest) = flatten_fields fi in
-        let present_fields =
-          List.fold_right
-            (fun (n, k, t) l ->
-               match field_kind_repr k with
-               | Fpublic -> (n, t) :: l
-               | _ -> l)
-            fields [] in
-        let sorted_fields =
-          List.sort
-            (fun (n, _) (n', _) -> String.compare n n') present_fields in
-        tree_of_typfields mode rest sorted_fields in
-      let (fields, open_row) = pr_fields fi in
+      let { fields; open_row } = tree_of_typobject_repr fi in
+      let fields =
+        List.map
+          (fun (s, t) -> (s, tree_of_typexp mode Alloc.Const.legacy t))
+          fields
+      in
       Otyp_object {fields; open_row}
   | Some (p, _ty :: tyl) ->
       let args = tree_of_typlist mode tyl in
@@ -1682,7 +1774,7 @@ and tree_of_typobject mode fi nm =
       fatal_error "Printtyp.tree_of_typobject"
   end
 
-and tree_of_typfields mode rest = function
+and tree_of_typfields rest = function
   | [] ->
       let open_row =
         match get_desc rest with
@@ -1691,9 +1783,8 @@ and tree_of_typfields mode rest = function
         | _ -> fatal_error "typfields (1)"
       in
       ([], open_row)
-  | (s, t) :: l ->
-      let field = (s, tree_of_typexp mode Alloc.Const.legacy t) in
-      let (fields, rest) = tree_of_typfields mode rest l in
+  | field :: l ->
+      let (fields, rest) = tree_of_typfields rest l in
       (field :: fields, rest)
 
 let tree_of_typexp mode ty =
