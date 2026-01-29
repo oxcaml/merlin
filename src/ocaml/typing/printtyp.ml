@@ -1506,41 +1506,9 @@ let rec tree_of_modal_typexp mode modal ty =
             Otyp_constr (tree_of_path (Some Type) p', tree_of_typlist mode tyl')
       end
     | Tvariant row ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-      let Row {fields; name; closed; _} = row_repr row in
-      let fields =
-          if closed then
-            List.filter (fun (_, f) -> row_field_repr f <> Rabsent)
-              fields
-          else fields in
-        let present =
-          List.filter
-            (fun (_, f) ->
-               match row_field_repr f with
-               | Rpresent _ -> true
-               | _ -> false)
-            fields in
-        let all_present = List.length present = List.length fields in
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-        let Row {fields; name; closed; _} = row_repr row in
-        let fields =
-          if closed then
-            List.filter (fun (_, f) -> row_field_repr f <> Rabsent)
-              fields
-          else fields in
-        let present =
-          List.filter
-            (fun (_, f) ->
-               match row_field_repr f with
-               | Rpresent _ -> true
-               | _ -> false)
-            fields in
-        let all_present = List.length present = List.length fields in
-=======
         let { fields; name; closed; present; all_present; tags } =
           tree_of_typvariant_repr row
         in
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
         begin match name with
         | Some(p, tyl) when nameable_row row ->
             let out_variant =
@@ -1558,23 +1526,11 @@ let rec tree_of_modal_typexp mode modal ty =
                 if all_present then None else Some (List.map fst present) in
               Otyp_variant (Ovar_typ out_variant, closed, tags)
         | _ ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-            let fields = List.map (tree_of_row_field mode) fields in
-            let tags =
-              if all_present then None else Some (List.map fst present) in
-              Otyp_variant (Ovar_fields fields, closed, tags)
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-            let fields = List.map (tree_of_row_field mode) fields in
-            let tags =
-              if all_present then None else Some (List.map fst present) in
-            Otyp_variant (Ovar_fields fields, closed, tags)
-=======
             let fields =
               List.map
                 (fun (l, c, tyl) -> (l, c, tree_of_typlist mode tyl)) fields
             in
             Otyp_variant (Ovar_fields fields, closed, tags)
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
         end
     | Tobject (fi, nm) ->
         tree_of_typobject mode fi !nm
@@ -1661,35 +1617,15 @@ and tree_of_qtvs qtvs =
   in
   List.filter_map tree_of_qtv qtvs
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-and tree_of_row_field mode (l, f) =
-    match row_field_repr f with
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-and tree_of_row_field mode (l, f) =
-  match row_field_repr f with
-=======
 and tree_of_row_field (l, f) =
   match row_field_repr f with
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
   | Rpresent None | Reither(true, [], _) -> (l, false, [])
   | Rpresent(Some ty) -> (l, false, [ty])
   | Reither(c, tyl, _) ->
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-        if c (* contradiction: constant constructor with an argument *)
-      then (l, true, tree_of_typlist mode tyl)
-      else (l, false, tree_of_typlist mode tyl)
-    | Rabsent -> (l, false, [] (* actually, an error *))
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-      if c (* contradiction: constant constructor with an argument *)
-      then (l, true, tree_of_typlist mode tyl)
-      else (l, false, tree_of_typlist mode tyl)
-  | Rabsent -> (l, false, [] (* actually, an error *))
-=======
       if c (* contradiction: constant constructor with an argument *)
       then (l, true, tyl)
       else (l, false, tyl)
   | Rabsent -> (l, false, [] (* actually, an error *))
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
 
 and tree_of_typvariant_repr row =
   let Row {fields; name; closed; _} = row_repr row in

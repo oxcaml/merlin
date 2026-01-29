@@ -7216,50 +7216,15 @@ and type_expect_
         exp_env = env;
         exp_extra = (exp_extra, loc, sexp.pexp_attributes) :: arg.exp_extra;
       }
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-  | Pexp_send (e, {txt=met}) ->
+  | Pexp_send (e, met) ->
     submode ~loc ~env Mode.Value.legacy expected_mode;
     let obj = type_exp env mode_legacy e in
     let pm = position_and_mode env expected_mode sexp in
     begin try
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-  | Pexp_send (e, {txt=met}) ->
-      submode ~loc ~env Mode.Value.legacy expected_mode;
-      let pm = position_and_mode env expected_mode sexp in
-=======
-  | Pexp_send (e, met) ->
-      submode ~loc ~env Mode.Value.legacy expected_mode;
-      let pm = position_and_mode env expected_mode sexp in
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
       let (obj,meth,typ) =
         with_local_level_if_principal
           (fun () -> type_send env loc explanation e met.txt)
           ~post:(fun (_,_,typ) -> generalize_structure typ)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-29
-||||||| oxcaml/oxcaml:0a1dc8de0264b1b68a7905fade89c81e0580c685
-      in
-      let typ =
-        match get_desc typ with
-        | Tpoly (ty, []) ->
-            instance ty
-        | Tpoly (ty, tl) ->
-            if !Clflags.principal && get_level typ <> generic_level then
-              Location.prerr_warning loc
-                (Warnings.Not_principal "this use of a polymorphic method");
-            instance_poly tl ty
-        | Tvar _ ->
-            let ty' = newvar (Jkind.Builtin.value ~why:Object_field) in
-            unify env (instance typ) (newty(Tpoly(ty',[])));
-            (* if not !Clflags.nolabels then
-               Location.prerr_warning loc (Warnings.Unknown_method met); *)
-            ty'
-        | _ ->
-            assert false
-      in
-      rue {
-        exp_desc = Texp_send(obj, meth, pm.apply_position);
-        exp_loc = loc; exp_extra = [];
-=======
       in
       let typ, obj_extra =
         match get_desc typ with
@@ -7289,29 +7254,6 @@ and type_expect_
       rue {
         exp_desc = Texp_send(obj, meth, pm.apply_position);
         exp_loc = loc; exp_extra = [];
->>>>>>> oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        in
-        let typ =
-          match get_desc typ with
-          | Tpoly (ty, []) ->
-              instance ty
-          | Tpoly (ty, tl) ->
-              if !Clflags.principal && get_level typ <> generic_level then
-                Location.prerr_warning loc
-                  (Warnings.Not_principal "this use of a polymorphic method");
-              instance_poly tl ty
-          | Tvar _ ->
-              let ty' = newvar (Jkind.Builtin.value ~why:Object_field) in
-              unify env (instance typ) (newty(Tpoly(ty',[])));
-              (* if not !Clflags.nolabels then
-                Location.prerr_warning loc (Warnings.Unknown_method met); *)
-              ty'
-          | _ ->
-              assert false
-        in
-        rue {
-          exp_desc = Texp_send(obj, meth, pm.apply_position);
-          exp_loc = loc; exp_extra = [];
           exp_type = typ;
           exp_attributes = sexp.pexp_attributes;
           exp_env = env }
@@ -7331,9 +7273,9 @@ and type_expect_
         Msupport.erroneous_type_register ty_expected;
         raise_error
           (error(e.pexp_loc, env,
-                Undefined_method (obj.exp_type, met, valid_methods)));
+                Undefined_method (obj.exp_type, met.txt, valid_methods)));
         rue {
-          exp_desc = Texp_send(obj, Tmeth_name met, pm.apply_position);
+          exp_desc = Texp_send(obj, Tmeth_name met.txt, pm.apply_position);
           exp_loc = loc; exp_extra = [];
           exp_type = ty_expected;
           exp_attributes = Msupport.recovery_attributes sexp.pexp_attributes;
