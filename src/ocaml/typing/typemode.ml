@@ -555,7 +555,7 @@ let untransl_mod_bounds ?(verbose = false) (bounds : Jkind.Mod_bounds.t) :
         { Location.txt = Parsetree.Mode s; loc = Location.none })
       least_modalities
   in
-    (* These mod-bounds are top ones, which are redundant to print. But we include
+  (* These mod-bounds are top ones, which are redundant to print. But we include
      them when printing verbosely. *)
   let top_modality_annots () =
     List.filter_map
@@ -580,7 +580,7 @@ let untransl_mod_bounds ?(verbose = false) (bounds : Jkind.Mod_bounds.t) :
   in
   let nonmodal_annots, top_nonmodal_annots =
     let open Jkind.Mod_bounds in
-        let mk_annot top print value =
+    let mk_annot top print value =
       let only_when_verbose = value = top in
       let s = Format.asprintf "%a" print value in
       ( { Location.txt = Parsetree.Mode s; loc = Location.none },
