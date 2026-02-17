@@ -94,7 +94,9 @@ jobs:
         opam depext conf-jq --yes # opam depext bug
         opam pin menhirLib 20231231 --no-action
         opam install --yes ppx_string ppx_compare ocamlformat.0.26.2
+        echo "Installing deps:"
         opam install . --deps-only --with-test --yes -v
+        echo "Finished installing deps"
 
     - name: Check formatting
       working-directory: merlin-jst
