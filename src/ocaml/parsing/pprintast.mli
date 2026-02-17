@@ -66,8 +66,19 @@ val tyvar: Format.formatter -> string -> unit
 
 val jkind_annotation : Format.formatter -> Parsetree.jkind_annotation -> unit
 val mode : Format.formatter -> Parsetree.mode Location.loc -> unit
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 
 (* merlin *)
 val case_list : Format.formatter -> Parsetree.case list -> unit
 val ident_of_name : Format.formatter -> string -> unit
 val needs_parens : string -> bool
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+=======
+
+(** {!Format_doc} functions for error messages *)
+module Doc:sig
+  val longident: Longident.t Format_doc.printer
+  val tyvar: string Format_doc.printer
+  val jkind_annotation: Parsetree.jkind_annotation Format_doc.printer
+end
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

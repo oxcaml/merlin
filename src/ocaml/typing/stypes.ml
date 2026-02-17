@@ -148,8 +148,17 @@ let print_info pp prev_loc ti =
       printtyp_reset_maybe loc;
       Format.pp_print_string Format.str_formatter "  ";
       Printtyp.wrap_printing_env ~error:false env
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
         (fun () -> Printtyp.shared_type_scheme Format.str_formatter typ);
       (* (fun () -> Printtyp.shared_type_scheme Format.str_formatter typ); *)
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+        (fun () -> Printtyp.shared_type_scheme Format.str_formatter typ);
+=======
+        (fun () ->
+           Format_doc.compat Printtyp.shared_type_scheme Format.str_formatter
+             typ
+        );
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
       Format.pp_print_newline Format.str_formatter ();
       let s = Format.flush_str_formatter () in
       output_string pp s;

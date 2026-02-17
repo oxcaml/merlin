@@ -169,22 +169,49 @@ let to_global = function
   | _ -> None
 
 let print ~with_scope ppf =
-  let open Format in
+  let open Format_doc in
   function
   | Global name -> fprintf ppf "%s!" name
   | Predef { name; stamp = n } ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
       fprintf ppf "%s/%i!" name n
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+      fprintf ppf "%s%s!" name
+        (if !Clflags.unique_ids then sprintf "/%i" n else "")
+=======
+      fprintf ppf "%s%s!" name
+        (if !Clflags.unique_ids then asprintf "/%i" n else "")
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   | Local { name; stamp = n } ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
       fprintf ppf "%s/%i" name n
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+      fprintf ppf "%s%s" name
+        (if !Clflags.unique_ids then sprintf "/%i" n else "")
+=======
+      fprintf ppf "%s%s" name
+        (if !Clflags.unique_ids then asprintf "/%i" n else "")
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   | Scoped { name; stamp = n; scope } ->
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
       fprintf ppf "%s/%i%s" name n
         (if with_scope then sprintf "[%i]" scope else "")
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+      fprintf ppf "%s%s%s" name
+        (if !Clflags.unique_ids then sprintf "/%i" n else "")
+        (if with_scope then sprintf "[%i]" scope else "")
+=======
+      fprintf ppf "%s%s%s" name
+        (if !Clflags.unique_ids then asprintf "/%i" n else "")
+        (if with_scope then asprintf "[%i]" scope else "")
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   | Global_with_args g ->
       fprintf ppf "%a!" Global_module.Name.print g
 
 let print_with_scope ppf id = print ~with_scope:true ppf id
 
-let print ppf id = print ~with_scope:false ppf id
+let doc_print ppf id = print ~with_scope:false ppf id
+let print ppf id = Format_doc.compat doc_print ppf id
 
 let to_global_exn id =
   match to_global id with

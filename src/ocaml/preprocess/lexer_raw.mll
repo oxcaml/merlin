@@ -107,7 +107,7 @@ let keyword_table : keywords =
     "include", INCLUDE;
     "inherit", INHERIT;
     "initializer", INITIALIZER;
-    "kind_abbrev_", KIND_ABBREV;
+    "kind_", KIND;
     "kind_of_", KIND_OF;
     "lazy", LAZY;
     "let", LET;
@@ -126,10 +126,13 @@ let keyword_table : keywords =
     "or", OR;
     "overwrite_", OVERWRITE;
 (*  "parser", PARSER; *)
+    "poly_", POLY;
     "private", PRIVATE;
     "rec", REC;
+    "repr_", REPR;
     "sig", SIG;
     "stack_", STACK;
+    "borrow_", BORROW;
     "struct", STRUCT;
     "then", THEN;
     "to", TO;
@@ -506,7 +509,7 @@ let skip_hash ~maybe_hash =
 
 (* Error report *)
 
-open Format
+open Format_doc
 
 let prepare_error loc = function
   | Illegal_character c ->
@@ -797,6 +800,24 @@ rule token state = parse
       { let loc = Location.curr lexbuf in
         Location.prerr_warning loc Warnings.Comment_start;
         state.comment_start_loc <- [loc];
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+  | ")"  { RPAREN }
+  | "#(" { HASHLPAREN }
+  | "#{" { HASHLBRACE }
+  | "*"  { STAR }
+  | ","  { COMMA }
+  | "->" { MINUSGREATER }
+=======
+  | ")"  { RPAREN }
+  | "#(" { HASHLPAREN }
+  | "#{" { HASHLBRACE }
+  | "#false" { HASHFALSE }
+  | "#true" { HASHTRUE }
+  | "*"  { STAR }
+  | ","  { COMMA }
+  | "->" { MINUSGREATER }
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
         Buffer.reset state.buffer;
         comment state lexbuf >>= fun end_loc ->
         let s = Buffer.contents state.buffer in

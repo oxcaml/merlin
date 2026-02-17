@@ -215,4 +215,57 @@ let output_cmi filename oc cmi =
 let input_cmi ic = input_cmi_lazy ic |> force_cmi_infos
 let read_cmi filename = read_cmi_lazy filename |> force_cmi_infos
 
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 (* Error report moved to src/ocaml/typing/magic_numbers.ml *)
+||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
+(* Error report *)
+
+open Format
+module Style = Misc.Style
+
+let report_error ppf = function
+  | Not_an_interface filename ->
+      fprintf ppf "%a@ is not a compiled interface"
+        (Style.as_inline_code Location.print_filename) filename
+  | Wrong_version_interface (filename, older_newer) ->
+      fprintf ppf
+        "%a@ is not a compiled interface for this version of OCaml.@.\
+         It seems to be for %s version of OCaml."
+        (Style.as_inline_code  Location.print_filename) filename older_newer
+  | Corrupted_interface filename ->
+      fprintf ppf "Corrupted compiled interface@ %a"
+        (Style.as_inline_code Location.print_filename) filename
+
+let () =
+  Location.register_error_of_exn
+    (function
+      | Error err -> Some (Location.error_of_printer_file report_error err)
+      | _ -> None
+    )
+=======
+(* Error report *)
+
+open Format_doc
+
+let report_error_doc ppf = function
+  | Not_an_interface filename ->
+      fprintf ppf "%a@ is not a compiled interface"
+        Location.Doc.quoted_filename filename
+  | Wrong_version_interface (filename, older_newer) ->
+      fprintf ppf
+        "%a@ is not a compiled interface for this version of OCaml.@.\
+         It seems to be for %s version of OCaml."
+        Location.Doc.quoted_filename filename older_newer
+  | Corrupted_interface filename ->
+      fprintf ppf "Corrupted compiled interface@ %a"
+        Location.Doc.quoted_filename filename
+
+let () =
+  Location.register_error_of_exn
+    (function
+      | Error err -> Some (Location.error_of_printer_file report_error_doc err)
+      | _ -> None
+    )
+
+let report_error = Format_doc.compat report_error_doc
+>>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
