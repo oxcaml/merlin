@@ -47,36 +47,10 @@ val raw_field : formatter -> row_field -> unit
 val string_of_label: Types.arg_label -> string
 
 val wrap_printing_env: ?error:bool -> Env.t -> (unit -> 'a) -> 'a
+    (* Call the function using the environment for type path shortening *)
+    (* This affects all the printing functions below *)
+    (* Also, if [~error:true], then disable the loading of cmis *)
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-(** [wrap_printing_env_error env f] ensures that all printing functions in a
-    [Location.error] report are evaluated within the [wrap_printing_env
-    ~error:true env] context. (The original call to [f] is also evaluated
-    within that context.)
-*)
-val wrap_printing_env_error :
-  Env.t -> (unit -> Location.error) -> Location.error
-
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-(** [wrap_printing_env_error env f] ensures that all printing functions in a
-    [Location.error] report are evaluated within the [wrap_printing_env
-    ~error:true env] context. (The original call to [f] is also evaluated
-    within that context.)
-*)
-val wrap_printing_env_error :
-  Env.t -> (unit -> Location.error) -> Location.error
-
-module Naming_context: sig
-  val enable: bool -> unit
-  (** When contextual names are enabled, the mapping between identifiers
-=======
-module Naming_context: sig
-  val enable: bool -> unit
-  (** When contextual names are enabled, the mapping between identifiers
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-(* Call the function using the environment for type path shortening *)
-(* This affects all the printing functions below *)
-(* Also, if [~error:true], then disable the loading of cmis *)
 val shorten_type_path: Env.t -> Path.t -> Path.t
 val shorten_module_type_path: Env.t -> Path.t -> Path.t
 val shorten_module_path: Env.t -> Path.t -> Path.t
@@ -211,17 +185,8 @@ val tree_of_type_declaration:
     Ident.t -> type_declaration -> rec_status -> out_sig_item
 val add_type_declaration_to_preparation :
   Ident.t -> type_declaration -> unit
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-val prepared_type_declaration: Ident.t -> formatter -> type_declaration -> unit
-val type_declaration:
-  Ident.t -> formatter -> type_declaration -> unit
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val prepared_type_declaration: Ident.t -> formatter -> type_declaration -> unit
-val type_declaration: Ident.t -> formatter -> type_declaration -> unit
-=======
 val prepared_type_declaration: Ident.t -> type_declaration printer
 val type_declaration: Ident.t -> type_declaration printer
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 val tree_of_extension_constructor:
     Ident.t -> extension_constructor -> ext_status -> out_sig_item
 val add_extension_constructor_to_preparation :
@@ -367,16 +332,10 @@ val rewrite_double_underscore_longidents: Env.t -> Longident.t -> Longident.t
 
 (** [printed_signature sourcefile ppf sg] print the signature [sg] of
     [sourcefile] with potential warnings for name collisions *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-val printed_signature: string -> formatter -> signature -> unit
+val printed_signature: string -> Format.formatter -> signature -> unit
 
 (* Merlin-only: these functions are exposed for use by Merlin (in ptyp_of_type.ml). *)
 
 val tree_of_modes : Mode.Alloc.Const.t -> out_mode list
 
 val tree_of_modalities : mutability -> Mode.Modality.Const.t -> out_modality list
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val printed_signature: string -> formatter -> signature -> unit
-=======
-val printed_signature: string -> Format.formatter -> signature -> unit
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

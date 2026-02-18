@@ -2495,13 +2495,9 @@ module Format_history = struct
     | Structure_item ->
       fprintf ppf "it's the type of something stored in a module"
     | Signature_item -> fprintf ppf "it's the type of something in a signature"
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
+    | Layout_poly -> fprintf ppf "it's the layout polymorphic type"
     | Merlin ->
       fprintf ppf "merlin needed to create a fake AST node"
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
-    | Layout_poly -> fprintf ppf "it's the layout polymorphic type"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
   let format_concrete_legacy_creation_reason ppf :
       History.concrete_legacy_creation_reason -> unit = function
@@ -3439,12 +3435,8 @@ module Debug_printers = struct
     | Idx_element -> fprintf ppf "Idx_element"
     | Structure_item -> fprintf ppf "Structure_item"
     | Signature_item -> fprintf ppf "Signature_item"
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    | Merlin -> fprintf ppf "Merlin"
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
     | Layout_poly -> fprintf ppf "Layout_poly"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+    | Merlin -> fprintf ppf "Merlin"
 
   let concrete_legacy_creation_reason ppf :
       History.concrete_legacy_creation_reason -> unit = function

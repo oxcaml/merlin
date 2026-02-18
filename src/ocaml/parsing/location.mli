@@ -215,10 +215,6 @@ val print_loc_in_lowercase: formatter -> t -> unit
 val print_locs: formatter -> t list -> unit
 val separate_new_message: formatter -> unit
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-
-=======
 module Doc: sig
   val separate_new_message: unit Format_doc.printer
   val filename: string Format_doc.printer
@@ -227,7 +223,6 @@ module Doc: sig
   val locs: t list Format_doc.printer
 end
 
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 (** {1 Toplevel-specific location highlighting} *)
 (*
 val highlight_terminfo:
@@ -384,40 +379,18 @@ val deprecated_script_alert: string -> unit
 
 (** {1 Reporting errors} *)
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 type error = report
 (** An [error] is a [report] which [report_kind] must be [Report_error]. *)
 
 val error: ?loc:t -> ?sub:msg list -> ?source:error_source -> string -> error
 
 val errorf: ?loc:t -> ?sub:msg list -> ?source:error_source ->
-  ('a, Format.formatter, unit, error) format4 -> 'a
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val errorf: ?loc:t -> ?sub:msg list ->
-  ('a, Format.formatter, unit, error) format4 -> 'a
-=======
-val errorf: ?loc:t -> ?sub:msg list ->
   ('a, Format_doc.formatter, unit, error) format4 -> 'a
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 val error_of_printer: ?loc:t -> ?sub:msg list -> ?source:error_source ->
-  (formatter -> 'a -> unit) -> 'a -> error
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val error_of_printer: ?loc:t -> ?sub:msg list ->
-  (formatter -> 'a -> unit) -> 'a -> error
-=======
-val error_of_printer: ?loc:t -> ?sub:msg list ->
   (Format_doc.formatter -> 'a -> unit) -> 'a -> error
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-val error_of_printer_file: ?source:error_source -> (formatter -> 'a -> unit) -> 'a -> error
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val error_of_printer_file: (formatter -> 'a -> unit) -> 'a -> error
-=======
-val error_of_printer_file: (Format_doc.formatter -> 'a -> unit) -> 'a -> error
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+val error_of_printer_file: ?source:error_source -> (Format_doc.formatter -> 'a -> unit) -> 'a -> error
 
 
 (** {1 Automatically reporting errors for raised exceptions} *)
@@ -440,16 +413,8 @@ exception Already_displayed_error
 (** Raising [Already_displayed_error] signals an error which has already been
    printed. The exception will be caught, but nothing will be printed *)
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 val raise_errorf: ?loc:t -> ?sub:msg list -> ?source:error_source ->
-  ('a, Format.formatter, unit, 'b) format4 -> 'a
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val raise_errorf: ?loc:t -> ?sub:msg list ->
-  ('a, Format.formatter, unit, 'b) format4 -> 'a
-=======
-val raise_errorf: ?loc:t -> ?sub:msg list ->
   ('a, Format_doc.formatter, unit, 'b) format4 -> 'a
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 val report_exception: formatter -> exn -> unit
 (** Reraise the exception if it is unknown. *)

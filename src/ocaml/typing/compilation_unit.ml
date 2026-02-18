@@ -17,16 +17,9 @@
 [@@@ocaml.warning "+a-9-40-41-42"]
 
 open! Int_replace_polymorphic_compare
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 module List = Misc.List
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-module List = Misc.Stdlib.List
-module String = Misc.Stdlib.String
-=======
-module List = Misc.Stdlib.List
-module String = Misc.Stdlib.String
+module String = Misc.String
 module Fmt = Format_doc
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 type error =
   | Invalid_character of char * string
@@ -82,13 +75,7 @@ end = struct
 
     let hash = Hashtbl.hash
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    let print = Format.pp_print_string
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    let print = String.print
-=======
     let print ppf x = Fmt.compat doc_print ppf x
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
     let output = Misc.output_of_doc_print doc_print
   end)

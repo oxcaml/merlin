@@ -1013,23 +1013,6 @@ let merloc startpos ?endpos x =
 
   let string_of_FLOAT = function
     | (s, None) -> Printf.sprintf "FLOAT(%s)" s
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-%token BARBAR                 "||"
-%token BARRBRACKET            "|]"
-%token BEGIN                  "begin"
-%token <char> CHAR            "'a'" (* just an example *)
-%token <char> HASH_CHAR       "#'a'" (* just an example *)
-%token CLASS                  "class"
-=======
-%token BARBAR                 "||"
-%token BARRBRACKET            "|]"
-%token BEGIN                  "begin"
-%token BORROW                 "borrow_"
-%token <char> CHAR            "'a'" (* just an example *)
-%token <char> HASH_CHAR       "#'a'" (* just an example *)
-%token CLASS                  "class"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
     | (s, Some c) -> Printf.sprintf "FLOAT(%s%c)" s c
 
   let string_of_STRING = function
@@ -1067,24 +1050,6 @@ let merloc startpos ?endpos x =
 ]
 
 /* Tokens */
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-%token GREATERRBRACKET        ">]"
-%token HASHLPAREN             "#("
-%token HASHLBRACE             "#{"
-%token IF                     "if"
-%token IN                     "in"
-%token INCLUDE                "include"
-=======
-%token GREATERRBRACKET        ">]"
-%token HASHLPAREN             "#("
-%token HASHLBRACE             "#{"
-%token HASHFALSE              "#false"
-%token HASHTRUE               "#true"
-%token IF                     "if"
-%token IN                     "in"
-%token INCLUDE                "include"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 /* The alias that follows each token is used by Menhir when it needs to
    produce a sentence (that is, a sequence of tokens) in concrete syntax. */
@@ -1102,28 +1067,11 @@ let merloc startpos ?endpos x =
 %token ASSERT [@symbol "assert"]
 %token BACKQUOTE [@symbol "`"]
 %token BANG [@symbol "!"]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 %token BAR [@symbol "|"]
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-%token INITIALIZER            "initializer"
-%token <string * char option> INT      "42"  (* just an example *)
-%token <string * char option> HASH_INT "#42l" (* just an example *)
-%token KIND_ABBREV            "kind_abbrev_"
-%token KIND_OF                "kind_of_"
-%token <string> LABEL         "~label:" (* just an example *)
-%token LAZY                   "lazy"
-=======
-%token INITIALIZER            "initializer"
-%token <string * char option> INT      "42"  (* just an example *)
-%token <string * char option> HASH_INT "#42l" (* just an example *)
-%token KIND                   "kind_"
-%token KIND_OF                "kind_of_"
-%token <string> LABEL         "~label:" (* just an example *)
-%token LAZY                   "lazy"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 %token BARBAR [@symbol "||"]
 %token BARRBRACKET [@symbol "|]"]
 %token BEGIN [@symbol "begin"]
+%token BORROW [@symbol "borrow_"]
 %token <char> CHAR [@cost 2] [@recovery '_']
 %token <char> HASH_CHAR [@cost 2] [@recovery '_']
 %token CLASS [@symbol "class"]
@@ -1161,23 +1109,8 @@ let merloc startpos ?endpos x =
 %token GREATERRBRACKET [@symbol ">]"]
 %token HASHLPAREN [@symbol "#("]
 %token HASHLBRACE [@symbol "#{"]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-%token OR                     "or"
-%token OVERWRITE              "overwrite_"
-/* %token PARSER              "parser" */
-%token PERCENT                "%"
-%token PLUS                   "+"
-%token PLUSDOT                "+."
-=======
-%token OR                     "or"
-%token OVERWRITE              "overwrite_"
-/* %token PARSER              "parser" */
-%token POLY                   "poly_"
-%token PERCENT                "%"
-%token PLUS                   "+"
-%token PLUSDOT                "+."
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+%token HASHFALSE [@symbol "#false"]
+%token HASHTRUE [@symbol "#true"]
 %token IF [@symbol "if"]
 %token IN [@symbol "in"]
 %token INCLUDE [@symbol "include"]
@@ -1190,29 +1123,12 @@ let merloc startpos ?endpos x =
 %token <string> INFIXOP4 [@cost 2] [@recovery "_"][@printer Printf.sprintf "INFIXOP4(%S)"]
 %token <string> DOTOP
 %token <string> LETOP /* TODO: recovery & printing */
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-%token RBRACKET               "]"
-%token RBRACKETGREATER        "]>"
-%token REC                    "rec"
-%token RPAREN                 ")"
-%token SEMI                   ";"
-%token SEMISEMI               ";;"
-=======
-%token RBRACKET               "]"
-%token RBRACKETGREATER        "]>"
-%token REC                    "rec"
-%token REPR                   "repr_"
-%token RPAREN                 ")"
-%token SEMI                   ";"
-%token SEMISEMI               ";;"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 %token <string> ANDOP /* TODO: recovery & printing */
 %token INHERIT [@symbol "inherit"]
 %token INITIALIZER [@symbol "initializer"]
 %token <string * char option> INT [@cost 1] [@recovery ("0",None)] [@printer string_of_INT]
 %token <string * char option> HASH_INT [@cost 1] [@recovery ("0",None)] [@printer string_of_INT]
-%token KIND_ABBREV [@symbol "kind_abbrev_"]
+%token KIND [@symbol "kind_"]
 %token KIND_OF [@symbol "kind_of_"]
 %token <string> LABEL [@cost 2] [@recovery "_"][@printer Printf.sprintf "LABEL(%S)"] [@symbol "label"]
 %token LAZY [@symbol "lazy"]
@@ -1253,6 +1169,7 @@ let merloc startpos ?endpos x =
 %token OR [@symbol "or"]
 %token OVERWRITE [@symbol "overwrite_"]
 /* %token PARSER */
+%token POLY [@symbol "poly_"]
 %token PERCENT [@symbol "%"]
 %token PLUS [@symbol "+"]
 %token PLUSDOT [@symbol "+."]
@@ -1265,6 +1182,7 @@ let merloc startpos ?endpos x =
 %token RBRACKET [@symbol "]"]
 %token RBRACKETGREATER [@symbol "]>"]
 %token REC [@symbol "rec"]
+%token REPR [@symbol "repr_"]
 %token RPAREN [@symbol ")"]
 %token SEMI [@symbol ";"]
 %token SEMISEMI [@symbol ";;"]
@@ -1374,12 +1292,8 @@ The precedences must be listed from low to high.
           LBRACE LBRACELESS LBRACKET LBRACKETBAR LBRACKETCOLON LIDENT LPAREN
           NEW PREFIXOP STRING TRUE UIDENT LESSLBRACKET DOLLAR
           LBRACKETPERCENT QUOTED_STRING_EXPR HASHLBRACE HASHLPAREN UNDERSCORE
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-          DOTLESS DOTTILDE GREATERDOT
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
           HASHFALSE HASHTRUE
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+          DOTLESS DOTTILDE GREATERDOT
 
 /* Entry points */
 
@@ -3587,17 +3501,9 @@ let_binding_body:
   | poly_flag = poly_flag let_binding_body_no_punning
       { let p,e,c,modes = $2 in (p,e,c,modes,false,poly_flag) }
 /* BEGIN AVOID */
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  | val_ident %prec below_HASH
-      { (mkpatvar ~loc:$loc ~attrs:[pun_attr] $1, ghexpvar ~loc:$loc ~attrs:[pun_attr] $1, None, [], true) }
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  | val_ident %prec below_HASH
-      { (mkpatvar ~loc:$loc $1, ghexpvar ~loc:$loc $1, None, [], true) }
-=======
   | poly_flag = poly_flag val_ident %prec below_HASH
-      { (mkpatvar ~loc:$loc $2, ghexpvar ~loc:$loc $2, None, [], true,
+      { (mkpatvar ~loc:$loc ~attrs:[pun_attr] $2, ghexpvar ~loc:$loc ~attrs:[pun_attr] $2, None, [], true,
          poly_flag) }
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   (* The production that allows puns is marked so that [make list-parse-errors]
      does not attempt to exploit it. That would be problematic because it
      would then generate bindings such as [let x], which are rejected by the

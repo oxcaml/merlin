@@ -911,19 +911,7 @@ let interface_mismatch ppf (diff: _ Err.diff) =
     Style.inline_code diff.got Style.inline_code diff.expected
 
 let parameter_mismatch ppf (diff: _ Err.diff) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  Format.fprintf ppf
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  Format.fprintf ppf
-    "The argument module %s@ does not match the parameter signature %s:@ "
-    diff.got diff.expected
-
-=======
   Fmt.fprintf ppf
-    "The argument module %s@ does not match the parameter signature %s:@ "
-    diff.got diff.expected
-
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
     "The argument module %a@ does not match the parameter signature %a:@ "
     Style.inline_code diff.got Style.inline_code diff.expected
 

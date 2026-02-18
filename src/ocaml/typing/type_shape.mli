@@ -123,31 +123,7 @@ val add_to_type_decls :
 val add_to_type_shapes :
   Uid.t -> Types.type_expr -> Layout.t -> name:string -> path_lookup -> unit
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-(* CR sspies: [estimate_layout_from_shape] below is only an approximation. It
-   does, for example, not deal with type application and, as a result, can find
-   type variables that would have been substituted. This layout computation
-   needs to be revisited once type shapes have been integrated into shapes.
-
-   If the function returns [Some], the layout is precise (regardless of the
-   issues mentioned above). It returns [None] whenever estimation failed.
-*)
-val estimate_layout_from_type_shape : Shape.t -> Layout.t option
-
 (*
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-(* CR sspies: [estimate_layout_from_shape] below is only an approximation. It
-   does, for example, not deal with type application and, as a result, can find
-   type variables that would have been substituted. This layout computation
-   needs to be revisited once type shapes have been integrated into shapes.
-
-   If the function returns [Some], the layout is precise (regardless of the
-   issues mentioned above). It returns [None] whenever estimation failed.
-*)
-val estimate_layout_from_type_shape : Shape.t -> Layout.t option
-
-=======
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 val print_table_all_type_decls : Format.formatter -> unit
 
 val print_table_all_type_shapes : Format.formatter -> unit

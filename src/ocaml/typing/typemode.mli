@@ -33,26 +33,6 @@ val transl_modalities :
   Parsetree.modalities ->
   modalities
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val least_modalities_implying :
-  Types.mutability -> Mode.Modality.Const.t -> Mode.Modality.atom list
-
-val sort_dedup_modalities : Mode.Modality.atom list -> Mode.Modality.atom list
-
-=======
-(** Find the minimum modality annots a user must write to express the given
-    modality. If [include_implied] is [false], modalities implied by other
-    written modalities are included, even if not necessary. *)
-val least_modalities :
-  include_implied:bool ->
-  mut:Types.mutability ->
-  Mode.Modality.Const.t ->
-  Mode.Modality.atom list
-
-val sort_dedup_modalities : Mode.Modality.atom list -> Mode.Modality.atom list
-
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 (** Find the minimum modality annots a user must write to express the given
     modality. If [include_implied] is [false], modalities implied by other
     written modalities are included, even if not necessary. *)

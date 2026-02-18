@@ -185,13 +185,7 @@ end = struct
     | Some param -> Parameter_name.Set.mem param set
     | None -> false
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  let to_string = print |> Misc_stdlib.to_string_of_print
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  let to_string = print |> Misc.to_string_of_print
-=======
   let to_string = Fmt.asprintf "%a" print
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 end
 
 module T0 : sig
@@ -317,13 +311,7 @@ end
 
 include T0
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-let to_string = print |> Misc_stdlib.to_string_of_print
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let to_string = print |> Misc.to_string_of_print
-=======
 let to_string t = Fmt.asprintf "%a" print t
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 module Subst = Parameter_name.Map
 type subst = t Subst.t

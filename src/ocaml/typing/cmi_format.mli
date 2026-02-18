@@ -53,17 +53,4 @@ val input_cmi_lazy : in_channel -> cmi_infos_lazy
 val read_cmi : string -> cmi_infos
 val read_cmi_lazy : string -> cmi_infos_lazy
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 (* Error report moved to {!Magic_numbers.Cmi} *)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-exception Error of error
-
-open Format
-
-val report_error: formatter -> error -> unit
-=======
-exception Error of error
-
-val report_error: error Format_doc.format_printer
-val report_error_doc: error Format_doc.printer
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

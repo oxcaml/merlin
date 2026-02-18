@@ -214,13 +214,9 @@ let print_updating_num_loc_lines ppf f arg =
   pp_print_flush ppf ();
   pp_set_formatter_out_functions ppf out_functions
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-(*
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
 (** {1 Printing setup }*)
 
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+(*
 let setup_tags () =
   Misc.Style.setup !Clflags.color
 *)
@@ -728,14 +724,8 @@ let highlight_quote ppf
           (line_nb, line)
         ) lines
     end;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    Format.fprintf ppf "@]"
-*)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    Format.fprintf ppf "@]"
-=======
     Fmt.fprintf ppf "@]"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+*)
 
 
 
@@ -974,16 +964,10 @@ let batch_mode_printer : report_printer =
       | Misc.Error_style.Short ->
           ()
     in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    Format.fprintf ppf "@[<v>%a:@ %a@]" print_loc loc highlight loc
-    *)
-    ()
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    Format.fprintf ppf "@[<v>%a:@ %a@]" print_loc loc highlight loc
-=======
     Format.fprintf ppf "@[<v>%a:@ %a@]" print_loc loc
       (Fmt.compat highlight) loc
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+    *)
+    ()
   in
   let pp_txt ppf txt = Format.fprintf ppf "@[%a@]" Fmt.Doc.format txt in
   let pp self ppf report =
@@ -1089,13 +1073,13 @@ let mkerror loc sub txt source =
   { kind = Report_error; main = { loc; txt }; sub; source }
 
 let errorf ?(loc = none) ?(sub = []) ?(source=Typer) =
-  Format.kdprintf (fun msg -> mkerror loc sub msg source)
+  Fmt.kdoc_printf (fun msg -> mkerror loc sub msg source)
 
 let error ?(loc = none) ?(sub = []) ?(source=Typer) msg_str =
-  mkerror loc sub (fun ppf -> Format.pp_print_string ppf msg_str) source
+  mkerror loc sub (Fmt.Doc.string msg_str Fmt.Doc.empty) source
 
 let error_of_printer ?(loc = none) ?(sub = []) ?(source=Typer) pp x =
-  mkerror loc sub (fun ppf -> pp ppf x) source
+  mkerror loc sub (Fmt.doc_printf "%a" pp x) source
 
 let error_of_printer_file ?source print x =
   error_of_printer ?source ~loc:(in_file !input_name) print x
@@ -1108,7 +1092,7 @@ let default_warning_alert_reporter ?(source = Typer) report mk (loc: t) w : repo
   match report w with
   | `Inactive -> None
   | `Active { Warnings.id; message; is_error; sub_locs } ->
-      let msg_of_str str = fun ppf -> Format.pp_print_string ppf str in
+      let msg_of_str str = Format_doc.Doc.(empty |> string str) in
       let kind = mk is_error id in
       let main = { loc; txt = msg_of_str message } in
       let sub = List.map (fun (loc, sub_message) ->
@@ -1165,37 +1149,9 @@ let alert ?(def = none) ?(use = none) ~kind loc message =
 
 let deprecated ?def ?use loc message =
   alert ?def ?use ~kind:"deprecated" loc message
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  { kind = Report_error; main = { loc; txt }; sub }
 
-let errorf ?(loc = none) ?(sub = []) =
-  Format.kdprintf (mkerror loc sub)
-=======
-  { kind = Report_error; main = { loc; txt }; sub }
 
-let errorf ?(loc = none) ?(sub = []) =
-  Fmt.kdoc_printf (mkerror loc sub)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let error ?(loc = none) ?(sub = []) msg_str =
-  mkerror loc sub (fun ppf -> Format.pp_print_string ppf msg_str)
-=======
-let error ?(loc = none) ?(sub = []) msg_str =
-  mkerror loc sub (Fmt.Doc.string msg_str Fmt.Doc.empty)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 module Style = Misc.Style
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let error_of_printer ?(loc = none) ?(sub = []) pp x =
-  mkerror loc sub (fun ppf -> pp ppf x)
-=======
-let error_of_printer ?(loc = none) ?(sub = []) pp x =
-  mkerror loc sub (Fmt.doc_printf "%a" pp x)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 let auto_include_alert lib =
   let message = Fmt.asprintf "\
@@ -1283,16 +1239,8 @@ let () =
       | _ -> None
     )
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 let raise_errorf ?(loc = none) ?(sub = []) ?(source = Typer)=
-  Format.kdprintf (fun txt -> raise (Error (mkerror loc sub txt source)))
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let raise_errorf ?(loc = none) ?(sub = []) =
-  Format.kdprintf (fun txt -> raise (Error (mkerror loc sub txt)))
-=======
-let raise_errorf ?(loc = none) ?(sub = []) =
-  Fmt.kdoc_printf (fun txt -> raise (Error (mkerror loc sub txt)))
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+  Fmt.kdoc_printf (fun txt -> raise (Error (mkerror loc sub txt source)))
 
 let todo_overwrite_not_implemented ?(kind = "") t =
   alert ~kind t "Overwrite not implemented.";

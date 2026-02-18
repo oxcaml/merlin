@@ -20,45 +20,7 @@ open Types
 open Typedtree
 open Lambda
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 (* Expand a type, looking through ordinary synonyms, private synonyms, links,
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-type error =
-    Non_value_layout of type_expr * Jkind.Violation.t option
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of type_expr * Jkind.Violation.t
-  | Unsupported_product_in_lazy of Jkind.Sort.Const.t
-  | Unsupported_vector_in_product_array
-  | Mixed_product_array of Jkind.Sort.Const.t * type_expr
-  | Unsupported_void_in_array
-  | Opaque_array_non_value of
-      { array_type: type_expr;
-        elt_kinding_failure: (type_expr * Jkind.Violation.t) option }
-
-exception Error of Location.t * error
-
-=======
-type error =
-    Non_value_layout of Env.t * type_expr * Jkind.Violation.t option
-  | Sort_without_extension of
-      Jkind.Sort.t * Language_extension.maturity * type_expr option
-  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
-  | Not_a_sort of Env.t * type_expr * Jkind.Violation.t
-  | Unsupported_product_in_lazy of Jkind.Sort.Const.t
-  | Unsupported_vector_in_product_array
-  | Mixed_product_array of Jkind.Sort.Const.t * type_expr
-  | Unsupported_void_in_array
-  | Opaque_array_non_value of
-      { array_type: type_expr;
-        elt_kinding_failure: (Env.t * type_expr * Jkind.Violation.t) option }
-
-exception Error of Location.t * error
-
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
    and [@@unboxed] types. The returned type will be therefore be none of these
    cases (except in case of missing cmis).
 
@@ -134,13 +96,7 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
 let type_sort ~why env _loc ty =
   match Ctype.type_sort ~why ~fixed:false env ty with
   | Ok sort -> sort
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
   | Error _ -> Misc.fatal_error "merlin-jst: a representable layout is required here"
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  | Error err -> raise (Error (loc, Not_a_sort (ty, err)))
-=======
-  | Error err -> raise (Error (loc, Not_a_sort (env, ty, err)))
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 (* [classification]s are used for two things: things in arrays, and things in
    lazys. In the former case, we need detailed information about unboxed
@@ -280,19 +236,7 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Product c -> c
   | Void ->
     (*= raise (Error (loc, Unsupported_void_in_array)) *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
     Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts ->
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
-=======
-    raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts ->
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_scannable_product_element_kind: Univar"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 let array_type_kind ~elt_sort ~elt_ty env loc ty =
   match scrape_poly env ty with
@@ -309,19 +253,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
       | Ok _ -> Pgenarray
       | Error e ->
         (* CR layouts v4: rather than constraining [elt_ty]'s jkind to be value,
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
            we could instead use its jkind to determine a non-value array kind.
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-=======
-    raise (Error (loc, Unsupported_vector_in_product_array))
-  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_ignorable_product_element_kind: Univar"
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
            We are choosing to error in this case for now because it is safer,
            and because it could be potentially confusing that there is a second
@@ -336,19 +268,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
         (*= raise (Error(loc,
           Opaque_array_non_value {
             array_type = ty;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-            elt_kinding_failure = Some (elt_ty, e);
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-            elt_kinding_failure = Some (elt_ty, e);
-          }))
-      end
-    | None ->
-=======
             elt_kinding_failure = Some (env, elt_ty, e);
-          }))
-      end
-    | None ->
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
           })) *)
         ignore e;
         Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
@@ -1212,105 +1132,3 @@ let classify_lazy_argument : Typedtree.expression ->
        `Identifier `Other
     | _ ->
        `Other
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-
-(* Error report *)
-open Format
-
-let report_error ppf = function
-  | Non_value_layout (ty, err) ->
-      fprintf ppf
-        "Non-value detected in [value_kind].@ Please report this error to \
-         the Jane Street compilers team.";
-=======
-
-(* Error report *)
-open Format_doc
-
-let report_error ppf = function
-  | Non_value_layout (env, ty, err) ->
-      fprintf ppf
-        "Non-value detected in [value_kind].@ Please report this error to \
-         the Jane Street compilers team.";
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        fprintf ppf "@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-           ~level:(Ctype.get_current_level ())) err
-      end
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
-=======
-        fprintf ppf "@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-           ~level:(Ctype.get_current_level ()) env) err
-      end
-  | Sort_without_extension (sort, maturity, ty) ->
-      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-         build file.@ \
-         Otherwise, please report this error to the Jane Street compilers team."
-        extension verb flags
-  | Not_a_sort (ty, err) ->
-      fprintf ppf "A representable layout is required here.@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-           ~level:(Ctype.get_current_level ()) ) err
-  | Unsupported_product_in_lazy const ->
-      fprintf ppf
-        "Product layout %a detected in [lazy] in [Typeopt.Layout]@ \
-=======
-         build file.@ \
-         Otherwise, please report this error to the Jane Street compilers team."
-        extension verb flags
-  | Not_a_sort (env, ty, err) ->
-      fprintf ppf "A representable layout is required here.@ %a"
-        (Jkind.Violation.report_with_offender
-           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-           ~level:(Ctype.get_current_level ()) env) err
-  | Unsupported_product_in_lazy const ->
-      fprintf ppf
-        "Product layout %a detected in [lazy] in [Typeopt.Layout]@ \
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        Jkind.Sort.Const.format const
-  | Opaque_array_non_value { array_type; elt_kinding_failure }  ->
-      begin match elt_kinding_failure with
-      | Some (ty, err) ->
-        fprintf ppf
-        "This array operation cannot tell whether %a is an array type,@ \
-         possibly because it is abstract. In this case, the element type@ \
-=======
-        Jkind.Sort.Const.format const
-  | Opaque_array_non_value { array_type; elt_kinding_failure }  ->
-      begin match elt_kinding_failure with
-      | Some (env, ty, err) ->
-        fprintf ppf
-        "This array operation cannot tell whether %a is an array type,@ \
-         possibly because it is abstract. In this case, the element type@ \
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-          Printtyp.type_expr ty
-          (Jkind.Violation.report_with_offender
-             ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-             ~level:(Ctype.get_current_level ())) err
-      | None ->
-        fprintf ppf
-          "This array operation expects an array type, but %a does not appear@ \
-=======
-          Printtyp.type_expr ty
-          (Jkind.Violation.report_with_offender
-             ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
-             ~level:(Ctype.get_current_level ()) env) err
-      | None ->
-        fprintf ppf
-          "This array operation expects an array type, but %a does not appear@ \
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

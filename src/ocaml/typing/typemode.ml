@@ -546,38 +546,13 @@ let untransl_mod_bounds ?(verbose = false) (bounds : Jkind.Mod_bounds.t) :
   let crossing = Jkind.Mod_bounds.crossing bounds in
   let modality = Crossing.to_modality crossing in
   let least_modalities =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
     least_modalities ~include_implied:verbose ~mut:Immutable modality
   in
   let modality_annots =
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    least_modalities_implying Types.Immutable modality
-    |> List.map (fun (Atom (ax, m) : Modality.atom) ->
-        let s = Format.asprintf "%a" (Modality.Per_axis.print ax) m in
-=======
     List.map
       (fun (Atom (ax, m) : Modality.atom) ->
         let s = Format_doc.asprintf "%a" (Modality.Per_axis.print ax) m in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-    List.map
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-      (fun (Atom (ax, m) : Modality.atom) ->
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  in
-  let nonmodal_annots =
-    let open Jkind.Mod_bounds in
-    let mk_annot default print value =
-      if (not verbose) && value = default
-      then None
-      else
-        let s = Format.asprintf "%a" print value in
-        Some { Location.txt = Parsetree.Mode s; loc = Location.none }
-    in
-    [ mk_annot Externality.max Externality.print (externality bounds);
-      mk_annot Nullability.max Nullability.print (nullability bounds);
-      mk_annot Separability.max Separability.print (separability bounds) ]
-    |> List.filter_map Fun.id
-=======
+        { Location.txt = Parsetree.Mode s; loc = Location.none })
       least_modalities
   in
   (* These mod-bounds are top ones, which are redundant to print. But we include
@@ -608,64 +583,6 @@ let untransl_mod_bounds ?(verbose = false) (bounds : Jkind.Mod_bounds.t) :
     let mk_annot top print value =
       let only_when_verbose = value = top in
       let s = Format_doc.asprintf "%a" print value in
-      ( { Location.txt = Parsetree.Mode s; loc = Location.none },
-        only_when_verbose )
-    in
-    [ mk_annot Externality.max Externality.print (externality bounds);
-      mk_annot Nullability.max Nullability.print (nullability bounds);
-      mk_annot Separability.max Separability.print (separability bounds) ]
-    |> List.partition_map (fun (annot, only_when_verbose) ->
-        match only_when_verbose with false -> Left annot | true -> Right annot)
-  in
-  let verbose_annots =
-    match verbose with
-    | true -> top_modality_annots () @ top_nonmodal_annots
-    | false -> []
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-        let s = Format.asprintf "%a" (Modality.Per_axis.print ax) m in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  modality_annots @ nonmodal_annots
-
-let sort_dedup_modalities ~warn l =
-  let open Modality in
-=======
-  modality_annots @ nonmodal_annots @ verbose_annots
-
-let sort_dedup_modalities ~warn l =
-  let open Modality in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-        { Location.txt = Parsetree.Mode s; loc = Location.none })
-      least_modalities
-  in
-  (* These mod-bounds are top ones, which are redundant to print. But we include
-     them when printing verbosely. *)
-  let top_modality_annots () =
-    List.filter_map
-      (fun ax ->
-        let (P ax) = Modality.Axis.of_value ax in
-        let included_in_nonverbose =
-          List.exists
-            (fun (Atom (ax2, _) : Modality.atom) ->
-              Modality.Axis.P ax = Modality.Axis.P ax2)
-            least_modalities
-        in
-        match included_in_nonverbose with
-        | true -> None
-        | false ->
-          let s =
-            Format.asprintf "%a"
-              (Modality.Per_axis.print ax)
-              (Modality.Const.proj ax modality)
-          in
-          Some { Location.txt = Parsetree.Mode s; loc = Location.none })
-      Value.Axis.all
-  in
-  let nonmodal_annots, top_nonmodal_annots =
-    let open Jkind.Mod_bounds in
-    let mk_annot top print value =
-      let only_when_verbose = value = top in
-      let s = Format.asprintf "%a" print value in
       ( { Location.txt = Parsetree.Mode s; loc = Location.none },
         only_when_verbose )
     in

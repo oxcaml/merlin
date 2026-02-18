@@ -229,18 +229,9 @@ module Conflicts = struct
           explanations := M.add name explanation !explanations
 
   let pp_explanation ppf r=
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    Format.fprintf ppf "@[<v 2>%a:@,Definition of %s %a@]"
-      Location.print_loc r.location
-      (Shape.Sig_component_kind.to_string r.kind)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    Format.fprintf ppf "@[<v 2>%a:@,Definition of %s %a@]"
-      Location.print_loc r.location (Sig_component_kind.to_string r.kind)
-=======
     Fmt.fprintf ppf "@[<v 2>%a:@,Definition of %s %a@]"
       (Location.Doc.loc ~capitalize_first:true) r.location
-      (Sig_component_kind.to_string r.kind)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+      (Shape.Sig_component_kind.to_string r.kind)
       Style.inline_code r.name
 
   let print_located_explanations ppf l =
@@ -804,60 +795,13 @@ let wrap_mutation f =
   try_finally f ~always:(fun () -> Btype.backtrack snap)
 
 let wrap_printing_env env f =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  set_printing_env (Env.update_short_paths env); reset_naming_context ();
-  try_finally f ~always:(fun () -> set_printing_env Env.empty)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  set_printing_env env; reset_naming_context ();
-  try_finally f ~always:(fun () -> set_printing_env Env.empty)
-=======
   let old_env = !printing_env in
-  set_printing_env env; reset_naming_context ();
+  set_printing_env (Env.update_short_paths env); reset_naming_context ();
   try_finally f ~always:(fun () -> set_printing_env old_env)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 let wrap_printing_env ?error:_ env f =
   Env.without_cmis (wrap_printing_env env) f
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-let wrap_printing_env_error env f =
-  let wrap (loc : _ Location.loc) =
-    { loc with txt =
-        (fun fmt -> Env.without_cmis (fun () -> loc.txt fmt) ())
-  (* CR nroberts: See https://github.com/oxcaml/oxcaml/pull/2529
-     for an explanation of why this has drifted from upstream. *)
-    }
-  in
-  let err : Location.error = wrap_printing_env ~error:true env f in
-  { Location.kind = err.kind;
-    main = wrap err.main;
-    sub = List.map wrap err.sub;
-    source = err.source
-  }
-
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let wrap_printing_env_error env f =
-  let wrap (loc : _ Location.loc) =
-    { loc with txt =
-        (fun fmt -> Env.without_cmis (fun () -> loc.txt fmt) ())
-  (* CR nroberts: See https://github.com/oxcaml/oxcaml/pull/2529
-     for an explanation of why this has drifted from upstream. *)
-    }
-  in
-  let err : Location.error = wrap_printing_env ~error:true env f in
-  { Location.kind = err.kind;
-    main = wrap err.main;
-    sub = List.map wrap err.sub;
-  }
-
-let rec lid_of_path = function
-    Path.Pident id ->
-      Longident.Lident (Ident.name id)
-=======
-let rec lid_of_path = function
-    Path.Pident id ->
-      Longident.Lident (Ident.name id)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 type type_result = Short_paths.type_result =
   | Nth of int
   | Path of int list option * Path.t
@@ -1233,19 +1177,7 @@ let add_printed_alias ty = add_printed_alias_proxy (proxy ty)
 
 let aliasable ty =
   match get_desc ty with
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    Tvar _ | Tunivar _ | Tpoly _ -> false
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    Tvar _ | Tunivar _ | Tpoly _ -> false
-  | Tconstr (p, _, _) ->
-      not (is_nth (snd (best_type_path p)))
-  | _ -> true
-=======
     Tvar _ | Tunivar _ | Tpoly _ | Trepr _ -> false
-  | Tconstr (p, _, _) ->
-      not (is_nth (snd (best_type_path p)))
-  | _ -> true
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   | Tconstr (p, _, _) -> begin
       match best_type_path_resolution p with
       | Nth _ -> false
@@ -1403,19 +1335,9 @@ let rec out_jkind_of_desc env (desc : 'd Jkind.Desc.t) =
 let out_jkind_option_of_jkind ~ignore_null env jkind =
   let desc = Jkind.get jkind in
   let elide =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-    Jkind.is_value_for_printing ~ignore_null jkind (* C2.1 *)
-    || (match desc.layout with
-        | Sort (Var _) -> true (* not !Clflags.verbose_types *) (* X1 *)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    Jkind.is_value_for_printing ~ignore_null jkind (* C2.1 *)
-    || (match desc.layout with
-        | Sort (Var _) -> not !Clflags.verbose_types (* X1 *)
-=======
     Jkind.is_value_for_printing ~ignore_null env jkind (* C2.1 *)
     || (match desc.base with
-        | Layout (Sort (Var _)) -> not !Clflags.verbose_types (* X1 *)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+        | Layout (Sort (Var _)) -> true (* not !Clflags.verbose_types *) (* X1 *)
         | _ -> false)
   in
   if elide then None else Some (out_jkind_of_desc env desc)
@@ -1440,8 +1362,8 @@ let tree_of_modalities mut t =
   t
   |> Typemode.least_modalities ~include_implied:false ~mut
   |> Typemode.sort_dedup_modalities
+  |> List.map (fun (Atom (ax, m) : Modality.atom) ->
       Fmt.asprintf "%a" (Modality.Per_axis.print ax) m)
-      Format.asprintf "%a" (Modality.Per_axis.print ax) m)
 
 let tree_of_modes (modes : Mode.Alloc.Const.t) =
   (* Step 1: Compute the modes to print *)
@@ -3636,6 +3558,24 @@ let tree_of_type_declaration ident td rs =
   with_hidden_items [{hide=true; ident}]
     (fun () -> tree_of_type_declaration ident td rs)
 
+(** Compatibility module for Format printers *)
+module Compat = struct
+  let longident = Fmt.compat longident
+  let path = Fmt.compat path
+  let type_expr = Fmt.compat type_expr
+  let shared_type_scheme = Fmt.compat shared_type_scheme
+  let signature = Fmt.compat signature
+  let class_type = Fmt.compat class_type
+  let modtype = Fmt.compat modtype
+  let string_of_label (lbl : Asttypes.arg_label) =
+    let lbl : Types.arg_label = match lbl with
+      | Nolabel -> Nolabel
+      | Labelled s -> Labelled s
+      | Optional s -> Optional s
+    in
+    string_of_label lbl
+end
+
 let shorten_type_path env p =
   wrap_printing_env env
     (fun () -> best_type_path_simple p)
@@ -3686,34 +3626,6 @@ let type_declaration_for_merlin = type_declaration
 
 let type_declaration x y z : unit =
   type_declaration x y z ~print_non_value_inferred_jkind:false
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 
 let () =
   Env.shorten_module_path := shorten_module_path
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let tree_of_type_declaration ident td rs =
-  with_hidden_items [{hide=true; ident}]
-    (fun () -> tree_of_type_declaration ident td rs)
-=======
-let tree_of_type_declaration ident td rs =
-  with_hidden_items [{hide=true; ident}]
-    (fun () -> tree_of_type_declaration ident td rs)
-
-(** Compatibility module for Format printers *)
-module Compat = struct
-  let longident = Fmt.compat longident
-  let path = Fmt.compat path
-  let type_expr = Fmt.compat type_expr
-  let shared_type_scheme = Fmt.compat shared_type_scheme
-  let signature = Fmt.compat signature
-  let class_type = Fmt.compat class_type
-  let modtype = Fmt.compat modtype
-  let string_of_label (lbl : Asttypes.arg_label) =
-    let lbl : Types.arg_label = match lbl with
-      | Nolabel -> Nolabel
-      | Labelled s -> Labelled s
-      | Optional s -> Optional s
-    in
-    string_of_label lbl
-end
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

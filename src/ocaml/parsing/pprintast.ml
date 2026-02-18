@@ -2512,6 +2512,12 @@ let payload = print_reset_with_maximal_extensions payload
 let type_declaration = print_reset_with_maximal_extensions type_declaration
 let jkind_annotation = print_reset_with_maximal_extensions jkind_annotation
 
+module Doc = struct
+  include Doc_internal
+  let jkind_annotation ppf jkind =
+    Format_doc.deprecated_printer (fun fmt -> jkind_annotation fmt jkind) ppf
+end
+
 (* Added in merlin *)
 let case_list = print_reset_with_maximal_extensions case_list
 
@@ -2621,22 +2627,6 @@ let prepare_error err =
 let () =
   Location.register_error_of_exn
     (function
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
       | Syntaxerr.Error err -> Some (prepare_error err)
       | _ -> None
     )
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let payload = print_reset_with_maximal_extensions payload
-let type_declaration = print_reset_with_maximal_extensions type_declaration
-let jkind_annotation = print_reset_with_maximal_extensions jkind_annotation
-=======
-let payload = print_reset_with_maximal_extensions payload
-let type_declaration = print_reset_with_maximal_extensions type_declaration
-let jkind_annotation = print_reset_with_maximal_extensions jkind_annotation
-
-module Doc = struct
-  include Doc_internal
-  let jkind_annotation ppf jkind =
-    Format_doc.deprecated_printer (fun fmt -> jkind_annotation fmt jkind) ppf
-end
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

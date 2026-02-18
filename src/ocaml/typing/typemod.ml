@@ -241,7 +241,7 @@ let check_for_generated_type_or_jkind ~funct_body env loc mty exn =
     match Mtype.Contains_type_or_jkind.check env mty with
     | None -> ()
     | Some tj ->
-      raise (Error (loc, env, exn tj))
+      Msupport.raise_error (Error (loc, env, exn tj))
 
 (* Extract the signature and the mode of a functor's return, given the signature
    [sig_acc] and mode [md_mode] of the functor argument. *)
@@ -3009,41 +3009,15 @@ let rec type_module ?alias sttn funct_body anchor env smod =
   in
   md, shape
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 and type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
-  anchor env ?expected_mode smod =
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-and  type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
-  anchor env ?expected_mode smod =
-  Builtin_attributes.warning_scope smod.pmod_attributes
-    (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-      ?expected_mode smod)
-
-and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-  ?expected_mode smod =
-  (* If the module is an identifier, there might be locks between the
-  declaration site and the use site.
-  - If [hold_locks] is [true], the locks are held and stored in [mod_mode].
-=======
-and  type_module_maybe_hold_locks ?(alias=false) ~hold_locks sttn funct_body
   anchor env smod =
-  Builtin_attributes.warning_scope smod.pmod_attributes
-    (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-      smod)
-
-and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
-  (* If the module is an identifier, there might be locks between the
-  declaration site and the use site.
-  - If [hold_locks] is [true], the locks are held and stored in [mod_mode].
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   (* Merlin: when we start typing a module we don't want to include potential
     saved_items from its parent. We backup them before starting and restore them
     when finished. *)
   Msupport.with_saved_types @@ fun () ->
   try
     Builtin_attributes.warning_scope smod.pmod_attributes
-      (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-        ?expected_mode smod)
+      (fun () -> type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod)
   with exn ->
     Msupport.raise_error exn;
     { mod_desc = Tmod_typed_hole;
@@ -3054,8 +3028,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
       mod_loc = smod.pmod_loc },
       Shape.dummy_mod
 
-and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
-  ?expected_mode smod =
+and type_module_aux ~alias ~hold_locks sttn funct_body anchor env smod =
   (* If the module is an identifier, there might be locks between the
   declaration site and the use site.
   - If [hold_locks] is [true], the locks are held and stored in [mod_mode].
@@ -3072,13 +3045,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
   | Pmod_structure sstr ->
       Env.check_no_open_quotations smod.pmod_loc env Env.Struct_qt;
       let (str, sg, mode, names, shape, _finalenv) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-        type_structure funct_body anchor env [] ?expected_mode sstr in
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        type_structure funct_body anchor env ?expected_mode sstr in
-=======
-        type_structure funct_body anchor env sstr in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+        type_structure funct_body anchor env [] sstr in
       let md =
         { mod_desc = Tmod_structure str;
           mod_type = Mty_signature sg;
@@ -3168,24 +3135,7 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
         type_module_maybe_hold_locks ~alias ~hold_locks true funct_body
           anchor env sarg
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
       begin try
-        let md, final_shape =
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-      let md, final_shape =
-        match smty with
-        | None ->
-            (* CR zqian: Ideally, we want to call [wrap_constraint_with_shape]
-            even when [smty] is [None], to get a mode error messsage that
-            specifies the bad item (instead of the whole module). This is
-            currently impossible because inferred modalities can't be on the
-            RHS. *)
-            let arg_mode = Typedtree.mode_without_locks_exn arg.mod_mode in
-            submode ~loc:sarg.pmod_loc ~env arg_mode mode.mode_modes;
-            { arg with
-              mod_mode = (Mode.Value.disallow_right mode.mode_modes, None)},
-            arg_shape
-=======
       let md, final_shape =
         match smty with
         | None ->
@@ -3194,18 +3144,6 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
             { arg with
               mod_mode = (Mode.Value.disallow_right mode.mode_modes, None)},
             arg_shape
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
-          match smty with
-          | None ->
-              (* CR zqian: Ideally, we want to call [wrap_constraint_with_shape]
-              even when [smty] is [None], to get a mode error messsage that
-              specifies the bad item (instead of the whole module). This is
-              currently impossible because inferred modalities can't be on the
-              RHS. *)
-              let arg_mode = Typedtree.mode_without_locks_exn arg.mod_mode in
-              submode ~loc:sarg.pmod_loc ~env arg_mode mode.mode_modes;
-              { arg with mod_mode = (Mode.Value.disallow_right mode.mode_modes, None)},
-              arg_shape
           | Some smty ->
               let mty = transl_modtype env smty in
               wrap_constraint_with_shape env true arg mty.mty_type mode.mode_modes
@@ -3260,17 +3198,8 @@ and type_module_aux ~alias ~hold_locks sttn funct_body anchor env
         | _ ->
             raise (Error(smod.pmod_loc, env, Not_a_packed_module exp.exp_type))
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-      if funct_body && Mtype.contains_type env mty then
-        Msupport.raise_error
-          (Error (smod.pmod_loc, env, Not_allowed_in_functor_body));
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-      if funct_body && Mtype.contains_type env mty then
-        raise (Error (smod.pmod_loc, env, Not_allowed_in_functor_body));
-=======
       check_for_generated_type_or_jkind ~funct_body env smod.pmod_loc mty
         (fun tj -> Not_allowed_in_functor_body tj);
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
       { mod_desc = Tmod_unpack(exp, mty);
         mod_type = mty;
         mod_mode = Value.disallow_right mode, None;
@@ -3617,7 +3546,6 @@ and type_open_decl_aux ?used_slot ?toplevel funct_body names env od =
     } in
     open_descr, mode, sg, newenv
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 (* In the real compiler, the `toplevel` argument is a `signature option` because it serves
    two purposes: To tweak typing if we're in the toplevel, and to pass in the signature
    for what's been typed so far in that case (needed by include functor).  But in merlin
@@ -3626,13 +3554,7 @@ and type_open_decl_aux ?used_slot ?toplevel funct_body names env od =
    module).  We don't want the typing tweaks that occur for the toplevel, so we need an
    extra argument (sig_acc), but leave `toplevel` alone to minimize the diff *)
 and type_structure ?(toplevel = None) ?(keep_warnings = false) funct_body anchor env
-  sig_acc ?expected_mode sstr =
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-and type_structure ?(toplevel = None) funct_body anchor env ?expected_mode
-  sstr =
-=======
-and type_structure ?(toplevel = None) funct_body anchor env sstr =
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+  sig_acc sstr =
   (* CR implicit-types: implement implicit variable jkinds in structures. *)
   let env = Env.clear_implicit_jkinds env in
   let names = Signature_names.create () in
@@ -3664,16 +3586,10 @@ and type_structure ?(toplevel = None) funct_body anchor env sstr =
       Env.enter_signature_and_shape ~scope ~parent_shape:shape_map
         modl_shape sg ~mode env
     in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
     let new_env = Env.update_short_paths new_env in
-    let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-    let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
-=======
     let sg =
       rebase_modalities_sg ~loc:smodl.pmod_loc ~loc_md ~md_mode ~mode sg
     in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
     Signature_group.iter (Signature_names.check_sig_item names loc) sg;
     let incl =
       { incl_mod = modl;
@@ -4002,24 +3918,15 @@ and type_structure ?(toplevel = None) funct_body anchor env sstr =
         let (od, mode, sg, newenv) =
           type_open_decl ~toplevel funct_body names env sod
         in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
         let newenv = Env.update_short_paths newenv in
-        let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        let sg = rebase_modalities ~loc ~env ~md_mode ~mode sg in
-=======
         let sg =
           rebase_modalities_sg ~loc:sod.popen_expr.pmod_loc ~loc_md
             ~md_mode ~mode sg
         in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
         Tstr_open od, sg, shape_map, newenv
     | Pstr_class cl ->
         let (classes, new_env) = Typeclass.class_declarations env cl in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
         let new_env = Env.update_short_paths new_env in
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
         let first_id, first_loc =
           classes
           |> List.hd
@@ -4028,7 +3935,6 @@ and type_structure ?(toplevel = None) funct_body anchor env sstr =
         in
         let mode = apply_is_contained_by ~loc_md (Class, first_id) md_mode in
         Value.submode_err (first_loc, Class) Types.class_mode mode;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
         let shape_map = List.fold_left (fun acc cls ->
             let open Typeclass in
             let loc = cls.cls_id_loc.Location.loc in

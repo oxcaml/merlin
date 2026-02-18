@@ -4014,14 +4014,8 @@ let transl_value_decl env loc ~modal ~why valdecl =
           ~native_repr_res
           ~is_layout_poly
       in
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-      error_if_containing_unexpected_jkind prim cty ty;
-      (*
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-      error_if_containing_unexpected_jkind prim cty ty;
-=======
       error_if_containing_unexpected_jkind env prim cty ty;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+      (*
       if prim.prim_arity = 0 &&
          (prim.prim_name = "" || prim.prim_name.[0] <> '%') then
         raise(Error(valdecl.pval_type.ptyp_loc, Null_arity_external));

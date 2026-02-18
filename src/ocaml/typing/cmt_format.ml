@@ -319,25 +319,11 @@ let iter_on_occurrences
         iter_field_pats ~namespace:Label pat_env fields
       | Tpat_record_unboxed_product (fields, _) ->
         iter_field_pats ~namespace:Unboxed_label pat_env fields
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-      | Tpat_any | Tpat_var _ | Tpat_alias _ | Tpat_constant _ | Tpat_tuple _
-      | Tpat_unboxed_tuple _
-      | Tpat_variant _ | Tpat_array _ | Tpat_lazy _ | Tpat_value _
-      | Tpat_exception _ | Tpat_or _ -> ());
-      List.iter  ~f:(fun (pat_extra, _, _) ->
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-      | Tpat_any | Tpat_var _ | Tpat_alias _ | Tpat_constant _ | Tpat_tuple _
-      | Tpat_unboxed_tuple _
-      | Tpat_variant _ | Tpat_array _ | Tpat_lazy _ | Tpat_value _
-      | Tpat_exception _ | Tpat_or _ -> ());
-      List.iter  (fun (pat_extra, _, _) ->
-=======
-      | Tpat_any | Tpat_var _ | Tpat_alias _ | Tpat_constant _ 
+      | Tpat_any | Tpat_var _ | Tpat_alias _ | Tpat_constant _
       | Tpat_unboxed_unit | Tpat_unboxed_bool _ | Tpat_tuple _
       | Tpat_unboxed_tuple _ | Tpat_variant _ | Tpat_array _ | Tpat_lazy _
       | Tpat_value _ | Tpat_exception _ | Tpat_or _ -> ());
-      List.iter  (fun (pat_extra, _, _) ->
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+      List.iter ~f:(fun (pat_extra, _, _) ->
         match pat_extra with
         | Tpat_open (path, lid, _) ->
             f ~namespace:Module pat_env path lid

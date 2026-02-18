@@ -800,24 +800,6 @@ rule token state = parse
       { let loc = Location.curr lexbuf in
         Location.prerr_warning loc Warnings.Comment_start;
         state.comment_start_loc <- [loc];
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  | ")"  { RPAREN }
-  | "#(" { HASHLPAREN }
-  | "#{" { HASHLBRACE }
-  | "*"  { STAR }
-  | ","  { COMMA }
-  | "->" { MINUSGREATER }
-=======
-  | ")"  { RPAREN }
-  | "#(" { HASHLPAREN }
-  | "#{" { HASHLBRACE }
-  | "#false" { HASHFALSE }
-  | "#true" { HASHTRUE }
-  | "*"  { STAR }
-  | ","  { COMMA }
-  | "->" { MINUSGREATER }
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
         Buffer.reset state.buffer;
         comment state lexbuf >>= fun end_loc ->
         let s = Buffer.contents state.buffer in
@@ -843,6 +825,8 @@ rule token state = parse
   | ")"  { return RPAREN }
   | "#(" { return HASHLPAREN }
   | "#{" { return HASHLBRACE }
+  | "#false" { return HASHFALSE }
+  | "#true" { return HASHTRUE }
   | "*"  { return STAR }
   | ","  { return COMMA }
   | "->" { return MINUSGREATER }

@@ -934,17 +934,9 @@ let check_pers_struct ~allow_hidden penv f1 f2 ~loc name =
   | Not_found ->
       let warn = Warnings.No_cmi_file(name_as_string, None) in
         Location.prerr_warning loc warn
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  | Magic_numbers.Cmi.Error err ->
-      let msg = Format.asprintf "%a" Magic_numbers.Cmi.report_error err in
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  | Cmi_format.Error err ->
-      let msg = Format.asprintf "%a" Cmi_format.report_error err in
-=======
-  | Cmi_format.Error err ->
+  | Magic_numbers.Cmi_format.Error err ->
       let msg = Format.asprintf "%a"
-          Cmi_format.report_error err in
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+          Magic_numbers.Cmi_format.report_error err in
       let warn = Warnings.No_cmi_file(name_as_string, Some msg) in
         Location.prerr_warning loc warn
   | Error err ->
@@ -1292,7 +1284,7 @@ let () =
              [Env] is often able to add location info to our errors by
              re-raising them with the [Env.Error_from_persistent_env]
              constructor. *)
-          Some (Location.error_of_printer_file report_error err)
+          Some (Location.error_of_printer_file report_error_doc err)
       | _ -> None
     )
 
@@ -1303,25 +1295,11 @@ let with_cmis penv f x =
           [R (penv.can_load_cmis, Can_load_cmis)]
           (fun () -> f x))
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 let forall ~found ~missing t =
   Std.Hashtbl.forall t.imports (fun name -> function
       | Missing -> missing name
       | Found import ->
         found name import.imp_filename name
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-             [Env] is often able to add location info to our errors by
-             re-raising them with the [Env.Error_from_persistent_env]
-             constructor. *)
-          Some (Location.error_of_printer_file report_error err)
-      | _ -> None
-=======
-             [Env] is often able to add location info to our errors by
-             re-raising them with the [Env.Error_from_persistent_env]
-             constructor. *)
-          Some (Location.error_of_printer_file report_error_doc err)
-      | _ -> None
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
     )
 
 let report_error = Format_doc.compat report_error_doc

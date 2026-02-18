@@ -195,10 +195,6 @@ let arg_label i ppf = function
   | Labelled s -> line i ppf "Labelled \"%s\"\n" s
   | Position s -> line i ppf "Position \"%s\"\n" s
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
 let typevar_no_jkind ~print_quote ppf v =
   let pptv =
     if print_quote
@@ -207,7 +203,6 @@ let typevar_no_jkind ~print_quote ppf v =
   in
   fprintf ppf " %a" pptv v
 
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 let typevar_jkind ~print_quote ppf (v, l) =
   let pptv =
     if print_quote

@@ -6401,24 +6401,8 @@ and type_expect_
       let exp = rue {
         exp_desc; exp_loc = loc; exp_extra = [];
         exp_type = desc.val_type;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
         exp_attributes = sexp.pexp_attributes;
         exp_env = env }
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        | Tconstr(path, _, _) when Path.same path fmt6_path ->
-          if !Clflags.principal && get_level ty_exp <> generic_level then
-            Location.prerr_warning loc
-              (Warnings.Not_principal "this coercion to format6");
-          true
-        | _ -> false
-=======
-        | Tconstr(path, _, _) when Path.same path fmt6_path ->
-          if !Clflags.principal && get_level ty_exp <> generic_level then
-            Location.prerr_warning loc
-              (not_principal "this coercion to format6");
-          true
-        | _ -> false
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
       in
       submode ~loc ~env actual_mode expected_mode;
       exp
@@ -6434,7 +6418,7 @@ and type_expect_
       | Tconstr(path, _, _) when Path.same path fmt6_path ->
         if !Clflags.principal && get_level ty_exp <> generic_level then
           Location.prerr_warning loc
-            (Warnings.Not_principal "this coercion to format6");
+            (not_principal "this coercion to format6");
         true
       | _ -> false
     in

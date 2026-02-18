@@ -759,7 +759,7 @@ type address_head =
 
 val address_head : address -> address_head
 
-val print_stage : Format.formatter -> stage -> unit
+val print_stage : Format_doc.formatter -> stage -> unit
 
 val unbound_class : Path.t
 
@@ -780,16 +780,10 @@ val cleanup_usage_tables : stamp:int -> unit
     function directly because [Msupport] depends on [Env] *)
 val msupport_raise_error : (?ignore_unify:bool -> exn -> unit) ref
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 type 'acc fold_all_labels_f = {
   fold_all_labels_f : 'rcd. 'rcd record_form -> 'rcd gen_label_description -> 'acc -> 'acc
 }
 val fold_all_labels: 'a fold_all_labels_f -> Longident.t option -> t -> 'a -> 'a
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val print_stage : Format.formatter -> stage -> unit
-=======
-val print_stage : Format_doc.formatter -> stage -> unit
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 val print_with_quote_promote :
   Format_doc.formatter -> (string * stage * stage) -> unit

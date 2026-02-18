@@ -1756,26 +1756,6 @@ let undo_compress (changes, _old) =
         | _ -> ())
         log
 
-(* Merlin specific *)
-let linked_variables () = !linked_variables
-
-let is_valid (changes, _old) =
-  match !changes with
-  | Invalid -> false
-  | _ -> true
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-
-let on_backtrack f =
-  log_change (Cfun f)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-            Transient_expr.set_desc ty desc; r := !next
-        | _ -> ())
-        log
-=======
-            Transient_expr.set_desc ty desc; r := !next
-        | _ -> ())
-        log
-
 let class_mode =
   let hint : _ Mode.Hint.const = Legacy Class in
   Mode.Value.(of_const ~hint_monadic:hint ~hint_comonadic:hint Const.legacy)
@@ -1783,4 +1763,14 @@ let class_mode =
 let toplevel_mode =
   let hint : _ Mode.Hint.const = Legacy Toplevel in
   Mode.Value.(of_const ~hint_monadic:hint ~hint_comonadic:hint Const.legacy)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+
+(* Merlin specific *)
+let linked_variables () = !linked_variables
+
+let is_valid (changes, _old) =
+  match !changes with
+  | Invalid -> false
+  | _ -> true
+
+let on_backtrack f =
+  log_change (Cfun f)

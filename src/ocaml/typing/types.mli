@@ -1281,6 +1281,8 @@ val set_univar: type_expr option ref -> type_expr -> unit
 val link_kind: inside:field_kind -> field_kind -> unit
 val link_commu: inside:commutable -> commutable -> unit
 val set_commu_ok: commutable -> unit
+val class_mode : Mode.Value.lr
+val toplevel_mode : Mode.Value.lr
 
 (* Merlin specific *)
 
@@ -1290,18 +1292,6 @@ val is_valid: snapshot -> bool
 (** also register changes to arbitrary references *)
 val on_backtrack: (unit -> unit) -> unit
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 (** Number of unification variables that have been linked so far.
    Used to estimate the "cost" of unification. *)
 val linked_variables: unit -> int
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-val link_kind: inside:field_kind -> field_kind -> unit
-val link_commu: inside:commutable -> commutable -> unit
-val set_commu_ok: commutable -> unit
-=======
-val link_kind: inside:field_kind -> field_kind -> unit
-val link_commu: inside:commutable -> commutable -> unit
-val set_commu_ok: commutable -> unit
-val class_mode : Mode.Value.lr
-val toplevel_mode : Mode.Value.lr
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2

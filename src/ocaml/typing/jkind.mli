@@ -778,13 +778,7 @@ type sub_or_intersect =
   | Sub  (** The first jkind is a subjkind of the second. *)
   | Disjoint of Sub_failure_reason.t Misc_stdlib.Nonempty_list.t
       (** The two jkinds have no common ground. *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  | Has_intersection of Sub_failure_reason.t Misc_stdlib.Nonempty_list.t
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  | Has_intersection of Sub_failure_reason.t Misc.Nonempty_list.t
-=======
-  | May_have_intersection of Sub_failure_reason.t Misc.Nonempty_list.t
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
+  | May_have_intersection of Sub_failure_reason.t Misc_stdlib.Nonempty_list.t
       (** The first jkind is not a subjkind of the second, but the two jkinds
           may have an intersection: try harder. *)
 
