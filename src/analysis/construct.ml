@@ -267,6 +267,8 @@ module Gen = struct
         @@ module_ env mod_decl.md_type
       in
       Str.module_ module_binding
+    | Sig_jkind (id, jkind_declaration, _visibility) ->
+      Str.jkind (Ptyp_of_type.jkind_declaration id jkind_declaration)
     | Sig_typext (id, ext_constructor, _, _) ->
       let lid =
         Untypeast.lident_of_path ext_constructor.ext_type_path

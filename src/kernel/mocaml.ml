@@ -67,7 +67,10 @@ let setup_reader_config config =
   open_modules := ocaml.open_modules;
   cmi_file := ocaml.cmi_file;
   as_parameter := ocaml.as_parameter;
-  zero_alloc_check := ocaml.zero_alloc_check
+  zero_alloc_check := ocaml.zero_alloc_check;
+  zero_alloc_assert := ocaml.zero_alloc_assert;
+  infer_with_bounds := ocaml.infer_with_bounds;
+  kind_verbosity := ocaml.kind_verbosity
 
 let init_params params =
   List.iter params ~f:(fun s ->
@@ -112,7 +115,8 @@ let () =
     oprint_doc default_out_class_type (fun x -> Out_class_type x);
   Oprint.out_module_type :=
     oprint_doc default_out_module_type (fun x -> Out_module_type x);
-  Oprint.out_sig_item := oprint_doc default_out_sig_item (fun x -> Out_sig_item x);
+  Oprint.out_sig_item :=
+    oprint_doc default_out_sig_item (fun x -> Out_sig_item x);
   Oprint.out_signature :=
     oprint_doc default_out_signature (fun x -> Out_signature x);
   Oprint.out_type_extension :=

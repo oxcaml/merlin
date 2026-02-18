@@ -2919,7 +2919,7 @@ let store_jkind ~check id decl shape env =
   if check then
     check_usage loc id decl.jkind_uid
       (fun s -> Warnings.Unused_kind_declaration s)
-      !jkind_declarations;
+      jkind_declarations;
   Builtin_attributes.mark_alerts_used decl.jkind_attributes;
   let jkda =
     { jkda_declaration = decl;
@@ -3490,7 +3490,7 @@ let mark_cltype_used uid =
   | exception Not_found -> ()
 
 let mark_jkind_used uid =
-  match Types.Uid.Tbl.find !jkind_declarations uid with
+  match stamped_find jkind_declarations uid with
   | mark -> mark ()
   | exception Not_found -> ()
 

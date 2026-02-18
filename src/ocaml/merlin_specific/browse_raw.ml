@@ -89,6 +89,7 @@ type node =
   | Mode of Mode.Alloc.atom Location.loc
   | Modality of Mode.Modality.atom Location.loc
   | Jkind_annotation of Parsetree.jkind_annotation
+  | Jkind_declaration of Typedtree.jkind_declaration
   | Mod_bound of Parsetree.mode Location.loc
   | Attribute of attribute
 
@@ -143,6 +144,7 @@ let node_update_env env0 = function
   | Mode _
   | Modality _
   | Jkind_annotation _
+  | Jkind_declaration _
   | Mod_bound _
   | Attribute _ -> env0
 
@@ -180,6 +182,7 @@ let node_real_loc loc0 = function
   | Mode { loc }
   | Modality { loc }
   | Jkind_annotation { pjka_loc = loc }
+  | Jkind_declaration { jkind_loc = loc }
   | Mod_bound { loc }
   | Attribute { attr_name = { loc } } -> loc
   | Module_type_declaration_name { mtd_name = loc } -> loc.Location.loc
@@ -614,6 +617,7 @@ and of_structure_item_desc = function
   | Tstr_include i -> app (Include_declaration i)
   | Tstr_open d -> app (Open_declaration d)
   | Tstr_attribute _ -> id_fold
+  | Tstr_jkind jkind -> app (Jkind_declaration jkind)
 
 and of_module_type_desc = function
   | Tmty_ident _ | Tmty_alias _ -> id_fold
@@ -653,6 +657,7 @@ and of_signature_item_desc = function
   | Tsig_modtypesubst _mts ->
     (* TODO. *)
     id_fold
+  | Tsig_jkind jkind -> app (Jkind_declaration jkind)
 
 and of_core_type_desc = function
   | Ttyp_var (_, jkind) -> of_jkind_annotation_opt jkind
@@ -843,6 +848,8 @@ let of_node node =
     | Mode _ -> id_fold
     | Modality _ -> id_fold
     | Jkind_annotation { pjka_desc } -> of_jkind_annotation_desc pjka_desc
+    | Jkind_declaration { jkind_annotation } ->
+      option_fold of_jkind_annotation jkind_annotation
     | Mod_bound _ -> id_fold
     | Attribute _ -> id_fold
   in
@@ -905,6 +912,7 @@ let string_of_node = function
   | Mode _ -> "mode"
   | Modality _ -> "modality"
   | Jkind_annotation _ -> "jkind_annotation"
+  | Jkind_declaration _ -> "jkind_declaration"
   | Mod_bound _ -> "mod_bound"
   | Attribute _ -> "attribute"
 

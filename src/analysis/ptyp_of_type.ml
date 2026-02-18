@@ -150,6 +150,20 @@ and module_declaration id { md_type; md_attributes; _ } =
   let name = Location.mknoloc (Some (Ident.name id)) in
   Ast_helper.Md.mk ~attrs:md_attributes name @@ module_type md_type
 
+and jkind_declaration id { jkind_manifest; jkind_attributes; _ } :
+    Parsetree.jkind_declaration =
+  { pjkind_name = Location.mknoloc (Ident.name id);
+    pjkind_manifest =
+      Option.map jkind_manifest ~f:(fun _ : Parsetree.jkind_annotation ->
+          (* CR modes: do better here *)
+          { pjka_desc =
+              Pjk_abbreviation { txt = Lident "any"; loc = Location.none };
+            pjka_loc = Location.none
+          });
+    pjkind_attributes = jkind_attributes;
+    pjkind_loc = Location.none
+  }
+
 and extension_constructor id { ext_args; ext_ret_type; ext_attributes; _ } =
   Ast_helper.Te.decl ~attrs:ext_attributes
     ~args:(constructor_arguments ext_args)
@@ -266,6 +280,8 @@ and signature_item (str_item : Types.signature_item) =
     Sig.modtype @@ modtype_declaration id modtype_decl
   | Sig_module (id, _, mod_decl, _, _) ->
     Sig.module_ @@ module_declaration id mod_decl
+  | Sig_jkind (id, jkind_decl, _visibility) ->
+    Sig.jkind @@ jkind_declaration id jkind_decl
   | Sig_typext (id, ext_constructor, _, _) ->
     let ext =
       Te.mk

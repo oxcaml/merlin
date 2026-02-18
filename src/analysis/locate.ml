@@ -303,6 +303,7 @@ end = struct
       | Module_type { mtd_attributes; _ } -> mtd_attributes
       | Class { ci_attributes; _ } | Class_type { ci_attributes; _ } ->
         ci_attributes
+      | Jkind { jkind_attributes; _ } -> jkind_attributes
     in
     match find_doc_attribute attributes with
     | Some (doc, _) -> `Found_doc (doc |> String.trim)
