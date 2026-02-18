@@ -179,7 +179,7 @@ let node_real_loc loc0 = function
   | Binding_op { bop_op_name = { loc } }
   | Mode { loc }
   | Modality { loc }
-  | Jkind_annotation { pjkind_loc = loc }
+  | Jkind_annotation { pjka_loc = loc }
   | Mod_bound { loc }
   | Attribute { attr_name = { loc } } -> loc
   | Module_type_declaration_name { mtd_name = loc } -> loc.Location.loc
@@ -837,7 +837,7 @@ let of_node node =
     | Binding_op { bop_exp = _ } -> id_fold
     | Mode _ -> id_fold
     | Modality _ -> id_fold
-    | Jkind_annotation { pjkind_desc } -> of_jkind_annotation_desc pjkind_desc
+    | Jkind_annotation { pjka_desc } -> of_jkind_annotation_desc pjka_desc
     | Mod_bound _ -> id_fold
     | Attribute _ -> id_fold
   in

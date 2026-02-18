@@ -192,9 +192,7 @@ let classify ~classify_product env ty sort : _ classification =
   | Base Vec128 -> Unboxed_vector Unboxed_vec128
   | Base Vec256 ->
     if split_vectors
-    then Product (Pgcignorableproductarray
-                    [ Punboxedvector_ignorable Unboxed_vec128;
-                      Punboxedvector_ignorable Unboxed_vec128 ])
+    then Product (Pgcignorableproductarray ())
     else Unboxed_vector Unboxed_vec256
   | Base Vec512 -> Unboxed_vector Unboxed_vec512
   | Base Word -> Unboxed_int Unboxed_nativeint

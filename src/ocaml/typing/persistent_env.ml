@@ -934,9 +934,9 @@ let check_pers_struct ~allow_hidden penv f1 f2 ~loc name =
   | Not_found ->
       let warn = Warnings.No_cmi_file(name_as_string, None) in
         Location.prerr_warning loc warn
-  | Magic_numbers.Cmi_format.Error err ->
+  | Magic_numbers.Cmi.Error err ->
       let msg = Format.asprintf "%a"
-          Magic_numbers.Cmi_format.report_error err in
+          Magic_numbers.Cmi.report_error err in
       let warn = Warnings.No_cmi_file(name_as_string, Some msg) in
         Location.prerr_warning loc warn
   | Error err ->

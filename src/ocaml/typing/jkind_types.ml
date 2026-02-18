@@ -14,7 +14,7 @@
 
 (* Merlin-specific: change some module paths to match the compiler *)
 module Misc = struct
-  let fatal_error = Misc.fatal_error
+  include Misc
   include Misc_stdlib
   module Stdlib = Misc_stdlib
 end

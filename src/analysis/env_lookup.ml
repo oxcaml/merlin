@@ -61,6 +61,9 @@ let by_path path (namespace : Namespace.t) env =
       | Class_type ->
         let clty = Env.find_cltype path env in
         (clty.clty_loc, clty.clty_uid, Class)
+      | Jkind ->
+        let jk = Env.find_jkind path env in
+        (jk.jkind_loc, jk.jkind_uid, Jkind)
     in
     Some { uid; loc; namespace }
   with Not_found -> None
