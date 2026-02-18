@@ -562,6 +562,9 @@ module Gen = struct
               Ast_helper.Exp.unboxed_tuple choice)
         | Tvariant row_desc -> variant env rtyp row_desc
         | Tquote _ | Tsplice _ -> []
+        | Trepr (ty, _) ->
+          (* CR modes: This isn't quite right, but it's probably good enough. *)
+          exp_or_hole env ty
         | Tpackage (path, lids_args) -> begin
           let open Ast_helper in
           try

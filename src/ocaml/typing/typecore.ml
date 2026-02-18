@@ -356,6 +356,7 @@ let deep_copy () =
           Tobject (copy t1, ref r)
         | Tfield (s,fk,t1,t2) -> Tfield (s, fk, copy t1, copy t2)
         | Tpoly (t,tl) -> Tpoly (copy t, List.map copy tl)
+        | Trepr (t,tl) -> Trepr (copy t, tl)
         | Tpackage (p,ltl) ->
           Tpackage (p, List.map (fun (l, tl) -> l, copy tl) ltl)
         | Tquote t -> Tquote (copy t)
