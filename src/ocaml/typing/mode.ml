@@ -2676,7 +2676,7 @@ module Comonadic_gen (Obj : Obj) = struct
   let submode_err pp a b =
     match submode ~pp a b with
     | Ok () -> ()
-    | Error e -> raise (Submode_error_simple_context (pp, Axis (obj, e)))
+    | Error e -> Msupport.raise_error (Submode_error_simple_context (pp, Axis (obj, e)))
 
   let print_error pp err = Error.print_axis pp obj err
 
@@ -2778,7 +2778,7 @@ module Monadic_gen (Obj : Obj) = struct
   let submode_err pp a b =
     match submode ~pp a b with
     | Ok () -> ()
-    | Error e -> raise (Submode_error_simple_context (pp, Axis (obj, e)))
+    | Error e -> Msupport.raise_error (Submode_error_simple_context (pp, Axis (obj, e)))
 
   let print_error pp err = Error.print_axis pp obj err
 
@@ -3222,7 +3222,7 @@ module Comonadic_with (Areality : Areality) = struct
     | Ok () -> ()
     | Error e ->
       let (Error (ax, _)) = to_simple_error e in
-      raise (Submode_error_simple_context (pp, Product (Obj.obj, ax, e)))
+      Msupport.raise_error (Submode_error_simple_context (pp, Product (Obj.obj, ax, e)))
 
   let print_error pp err =
     let (Error (ax, _)) = to_simple_error err in
@@ -3355,7 +3355,7 @@ module Monadic = struct
     | Ok () -> ()
     | Error e ->
       let (Error (ax, _)) = to_simple_error e in
-      raise (Submode_error_simple_context (pp, Product (Obj.obj, ax, e)))
+      Msupport.raise_error (Submode_error_simple_context (pp, Product (Obj.obj, ax, e)))
 
   let print_error pp err =
     let (Error (ax, _)) = to_simple_error err in

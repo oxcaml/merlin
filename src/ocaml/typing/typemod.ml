@@ -4062,27 +4062,9 @@ let type_toplevel_phrase env sig_acc s =
   Env.reset_required_globals ();
   Env.reset_probes ();
   Typecore.reset_allocations ();
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-  let expected_mode = Value.(legacy |> disallow_left) in
   let (str, sg, mode, _to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env ~expected_mode sig_acc s in
-  begin match Value.submode mode Value.legacy with
-  | Ok () -> ()
-  | Error e -> Msupport.raise_error (Error (Location.none, env, (Legacy_module (Toplevel, e))))
-  end;
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  let expected_mode = Value.(legacy |> disallow_left) in
-  let (str, sg, mode, to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env ~expected_mode s in
-  begin match Value.submode mode Value.legacy with
-  | Ok () -> ()
-  | Error e -> raise (Error (Location.none, env, (Legacy_module (Toplevel, e))))
-  end;
-=======
-  let (str, sg, mode, to_remove_from_sg, shape, env) =
-    type_structure ~toplevel:(Some sig_acc) false None env s in
+    type_structure ~toplevel:(Some sig_acc) false None env sig_acc s in
   Value.submode_err (Location.none, Structure) mode toplevel_mode;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   remove_mode_and_jkind_variables env sg;
   remove_mode_and_jkind_variables_for_toplevel str;
   Typecore.optimise_allocations ();
@@ -4388,25 +4370,10 @@ let type_implementation target modulename initial_env ast =
       if !Clflags.as_parameter then
         error Cannot_compile_implementation_as_parameter;
       let (str, sg, mode, names, shape, finalenv) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-          type_structure initial_env ~expected_mode ast in
-      begin match Value.submode mode Env.mode_unit with
-      | Ok () -> ()
-      | Error e -> Msupport.raise_error (error (Legacy_module (Compilation_unit, e)))
-      end;
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-        Profile.record_call "infer" (fun () ->
-          type_structure initial_env ~expected_mode ast) in
-      begin match Value.submode mode Env.mode_unit with
-      | Ok () -> ()
-      | Error e -> error (Legacy_module (Compilation_unit, e))
-      end;
-=======
-        Profile.record_call "infer" (fun () -> type_structure initial_env ast)
+        type_structure initial_env ast
       in
       Value.submode_err (Location.in_file sourcefile, Structure)
         mode Env.mode_unit;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
       let uid = Uid.of_compilation_unit_id modulename in
       let shape = Shape.set_uid_if_none shape uid in
       if !Clflags.binary_annotations_cms then
