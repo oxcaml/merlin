@@ -39,18 +39,7 @@ type 'a usage_tbl = (Uid.t, ('a -> unit)) Stamped_hashtable.t
     The callback attached to a declaration is called whenever the value (or
     type, or ...) is used explicitly (lookup_value, ...) or implicitly
     (inclusion test between signatures, cf Includemod.value_descriptions, ...).
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
 *)
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let value_declarations  : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-let type_declarations   : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-let module_declarations : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-=======
-let value_declarations  : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-let type_declarations   : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-let module_declarations : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
-let jkind_declarations   : unit usage_tbl ref = s_table Types.Uid.Tbl.create 16
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
 
 let local_stamped n : Stamped_hashtable.changelog * ('a usage_tbl) =
   let changelog = Stamped_hashtable.create_changelog () in
@@ -64,6 +53,9 @@ let type_declarations_changelog, type_declarations = !stamped_type_declarations
 
 let stamped_module_declarations = s_table local_stamped 32
 let module_declarations_changelog, module_declarations = !stamped_module_declarations
+
+let stamped_jkind_declarations = s_table local_stamped 32
+let jkind_declarations_changelog, jkind_declarations = !stamped_jkind_declarations
 
 let stamped_mutated_mutable_values = s_table local_stamped 32
 let mutated_mutable_values_changelog, mutated_mutable_values = !stamped_mutated_mutable_values
@@ -1025,13 +1017,9 @@ let empty = {
   implicit_jkinds = String.Map.empty;
   flags = 0;
   functor_args = Ident.empty;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
+  jkinds = IdTbl.empty;
   short_paths = None;
   short_paths_additions = [];
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-=======
-  jkinds = IdTbl.empty;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   stage = 0;
  }
 
@@ -1384,23 +1372,9 @@ let reset_declaration_caches () =
   Stamped_hashtable.clear type_declarations;
   Stamped_hashtable.clear module_declarations;
   Stamped_hashtable.clear mutated_mutable_values;
+  Stamped_hashtable.clear jkind_declarations;
   Stamped_hashtable.clear used_constructors;
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
   Stamped_hashtable.clear used_labels;
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-  Types.Uid.Tbl.clear !type_declarations;
-  Types.Uid.Tbl.clear !module_declarations;
-  Types.Uid.Tbl.clear !mutated_mutable_values;
-  Types.Uid.Tbl.clear !used_constructors;
-  Types.Uid.Tbl.clear !used_labels;
-=======
-  Types.Uid.Tbl.clear !type_declarations;
-  Types.Uid.Tbl.clear !module_declarations;
-  Types.Uid.Tbl.clear !mutated_mutable_values;
-  Types.Uid.Tbl.clear !jkind_declarations;
-  Types.Uid.Tbl.clear !used_constructors;
-  Types.Uid.Tbl.clear !used_labels;
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
   ()
 
 let reset_cache ~preserve_persistent_env =
@@ -5789,6 +5763,7 @@ let cleanup_usage_tables ~stamp =
   Stamped_hashtable.backtrack value_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack type_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack module_declarations_changelog ~stamp;
+  Stamped_hashtable.backtrack jkind_declarations_changelog ~stamp;
   Stamped_hashtable.backtrack mutated_mutable_values_changelog ~stamp;
   Stamped_hashtable.backtrack used_constructors_changelog ~stamp;
   Stamped_hashtable.backtrack used_labels_changelog ~stamp;
