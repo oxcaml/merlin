@@ -179,7 +179,8 @@ and value_description id
     pval_prim = [];
     pval_attributes = val_attributes;
     pval_modalities = const_modalities ~mut:Immutable modalities;
-    pval_loc = val_loc
+    pval_loc = val_loc;
+    pval_poly = false
   }
 
 and constructor_argument { ca_type; ca_loc; ca_modalities; ca_sort = _ } =
