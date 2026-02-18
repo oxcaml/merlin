@@ -689,7 +689,13 @@ let ocaml_ignored_flags =
     "-ddissector";
     "-ddissector-sizes";
     "-ddissector-verbose";
-    "-ddissector-partitions"
+    "-ddissector-partitions";
+    "-dissector-assume-lld-without-64-bit-eh-frames";
+    "-no-dissector-assume-lld-without-64-bit-eh-frames";
+    "-manual-module-init";
+    "-no-manual-module-init";
+    "-dfexpr-annot";
+    "-dfexpr-annot-after"
   ]
 
 let ocaml_ignored_parametrized_flags =
