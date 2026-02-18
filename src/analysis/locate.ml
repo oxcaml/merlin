@@ -1181,7 +1181,7 @@ let get_doc ~config:mconfig ~env ~local_defs ~comments ~pos =
       match path with
       | `Completion_entry (namespace, path, _loc) ->
         log ~title:"get_doc" "completion: looking for the doc of '%a'"
-          Logger.fmt (fun fmt -> Path.print fmt path);
+          Logger.fmt (fun fmt -> (Format_doc.compat Path.print) fmt path);
 
         let from_path = from_path ~config ~env ~local_defs ~namespace path in
         begin

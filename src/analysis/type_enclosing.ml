@@ -42,7 +42,7 @@ let print_type ~verbosity type_info =
           | false -> Expanded
           | true -> Expanded_with_all_mod_bounds
         in
-        Jkind.format_verbose ~verbosity ppf jkind;
+        (Format_doc.compat (Jkind.format_verbose ~verbosity)) ppf jkind;
         Format.flush_str_formatter ())
   | String s -> s
 

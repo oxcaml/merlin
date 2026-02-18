@@ -293,13 +293,13 @@ let get_modality_doc (Atom (axis, modality) : Mode.Modality.atom) =
        weaker mode." *)
     match axis with
     | Comonadic _ ->
-      Format.asprintf
+      Format_doc.asprintf
         "The annotated value's mode is always at least as strong as `%a`, even \
          if its container's mode is weaker."
         (Mode.Modality.Per_axis.print axis)
         modality
     | Monadic _ ->
-      Format.asprintf
+      Format_doc.asprintf
         "The annotated value's mode is always at least as weak as `%a`, even \
          if its container's mode is a stronger."
         (Mode.Modality.Per_axis.print axis)

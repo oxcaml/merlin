@@ -264,6 +264,10 @@ module Compat: sig
   val modtype: module_type printer
   val class_type: class_type printer
   val string_of_label: Asttypes.arg_label -> string
+  val type_declaration_for_merlin:
+    print_non_value_inferred_jkind:bool -> Ident.t -> type_declaration printer
+  val type_scheme_for_merlin:
+    print_non_value_jkind_on_type_variables:bool -> type_expr printer
 end
 
 val report_ambiguous_type_error:

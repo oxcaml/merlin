@@ -71,7 +71,7 @@ module Util = struct
   let var_of_id id = Location.mknoloc @@ Ident.name id
 
   let type_to_string t =
-    Printtyp.type_expr Format.str_formatter t;
+    Printtyp.Compat.type_expr Format.str_formatter t;
     Format.flush_str_formatter ()
 
   let unifiable env type_expr type_expected =
@@ -98,7 +98,7 @@ module Util = struct
         Logger.fmt
         (fun fmt -> Printast.expression 0 fmt exp)
         Logger.fmt
-        (fun fmt -> Printtyp.type_expr fmt type_expected);
+        (fun fmt -> Printtyp.Compat.type_expr fmt type_expected);
     Btype.backtrack snap;
     typeable
 
@@ -415,7 +415,7 @@ module Gen = struct
               else (
                 log ~title:"constructor" "%s's type is not unifiable with %a"
                   cstr_descr.Types.cstr_name Logger.fmt (fun fmt ->
-                    Printtyp.type_expr fmt type_expr);
+                    Printtyp.Compat.type_expr fmt type_expr);
                 None))
         | None -> []
       in
@@ -598,7 +598,7 @@ module Gen = struct
               failwith
               @@ Format.asprintf
                    "Unexpected type constructor in fields list: %a"
-                   Printtyp.type_expr fields
+                   Printtyp.Compat.type_expr fields
           in
           let all_fields = aux [] fields |> Util.combinations in
           List.map all_fields ~f:(fun fields ->

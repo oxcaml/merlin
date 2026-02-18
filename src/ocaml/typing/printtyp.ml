@@ -3559,7 +3559,7 @@ let tree_of_type_declaration ident td rs =
     (fun () -> tree_of_type_declaration ident td rs)
 
 (** Compatibility module for Format printers *)
-module Compat = struct
+module Compat0 = struct
   let longident = Fmt.compat longident
   let path = Fmt.compat path
   let type_expr = Fmt.compat type_expr
@@ -3609,7 +3609,7 @@ let print_annotated_qtvs_as_comment ppf qtvs =
         fprintf ppf "@['%s : %a@]" name !Oprint.out_jkind jkind
       in
       fprintf ppf " @[(* @[%a@] *)@]"
-        (Format.pp_print_list annotated_qtv
+        (Format_doc.pp_print_list annotated_qtv
            ~pp_sep:(fun ppf () -> fprintf ppf ", "))
         qtvs
 
@@ -3621,6 +3621,15 @@ let type_scheme_for_merlin ~print_non_value_jkind_on_type_variables ppf ty =
     print_annotated_qtvs_as_comment ppf qtvs)
 
 let type_declaration_for_merlin = type_declaration
+
+module Compat = struct
+  include Compat0
+
+  let type_declaration_for_merlin ~print_non_value_inferred_jkind id =
+    Fmt.compat (type_declaration_for_merlin ~print_non_value_inferred_jkind id)
+  let type_scheme_for_merlin ~print_non_value_jkind_on_type_variables =
+    Fmt.compat (type_scheme_for_merlin ~print_non_value_jkind_on_type_variables)
+end
 
 (* Drop merlin-only arguments from exported interface *)
 

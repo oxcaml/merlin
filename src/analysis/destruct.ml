@@ -83,7 +83,7 @@ let placeholder = Ast_helper.Exp.hole ()
 let rec gen_patterns ?(recurse = true) env type_expr =
   let open Types in
   log ~title:"gen_patterns" "%a" Logger.fmt (fun fmt ->
-      Format.fprintf fmt "Generating patterns for type %a" Printtyp.type_expr
+      Format.fprintf fmt "Generating patterns for type %a" Printtyp.Compat.type_expr
         type_expr);
   match get_desc type_expr with
   | Tlink _ -> assert false (* impossible after [Btype.repr] *)
@@ -143,7 +143,7 @@ let rec gen_patterns ?(recurse = true) env type_expr =
                 Format.fprintf fmt
                   "Eliminating '%s' branch, its return type is not compatible \
                    with the expected type (%a)"
-                  cstr_descr.cstr_name Printtyp.type_expr type_expr);
+                  cstr_descr.cstr_name Printtyp.Compat.type_expr type_expr);
             None)
           else
             let args =
@@ -177,7 +177,7 @@ let rec gen_patterns ?(recurse = true) env type_expr =
           None)
   | _ ->
     let fmt, to_string = Format.to_string () in
-    Printtyp.type_expr fmt type_expr;
+    Printtyp.Compat.type_expr fmt type_expr;
     raise (Not_allowed (to_string ()))
 
 and from_type_decl env path texpr =

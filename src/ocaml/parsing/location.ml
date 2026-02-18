@@ -769,7 +769,7 @@ type report = {
 }
 
 let loc_of_report { main; _ } = main.loc
-let print_msg fmt msg = msg.txt fmt
+let print_msg fmt msg = Fmt.Doc.format fmt msg.txt
 let print_main fmt { main; _ } = print_msg fmt main
 let print_sub_msg = print_msg
 

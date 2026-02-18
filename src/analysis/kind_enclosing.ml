@@ -16,7 +16,7 @@ module Kind_info = struct
     in
     let print_with_verbosity ~jkind_verbosity kind =
       Printtyp.wrap_printing_env ~verbosity env (fun () ->
-          Format.asprintf "%a"
+          Format_doc.asprintf "%a"
             (Jkind.format_verbose ~verbosity:jkind_verbosity)
             kind)
     in

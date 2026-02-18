@@ -87,7 +87,7 @@ and core_type type_expr =
       | _ ->
         failwith
         @@ Format.asprintf "Unexpected type constructor in fields list: %a"
-             Printtyp.type_expr type_expr
+             Printtyp.Compat.type_expr type_expr
     in
     let fields, closed = aux [] type_expr in
     Typ.object_ fields closed
