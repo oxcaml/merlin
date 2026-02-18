@@ -376,8 +376,9 @@ let of_comprehension { comp_body; comp_clauses } =
 
 let of_pattern_desc (type k) (desc : k pattern_desc) =
   match desc with
-  | Tpat_any | Tpat_var _ | Tpat_constant _ | Tpat_variant (_, None, _) ->
-    id_fold
+  | Tpat_any | Tpat_var _ | Tpat_constant _
+  | Tpat_variant (_, None, _)
+  | Tpat_unboxed_bool _ | Tpat_unboxed_unit -> id_fold
   | Tpat_alias (p, _, _, _, _, _, _)
   | Tpat_variant (_, Some p, _)
   | Tpat_lazy p
@@ -421,7 +422,11 @@ let of_unboxed_access = function
 let rec of_expression_desc loc = function
   | Texp_ident _ | Texp_constant _ | Texp_instvar _ | Texp_mutvar _
   | Texp_variant (_, None)
-  | Texp_new _ | Texp_src_pos | Texp_typed_hole -> id_fold
+  | Texp_unboxed_bool _
+  | Texp_unboxed_unit
+  | Texp_new _
+  | Texp_src_pos
+  | Texp_typed_hole -> id_fold
   | Texp_let (_, vbs, e) -> of_expression e ** list_fold of_value_binding vbs
   | Texp_letmutable (vb, e) -> of_expression e ** of_value_binding vb
   | Texp_function { params; body; ret_mode; _ } ->

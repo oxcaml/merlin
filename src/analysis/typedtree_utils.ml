@@ -31,6 +31,8 @@ let let_bound_vars bindings =
       | Typedtree.Tpat_constant _
       | Typedtree.Tpat_tuple _
       | Typedtree.Tpat_unboxed_tuple _
+      | Typedtree.Tpat_unboxed_bool _
+      | Typedtree.Tpat_unboxed_unit
       | Typedtree.Tpat_construct (_, _, _, _)
       | Typedtree.Tpat_variant (_, _, _)
       | Typedtree.Tpat_record (_, _)
