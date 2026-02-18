@@ -309,108 +309,8 @@ module Doc = struct
    Some of the information (filename, line number or characters numbers) in the
    location might be invalid; in which case we do not print it.
  *)
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-let print_loc ~capitalize_first ppf loc =
-  (* setup_tags (); *)
-  let file_valid = function
-    | "_none_" ->
-        (* This is a dummy placeholder, but we print it anyway to please editors
-           that parse locations in error messages (e.g. Emacs). *)
-        true
-    | "" | "//toplevel//" -> false
-    | _ -> true
-  in
-  let line_valid line = line > 0 in
-  let chars_valid ~startchar ~endchar = startchar <> -1 && endchar <> -1 in
-
-  let file =
-    (* According to the comment in location.mli, if [pos_fname] is "", we must
-       use [!input_name]. *)
-    if loc.loc_start.pos_fname = "" then !input_name
-    else loc.loc_start.pos_fname
-  in
-  let line = loc.loc_start.pos_lnum in
-  let startchar = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
-  let endchar = loc.loc_end.pos_cnum - loc.loc_start.pos_bol in
-
-  let first = ref true in
-  let capitalize s =
-    if !first then (first := false;
-                    if capitalize_first then String.capitalize_ascii s else s)
-    else s in
-  let comma () =
-    if !first then () else Format.fprintf ppf ", " in
-
-  Format.fprintf ppf "@{<loc>";
-
-  if file_valid file then
-    Format.fprintf ppf "%s \"%a\"" (capitalize "file") print_filename file;
-
-  (* Print "line 1" in the case of a dummy line number. This is to please the
-     existing setup of editors that parse locations in error messages (e.g.
-     Emacs). *)
-  comma ();
-  Format.fprintf ppf "%s %a" (capitalize "line")
-    linenum (if line_valid line then line else 1);
-
-  if chars_valid ~startchar ~endchar then (
-||||||| oxcaml/oxcaml:4ac226a124a59cc8d0eef6b0f10b2269e2803a45
-let print_loc ~capitalize_first ppf loc =
-  setup_tags ();
-  let file_valid = function
-    | "_none_" ->
-        (* This is a dummy placeholder, but we print it anyway to please editors
-           that parse locations in error messages (e.g. Emacs). *)
-        true
-    | "" | "//toplevel//" -> false
-    | _ -> true
-  in
-  let line_valid line = line > 0 in
-  let chars_valid ~startchar ~endchar = startchar <> -1 && endchar <> -1 in
-
-  let file =
-    (* According to the comment in location.mli, if [pos_fname] is "", we must
-       use [!input_name]. *)
-    if loc.loc_start.pos_fname = "" then !input_name
-    else loc.loc_start.pos_fname
-  in
-  let startline = loc.loc_start.pos_lnum in
-  let endline = loc.loc_end.pos_lnum in
-  let startchar = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
-  let endchar = loc.loc_end.pos_cnum - loc.loc_end.pos_bol in
-
-  let first = ref true in
-  let capitalize s =
-    if !first then (first := false;
-                    if capitalize_first then String.capitalize_ascii s else s)
-    else s in
-  let comma () =
-    if !first then () else Format.fprintf ppf ", " in
-
-  Format.fprintf ppf "@{<loc>";
-
-  if file_valid file then
-    Format.fprintf ppf "%s \"%a\"" (capitalize "file") print_filename file;
-
-  (* Print "line 1" in the case of a dummy line number. This is to please the
-     existing setup of editors that parse locations in error messages (e.g.
-     Emacs). *)
-  comma ();
-  let startline = if line_valid startline then startline else 1 in
-  let endline = if line_valid endline then endline else startline in
-
-  begin if startline = endline then
-    Format.fprintf ppf "%s %a"
-      (capitalize "line") linenum startline
-  else
-    Format.fprintf ppf "%s %a-%a"
-      (capitalize "lines") linenum startline linenum endline
-  end;
-
-  if chars_valid ~startchar ~endchar then (
-=======
   let loc ~capitalize_first ppf loc =
-    setup_tags ();
+    (* setup_tags (); *)
     let file_valid = function
       | "_none_" ->
           (* This is a dummy placeholder, but we print it anyway to please
@@ -428,10 +328,9 @@ let print_loc ~capitalize_first ppf loc =
       if loc.loc_start.pos_fname = "" then !input_name
       else loc.loc_start.pos_fname
     in
-    let startline = loc.loc_start.pos_lnum in
-    let endline = loc.loc_end.pos_lnum in
+    let line = loc.loc_start.pos_lnum in
     let startchar = loc.loc_start.pos_cnum - loc.loc_start.pos_bol in
-    let endchar = loc.loc_end.pos_cnum - loc.loc_end.pos_bol in
+    let endchar = loc.loc_end.pos_cnum - loc.loc_start.pos_bol in
 
     let first = ref true in
     let capitalize s =
@@ -449,18 +348,9 @@ let print_loc ~capitalize_first ppf loc =
     (* Print "line 1" in the case of a dummy line number. This is to please the
        existing setup of editors that parse locations in error messages (e.g.
        Emacs). *)
->>>>>>> oxcaml/oxcaml:9790921724a7cd036e5f2e9e1eaac583e9ef0be2
     comma ();
-    let startline = if line_valid startline then startline else 1 in
-    let endline = if line_valid endline then endline else startline in
-
-    begin if startline = endline then
-        Fmt.fprintf ppf "%s %a"
-          (capitalize "line") linenum startline
-      else
-        Fmt.fprintf ppf "%s %a-%a"
-          (capitalize "lines") linenum startline linenum endline
-    end;
+    Fmt.fprintf ppf "%s %a" (capitalize "line")
+      linenum (if line_valid line then line else 1);
 
     if chars_valid ~startchar ~endchar then (
       comma ();
