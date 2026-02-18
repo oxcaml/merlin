@@ -5023,7 +5023,12 @@ let report_jkind_violation_with_offender =
 
 (* Error report *)
 
-open Format_doc
+(* Open Format_doc, but Format_doc shadows [t]. *)
+open struct
+  type env = t
+  include Format_doc
+  type t = env
+end
 
 (* Forward declarations *)
 
