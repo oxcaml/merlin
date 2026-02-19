@@ -42,10 +42,10 @@ The complete-prefix command returns the field names
 
 The reader cache was invalidated from previous non-for-completetion command
   $ cat merlin_logs | grep 'Phase cache' -A 1 | sed "s/[0-9]*//g"
-  # . Phase cache - Reader phase
+  # Phase cache - Reader phase
   Cache invalidation
   --
-  # . Phase cache - PPX phase
+  # Phase cache - PPX phase
   Cache invalidation
 
 Stop server
