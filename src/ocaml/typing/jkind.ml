@@ -3389,6 +3389,19 @@ let has_layout_any env jkind =
   | Error _ -> false
 
 let is_value_for_printing ~ignore_null env { jkind; _ } =
+  let env =
+    (* Merlin-only: Merlin uses an empty env for printing when Clflags.real_paths is true.
+       But for the below logic to work, value and value_or_null need to be in the env. *)
+    match !Clflags.real_paths with
+    | true ->
+      List.fold_left
+        (fun env ident ->
+          let jkind = Env.find_jkind (Pident ident) (Lazy.force Env.initial) in
+          Env.add_jkind ~check:false ident jkind env)
+        env
+        Predef.all_predef_jkinds
+    | false -> env
+  in
   let jkind = Base_and_axes.fully_expand_aliases env jkind in
   match Desc.get_const (Jkind_desc.get jkind) with
   | None -> false
