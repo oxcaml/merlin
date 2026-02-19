@@ -12,8 +12,7 @@ module Kind_info = struct
     let kind =
       Jkind.normalize ~mode:Require_best
         ~context:(Ctype.mk_jkind_context_check_principal env)
-        env
-        kind
+        env kind
     in
     let print_with_verbosity ~jkind_verbosity kind =
       Printtyp.wrap_printing_env ~verbosity env (fun () ->

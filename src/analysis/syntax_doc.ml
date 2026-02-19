@@ -42,7 +42,8 @@ let get_jkind_abbrev_doc (abbrev : Longident.t) =
     | Lident "any" ->
       Some
         ("The top of the kind lattice; all types have this kind.", Kind_syntax)
-    | Lident "any_non_null" -> Some ("A synonym for `any mod non_null`.", Kind_syntax)
+    | Lident "any_non_null" ->
+      Some ("A synonym for `any mod non_null`.", Kind_syntax)
     | Lident "value_or_null" ->
       Some
         ( "The kind of ordinary OCaml types, but with the possibility that the \

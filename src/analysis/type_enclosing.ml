@@ -78,7 +78,8 @@ let from_nodes ~path =
         (* The context isn't important. It's just used for printing error messages, which
            we immediately discard anyways. *)
         let jkind =
-          Jkind.of_annotation ~context:(Type_variable "fake_for_merlin") env annot
+          Jkind.of_annotation ~context:(Type_variable "fake_for_merlin") env
+            annot
         in
         ret (Jkind (env, jkind))
       with Jkind.Error.User_error _ -> None)
