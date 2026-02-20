@@ -1,6 +1,6 @@
 Test Merlin's behavior in the presense of let-punning
 
-  $ . helpers test.ml
+  $ file=test.ml; . helpers
 
 Test that locating a variable in a punned let goes to the original definition of the
 variable rather than the new definition. i.e., in:

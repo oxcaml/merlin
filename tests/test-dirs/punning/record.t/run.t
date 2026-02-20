@@ -1,6 +1,6 @@
 Test Merlin's behavior in the presense of punned record fields
 
-  $ . helpers test.ml
+  $ file=test.ml; . helpers
 
 Part 1: Expressions
 

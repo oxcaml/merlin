@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-file="$1"
-
 highlight_char_range_from_file () {
   line=$1
   start=$2
