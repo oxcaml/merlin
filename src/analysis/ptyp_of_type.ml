@@ -130,12 +130,9 @@ and core_type type_expr =
     Typ.any None
   | Tquote type_expr -> Typ.quote (core_type type_expr)
   | Tsplice type_expr -> Typ.splice (core_type type_expr)
-  | Trepr (ty, _) -> (
-    let ty = core_type ty in
-    match ty.ptyp_desc with
-    | Ptyp_poly (vars, inner_ty) ->
-      { ty with ptyp_desc = Ptyp_repr (List.map vars ~f:fst, inner_ty) }
-    | _ -> ty)
+  | Trepr (ty, _) ->
+    (* CR modes: We should do something proper here. Internal ticket 6601. *)
+    core_type ty
   | Tpackage (path, lids_type_exprs) ->
     let loc = mknoloc (Untypeast.lident_of_path path) in
     let args =
