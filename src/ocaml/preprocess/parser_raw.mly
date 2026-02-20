@@ -3502,16 +3502,8 @@ let_binding_body:
       { let p,e,c,modes = $2 in (p,e,c,modes,false,poly_flag) }
 /* BEGIN AVOID */
   | poly_flag = poly_flag val_ident %prec below_HASH
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-30
-      { (mkpatvar ~loc:$loc ~attrs:[pun_attr] $2, ghexpvar ~loc:$loc ~attrs:[pun_attr] $2, None, [], true,
-         poly_flag) }
-||||||| oxcaml/oxcaml:ae041759a243bfa09c2793f505c0305c8baa4ec5
-      { (mkpatvar ~loc:$loc $2, ghexpvar ~loc:$loc $2, None, [], true,
-         poly_flag) }
-=======
-      { (mkpatvar ~loc:$loc($2) $2, ghexpvar ~loc:$loc($2) $2,
+      { (mkpatvar ~loc:$loc($2) ~attrs:[pun_attr] $2, ghexpvar ~loc:$loc($2) ~attrs:[pun_attr] $2,
          None, [], true, poly_flag) }
->>>>>>> oxcaml/oxcaml:7d714cfb3f1c79c9b1e2a9c40ac60ba0c44cafd7
   (* The production that allows puns is marked so that [make list-parse-errors]
      does not attempt to exploit it. That would be problematic because it
      would then generate bindings such as [let x], which are rejected by the
