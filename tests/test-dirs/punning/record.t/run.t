@@ -57,26 +57,21 @@ at the definition point. ie, in:
 { a; b }
 locating the a goes to the label in the records type declaration.
 
-TODO: Fix this!
   $ locate 15:8
   Locating:
   let f { a; b } =
           ^
-  {
-    "class": "return",
-    "value": "Already at definition point",
-    "notifications": []
-  }
+  Found definition at 2:4:
+    { a : string
+      ^
 
   $ locate 15:11
   Locating:
   let f { a; b } =
              ^
-  {
-    "class": "return",
-    "value": "Already at definition point",
-    "notifications": []
-  }
+  Found definition at 3:4:
+    ; b : int
+      ^
 
 Test that the occurrences query finds occurrences of the variable, not the label
 

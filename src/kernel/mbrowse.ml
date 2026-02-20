@@ -39,6 +39,12 @@ module Let_pun_behavior = struct
   let default = Prefer_pattern
 end
 
+module Record_pattern_pun_behavior = struct
+  type t = Prefer_label | Prefer_pattern
+
+  let default = Prefer_pattern
+end
+
 let node_of_binary_part = Browse_raw.node_of_binary_part
 
 let fold_node f env t acc =
@@ -117,12 +123,23 @@ module Favorability = struct
 
   let based_on_let_punning ~(let_pun_behavior : Let_pun_behavior.t) node =
     let is_punned =
-      Browse_raw.has_attr ~name:Builtin_attributes.merlin_let_punned node
+      Browse_raw.has_attr ~name:Builtin_attributes.merlin_punned_let node
     in
     match (is_punned, node, let_pun_behavior) with
     | true, Expression _, Prefer_expression -> Favored
     | true, Expression _, Prefer_pattern -> Unfavored
     | true, Pattern _, Prefer_expression -> Unfavored
+    | true, Pattern _, Prefer_pattern -> Favored
+    | _ -> Neutral
+
+  let based_on_record_pattern_punning
+      ~(record_pattern_pun_behavior : Record_pattern_pun_behavior.t) node =
+    let is_punned =
+      Browse_raw.has_attr ~name:Builtin_attributes.merlin_punned_record_pattern
+        node
+    in
+    match (is_punned, node, record_pattern_pun_behavior) with
+    | true, Pattern _, Prefer_label -> Unfavored
     | true, Pattern _, Prefer_pattern -> Favored
     | _ -> Neutral
 end
@@ -172,7 +189,8 @@ let compare_locations pos l1 l2 : Node_comparison_result.t =
   (* Cursor is after both, select the one whose end is earlier in the file *)
   | _, _ -> closer_to_end_of_file l1 l2 |> Node_comparison_result.invert
 
-let compare_nodes ~let_pun_behavior pos (node1, loc1) (node2, loc2) =
+let compare_nodes ~let_pun_behavior ~record_pattern_pun_behavior pos
+    (node1, loc1) (node2, loc2) =
   (* Prioritization order:
      1. Choose the node whose location encompasses [pos]
      2. If node is part of a let-punned pattern, choose the one on the preferred side
@@ -186,13 +204,19 @@ let compare_nodes ~let_pun_behavior pos (node1, loc1) (node2, loc2) =
          (Favorability.based_on_let_punning ~let_pun_behavior node2));
     lazy
       (Node_comparison_result.from_favorabilities
+         (Favorability.based_on_record_pattern_punning
+            ~record_pattern_pun_behavior node1)
+         (Favorability.based_on_record_pattern_punning
+            ~record_pattern_pun_behavior node2));
+    lazy
+      (Node_comparison_result.from_favorabilities
          (Favorability.based_on_ghostliness loc1)
          (Favorability.based_on_ghostliness loc2));
     lazy (closer_to_end_of_file loc1 loc2)
   ]
   |> Node_comparison_result.combine_lazy_list
 
-let best_node ~let_pun_behavior pos = function
+let best_node ~let_pun_behavior ~record_pattern_pun_behavior pos = function
   | [] -> []
   | init :: xs ->
     let f acc x =
@@ -202,21 +226,27 @@ let best_node ~let_pun_behavior pos = function
         (node, loc)
       in
       match
-        compare_nodes ~let_pun_behavior pos (leaf_with_loc acc)
-          (leaf_with_loc x)
+        compare_nodes ~let_pun_behavior ~record_pattern_pun_behavior pos
+          (leaf_with_loc acc) (leaf_with_loc x)
       with
       | Left | Neutral -> acc
       | Right -> x
     in
     List.fold_left ~f ~init xs
 
-let enclosing ?(let_pun_behavior = Let_pun_behavior.default) pos roots =
-  match best_node ~let_pun_behavior pos roots with
+let enclosing ?(let_pun_behavior = Let_pun_behavior.default)
+    ?(record_pattern_pun_behavior = Record_pattern_pun_behavior.default) pos
+    roots =
+  match best_node ~let_pun_behavior ~record_pattern_pun_behavior pos roots with
   | [] -> []
-  | root -> best_node ~let_pun_behavior pos (select_leafs pos root)
+  | root ->
+    best_node ~let_pun_behavior ~record_pattern_pun_behavior pos
+      (select_leafs pos root)
 
-let deepest_before ?(let_pun_behavior = Let_pun_behavior.default) pos roots =
-  match enclosing ~let_pun_behavior pos roots with
+let deepest_before ?(let_pun_behavior = Let_pun_behavior.default)
+    ?(record_pattern_pun_behavior = Record_pattern_pun_behavior.default) pos
+    roots =
+  match enclosing ~let_pun_behavior ~record_pattern_pun_behavior pos roots with
   | [] -> []
   | root ->
     let rec aux path =
@@ -231,7 +261,8 @@ let deepest_before ?(let_pun_behavior = Let_pun_behavior.default) pos roots =
         then
           match acc with
           | Some (_, loc', node')
-            when compare_nodes ~let_pun_behavior pos (node', loc') (node, loc)
+            when compare_nodes ~let_pun_behavior ~record_pattern_pun_behavior
+                   pos (node', loc') (node, loc)
                  |> Node_comparison_result.left_or_neutral -> acc
           | Some _ | None -> Some (env, loc, node)
         else acc
