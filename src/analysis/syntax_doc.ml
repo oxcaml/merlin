@@ -648,7 +648,7 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
   | Jkind_annotation { pjka_desc = Pjk_abbreviation abbrev; _ } :: _ ->
     (* CR-someday: It isn't ideal that this is based on the parsetree, as this will result
        in an incorrect hint in the presence of shadowing. To properly fix, the compiler
-       should introduce a typed jkind into the typedtree. *)
+       should introduce a typed jkind into the typedtree. Internal ticket 6600. *)
     get_jkind_abbrev_doc abbrev.txt
   | Jkind_annotation { pjka_desc = Pjk_mod _; _ } :: _ ->
     Some

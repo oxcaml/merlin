@@ -125,7 +125,9 @@ and core_type type_expr =
         type_exprs
     in
     Typ.poly names @@ core_type type_expr
-  | Tof_kind _jkind -> (* CR modes: this is terrible *) Typ.any None
+  | Tof_kind _jkind ->
+    (* CR modes: this is terrible. Internal ticket 6599 *)
+    Typ.any None
   | Tquote type_expr -> Typ.quote (core_type type_expr)
   | Tsplice type_expr -> Typ.splice (core_type type_expr)
   | Trepr (ty, _) -> (
@@ -155,7 +157,7 @@ and jkind_declaration id { jkind_manifest; jkind_attributes; _ } :
   { pjkind_name = Location.mknoloc (Ident.name id);
     pjkind_manifest =
       Option.map jkind_manifest ~f:(fun _ : Parsetree.jkind_annotation ->
-          (* CR modes: do better here *)
+          (* CR modes: this is terrible. Internal ticket 6599 *)
           { pjka_desc =
               Pjk_abbreviation { txt = Lident "any"; loc = Location.none };
             pjka_loc = Location.none
