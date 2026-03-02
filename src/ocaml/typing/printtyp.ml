@@ -1338,13 +1338,7 @@ let out_jkind_option_of_jkind ~ignore_null env jkind =
   let elide =
     Jkind.is_value_for_printing ~ignore_null env jkind (* C2.1 *)
     || (match desc.base with
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-32
-        | Layout (Sort (Var _)) -> true (* not !Clflags.verbose_types *) (* X1 *)
-||||||| oxcaml/oxcaml:7d714cfb3f1c79c9b1e2a9c40ac60ba0c44cafd7
-        | Layout (Sort (Var _)) -> not !Clflags.verbose_types (* X1 *)
-=======
-        | Layout (Sort (Var _, _)) -> not !Clflags.verbose_types (* X1 *)
->>>>>>> oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
+        | Layout (Sort (Var _, _)) -> true (* not !Clflags.verbose_types *) (* X1 *)
         | _ -> false)
   in
   if elide then None else Some (out_jkind_of_desc env desc)

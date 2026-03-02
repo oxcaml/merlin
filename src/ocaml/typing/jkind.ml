@@ -1789,22 +1789,6 @@ module Const = struct
       | [] -> None
 
     let convert ~(verbosity : Format_verbosity.t) env (jkind : _ t) =
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-32
-||||||| oxcaml/oxcaml:7d714cfb3f1c79c9b1e2a9c40ac60ba0c44cafd7
-      (* For each primitive jkind, we try to print the jkind in terms of it
-         (this is possible if the primitive is a subjkind of it). We then choose
-         the "simplest". The "simplest" is taken to mean the one with the least
-=======
-      let jkind =
-        match verbosity with
-        | Not_verbose -> jkind
-        | Expanded | Expanded_with_all_mod_bounds ->
-          Base_and_axes.fully_expand_aliases_const env jkind
-      in
-      (* For each primitive jkind, we try to print the jkind in terms of it
-         (this is possible if the primitive is a subjkind of it). We then choose
-         the "simplest". The "simplest" is taken to mean the one with the least
->>>>>>> oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
       let jkind =
         match verbosity with
         | Not_verbose -> jkind
