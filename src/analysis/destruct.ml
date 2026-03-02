@@ -620,7 +620,7 @@ module Conv = struct
       in
       match pat.pat_desc with
       | Tpat_or (pa, pb, _) -> mkpat (Ppat_or (loop pa, loop pb))
-      | Tpat_var { name = ({ txt = "*extension*"; _ } as nm); _ } ->
+      | Tpat_var { name = { txt = "*extension*"; _ } as nm; _ } ->
         (* PR#7330 *)
         mkpat (Ppat_var nm)
       | Tpat_any | Tpat_var _ -> mkpat Ppat_any
