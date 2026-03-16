@@ -680,7 +680,8 @@ and of_core_type_desc = function
     of_core_type ct ** of_jkind_annotation_opt jkind
   | Ttyp_variant (rfs, _, _) -> list_fold (fun rf -> app (Row_field rf)) rfs
   | Ttyp_package pt -> app (Package_type pt)
-  | Ttyp_quote ct | Ttyp_splice ct | Ttyp_repr (_, ct) -> of_core_type ct
+  | Ttyp_quote ct | Ttyp_splice ct | Ttyp_repr (_, ct) | Ttyp_newlayout (_, ct)
+    -> of_core_type ct
 
 and of_class_type_desc = function
   | Tcty_constr (_, _, cts) -> list_fold of_core_type cts
