@@ -5948,21 +5948,23 @@ let pat_modes ~force_toplevel rec_mode_var (attrs, spat) =
 let create_merlin_type_error_node loc env ty_expected ~attributes =
     { exp_desc =
         Texp_ident
-          ( Path.Pident (Ident.create_local "*type-error*"),
-            Location.mkloc (Longident.Lident "*type-error*") loc,
-            { Types.
-              val_type = ty_expected;
-              val_kind = Val_reg (Jkind.Sort.new_var ~level:(Ctype.get_current_level ()));
-              val_loc = loc;
-              val_attributes = [];
-              val_uid = Uid.internal_not_actually_unique;
-              val_zero_alloc = Zero_alloc.default;
-              val_modalities = Modality.of_const Modality.Const.id;
-            },
-            Id_value,
-            (Uniqueness.disallow_left Uniqueness.legacy,
-             Linearity.disallow_right Linearity.legacy),
-            Mode.Value.disallow_right Mode.Value.legacy);
+          { path = Path.Pident (Ident.create_local "*type-error*");
+            lid = Location.mkloc (Longident.Lident "*type-error*") loc;
+            desc =
+              { Types.val_type = ty_expected;
+                val_kind =
+                  Val_reg (Jkind.Sort.new_var ~level:(Ctype.get_current_level ()));
+                val_loc = loc;
+                val_attributes = [];
+                val_uid = Uid.internal_not_actually_unique;
+                val_zero_alloc = Zero_alloc.default;
+                val_modalities = Modality.of_const Modality.Const.id
+              };
+            kind = Id_value;
+            unique_use = (Uniqueness.disallow_left Uniqueness.legacy,
+             Linearity.disallow_right Linearity.legacy);
+            mode = Mode.Value.disallow_right Mode.Value.legacy
+          };
       exp_loc = loc;
       exp_extra = [];
       exp_type = ty_expected;

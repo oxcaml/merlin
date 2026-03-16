@@ -963,7 +963,7 @@ let bindop_path { bop_op_name; bop_op_path } =
 let expression_paths { Typedtree.exp_desc; exp_extra; _ } =
   let init =
     match exp_desc with
-    | Texp_ident (path, loc, _, _, _, _) -> [ (reloc path loc, Some loc.txt) ]
+    | Texp_ident { path; lid = loc; _ } -> [ (reloc path loc, Some loc.txt) ]
     | Texp_letop { let_; ands } ->
       bindop_path let_ :: List.map ~f:bindop_path ands
     | Texp_new (path, loc, _, _) -> [ (reloc path loc, Some loc.txt) ]
