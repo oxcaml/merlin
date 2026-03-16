@@ -207,7 +207,7 @@ module type Axis = sig
 
   (** Compare two axes in implication order. If A implies B, then A is before B.
   *)
-  val compare : 'a t -> 'b t -> int
+  val compare : 'a t -> 'b t -> ('a, 'b) Misc.comparison
 
   type packed = P : 'a t -> packed
 
@@ -530,7 +530,13 @@ module type S = sig
 
     val print : Fmt.formatter -> ('p, 'r) t -> unit
 
+<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
     val eq : ('p, 'r0) t -> ('p, 'r1) t -> ('r0, 'r1) Misc_stdlib.eq option
+||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
+    val eq : ('p, 'r0) t -> ('p, 'r1) t -> ('r0, 'r1) Misc.eq option
+=======
+    val equal : ('p, 'r0) t -> ('p, 'r1) t -> ('r0, 'r1) Misc.eq option
+>>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
   end
 
   module type Mode := sig
@@ -580,8 +586,8 @@ module type S = sig
       (** Represents a mode axis in this product whose constant is ['a], and
           whose allowance is ['d1] given the product's allowance ['d0]. *)
       type 'a t =
-        | Monadic : 'a Monadic.Axis.t -> 'a t
         | Comonadic : 'a Comonadic.Axis.t -> 'a t
+        | Monadic : 'a Monadic.Axis.t -> 'a t
 
       include Axis with type 'a t := 'a t
     end
