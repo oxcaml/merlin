@@ -418,7 +418,7 @@ let check_recmod_decls env decls =
   let recmod_ids = List.map fst decls in
   List.iter
     (fun (id, md) ->
-      let { types; jkinds } =
+      let { Mtype.types; jkinds } =
         Mtype.type_and_jkind_paths env (Pident id) md.Types.md_type
       in
       List.iter
