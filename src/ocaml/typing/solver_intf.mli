@@ -47,15 +47,9 @@ module type Lattices = sig
 
   val print : 'a obj -> Fmt.formatter -> 'a elt -> unit
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
-  val eq_obj : 'a obj -> 'b obj -> ('a, 'b) Misc_stdlib.eq option
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-  val eq_obj : 'a obj -> 'b obj -> ('a, 'b) Misc.eq option
-=======
-  val equal_obj : 'a obj -> 'b obj -> ('a, 'b) Misc.eq option
+  val equal_obj : 'a obj -> 'b obj -> ('a, 'b) Misc_stdlib.eq option
 
-  val compare_obj : 'a obj -> 'b obj -> ('a, 'b) Misc.comparison
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
+  val compare_obj : 'a obj -> 'b obj -> ('a, 'b) Misc_stdlib.comparison
 
   val print_obj : Fmt.formatter -> 'a obj -> unit
 end
@@ -172,7 +166,7 @@ module type Lattices_mono = sig
     'b obj ->
     ('a0, 'b, 'd0) morph ->
     ('a1, 'b, 'd1) morph ->
-    ('a0, 'a1) Misc.comparison
+    ('a0, 'a1) Misc_stdlib.comparison
 
   (** Print morphism *)
   val print_morph : 'b obj -> Fmt.formatter -> ('a, 'b, 'd) morph -> unit

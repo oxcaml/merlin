@@ -1094,23 +1094,6 @@ let merloc startpos ?endpos x =
 %token DOWNTO [@symbol "downto"]
 %token ELSE [@symbol "else"]
 %token END [@symbol "end"]
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-%token HASH_SUFFIX            "# "
-%token <string> HASHOP        "##" (* just an example *)
-%token SIG                    "sig"
-%token STACK                  "stack_"
-%token STAR                   "*"
-%token <string * Location.t * string option>
-=======
-%token HASH_SUFFIX            "# "
-%token <string> HASHOP        "##" (* just an example *)
-%token SIG                    "sig"
-%token LAYOUT                 "layout_"
-%token STACK                  "stack_"
-%token STAR                   "*"
-%token <string * Location.t * string option>
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
 %token EOF
 %token EQUAL [@symbol "="]
 %token EXCEPTION [@symbol "exception"]
@@ -1211,6 +1194,7 @@ let merloc startpos ?endpos x =
 %token HASH_SUFFIX [@symbol "# "]
 %token <string> HASHOP [@cost 2] [@recovery ""][@printer Printf.sprintf "HASHOP(%S)"] [@symbol "#<op>"]
 %token SIG [@symbol "sig"]
+%token LAYOUT [@symbol "layout_"]
 %token STACK [@symbol "stack_"]
 %token STAR [@symbol "*"]
 %token <string * Location.t * string option> STRING "\"hello\"" [@cost 1] [@recovery ("", Location.none, None)][@printer string_of_STRING]
@@ -3267,33 +3251,7 @@ block_access:
       | _ ->
         raise Syntaxerr.(Error(Block_access_bad_paren(make_loc $loc(_p))))
     }
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
-  | DOTOP ident _p=LPAREN i=seq_expr RPAREN
-    {
-      match $1, $2 with
-      | ":", "L" -> Baccess_array (Immutable, Index_unboxed_int64, i)
-      | ":", "l" -> Baccess_array (Immutable, Index_unboxed_int32, i)
-      | ":", "S" -> Baccess_array (Immutable, Index_unboxed_int16, i)
-      | ":", "s" -> Baccess_array (Immutable, Index_unboxed_int8, i)
-      | ":", "n" -> Baccess_array (Immutable, Index_unboxed_nativeint, i)
-      | _ ->
-        raise Syntaxerr.(Error(Block_access_bad_paren(make_loc $loc(_p))))
-    }
   (*
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-  | DOTOP ident _p=LPAREN i=seq_expr RPAREN
-    {
-      match $1, $2 with
-      | ":", "L" -> Baccess_array (Immutable, Index_unboxed_int64, i)
-      | ":", "l" -> Baccess_array (Immutable, Index_unboxed_int32, i)
-      | ":", "S" -> Baccess_array (Immutable, Index_unboxed_int16, i)
-      | ":", "s" -> Baccess_array (Immutable, Index_unboxed_int8, i)
-      | ":", "n" -> Baccess_array (Immutable, Index_unboxed_nativeint, i)
-      | _ ->
-        raise Syntaxerr.(Error(Block_access_bad_paren(make_loc $loc(_p))))
-    }
-=======
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
   | DOT ident _p=LPAREN seq_expr _e=error
     { indexop_unclosed_error $loc(_p) Paren $loc(_e) }
   *)

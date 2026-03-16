@@ -236,18 +236,6 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Void ->
     (*= raise (Error (loc, Unsupported_void_in_array)) *)
     Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_scannable_product_element_kind: Univar"
-=======
-    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_scannable_product_element_kind: Univar"
-  | Genvar _ ->
-    Misc.fatal_error "sort_to_scannable_product_element_kind: Genvar"
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
 
 let array_type_kind ~elt_sort ~elt_ty env loc ty =
   match scrape_poly env ty with
@@ -270,18 +258,6 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
            and because it could be potentially confusing that there is a second
            source of information used to determine array type kinds (in addition
            to the type kind of the array parameter). See PR #4098.
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_ignorable_product_element_kind: Univar"
-=======
-  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
-  | Univar _ ->
-    Misc.fatal_error "sort_to_ignorable_product_element_kind: Univar"
-  | Genvar _ ->
-    Misc.fatal_error "sort_to_ignorable_product_element_kind: Genvar"
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
 
            Using its jkind to determine a non-value array kind would also only
            be useful for explicit user-written primitives. In other cases where

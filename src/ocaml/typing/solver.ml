@@ -17,38 +17,12 @@ open Allowance
 open Solver_intf
 module Fmt = Format_doc
 
-<<<<<<< janestreet/merlin-jst:merge-5.2.0minus-34
 module Misc = struct
   include Misc
   module Stdlib = Misc_stdlib
   include Misc_stdlib
 end
 
-module Magic_equal (X : Equal) :
-  Equal with type ('a, 'b, 'c) t = ('a, 'b, 'c) X.t = struct
-  type ('a, 'b, 'd) t = ('a, 'b, 'd) X.t
-
-  let equal : type a0 a1 b l0 l1 r0 r1.
-      (a0, b, l0 * r0) t -> (a1, b, l1 * r1) t -> (a0, a1) Misc.eq option =
-   fun x0 x1 ->
-    if Obj.repr x0 = Obj.repr x1 then Some (Obj.magic Misc.Refl) else None
-end
-[@@inline]
-
-||||||| oxcaml/oxcaml:812c76936172290b78e344649081313b9f0d48b2
-module Magic_equal (X : Equal) :
-  Equal with type ('a, 'b, 'c) t = ('a, 'b, 'c) X.t = struct
-  type ('a, 'b, 'd) t = ('a, 'b, 'd) X.t
-
-  let equal : type a0 a1 b l0 l1 r0 r1.
-      (a0, b, l0 * r0) t -> (a1, b, l1 * r1) t -> (a0, a1) Misc.eq option =
-   fun x0 x1 ->
-    if Obj.repr x0 = Obj.repr x1 then Some (Obj.magic Misc.Refl) else None
-end
-[@@inline]
-
-=======
->>>>>>> oxcaml/oxcaml:c7fb58867d3810c3341ff1b3fdba02d12cc76d3e
 module Solver_mono (H : Hint) (C : Lattices_mono) = struct
   type ('a, 'd) hint =
     | Apply :

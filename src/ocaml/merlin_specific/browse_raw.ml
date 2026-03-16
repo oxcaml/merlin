@@ -415,9 +415,6 @@ let of_method_call obj meth loc env (f : _ f0) acc =
 
 let of_block_access = function
   | Baccess_field (_, _) -> id_fold
-  | Baccess_array
-      { mut = _; index_kind = _; index; base_ty = _; elt_ty = _; elt_sort = _ }
-    -> of_expression index
   | Baccess_block (_, exp) -> of_expression exp
 
 let of_unboxed_access = function

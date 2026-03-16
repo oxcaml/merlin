@@ -3,6 +3,13 @@ open Mode
 open Jkind_axis
 module Jkind = Btype.Jkind0
 
+(* Merlin-specific: change some module paths to match the compiler *)
+module Misc = struct
+  include Misc
+  module Stdlib = Misc_stdlib
+  include Misc_stdlib
+end
+
 type 'a modes =
   { mode_modes : 'a;
     mode_desc : Mode.Alloc.atom Location.loc list
