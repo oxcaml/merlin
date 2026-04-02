@@ -1171,4 +1171,9 @@ let get_tracing_probe_payload (payload : Parsetree.payload) =
   in
   Ok { name; name_loc; enabled_at_init; arg }
 
+let get_eval_payload payload =
+  match payload with
+  | PTyp typ -> Ok typ
+  | _ -> Error ()
+
 let has_atomic attrs = has_attribute "atomic" attrs

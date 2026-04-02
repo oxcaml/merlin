@@ -87,12 +87,10 @@ module Mode_axis_pair = struct
     | "yielding" -> comonadic Yielding Yielding
     | "unyielding" -> comonadic Yielding Unyielding
     | "stateless" -> comonadic Statefulness Stateless
-    | "reading" -> comonadic Statefulness Reading
-    | "writing" -> comonadic Statefulness Writing
+    | "observing" -> comonadic Statefulness Observing
     | "stateful" -> comonadic Statefulness Stateful
     | "immutable" -> monadic Visibility Immutable
     | "read" -> monadic Visibility Read
-    | "write" -> monadic Visibility Write
     | "read_write" -> monadic Visibility Read_write
     | "static" -> monadic Staticity Static
     | "dynamic" -> monadic Staticity Dynamic
@@ -233,15 +231,15 @@ let implied_modalities (Atom (ax, a) : Modality.atom) : Modality.atom list =
       match a with
       | Immutable -> Contended
       | Read -> Shared
-      | Read_write | Write -> Uncontended
+      | Read_write -> Uncontended
     in
     [Atom (Monadic Contention, Join_const b)]
   | Comonadic Statefulness, Meet_const a ->
     let b : Portability.Const.t =
       match a with
       | Stateless -> Portable
-      | Reading -> Shareable
-      | Stateful | Writing -> Nonportable
+      | Observing -> Shareable
+      | Stateful -> Nonportable
     in
     [Atom (Comonadic Portability, Meet_const b)]
   | _ -> []
@@ -386,7 +384,7 @@ let default_mode_annots (annots : Alloc.Const.Option.t) =
     | (Some _ as c), _ | c, None -> c
     | None, Some Visibility.Const.Immutable -> Some Contention.Const.Contended
     | None, Some Visibility.Const.Read -> Some Contention.Const.Shared
-    | None, Some Visibility.Const.(Read_write | Write) ->
+    | None, Some Visibility.Const.Read_write ->
       Some Contention.Const.Uncontended
   in
   (* Likewise for [portability]. *)
@@ -394,8 +392,9 @@ let default_mode_annots (annots : Alloc.Const.Option.t) =
     match annots.portability, annots.statefulness with
     | (Some _ as p), _ | p, None -> p
     | None, Some Statefulness.Const.Stateless -> Some Portability.Const.Portable
-    | None, Some Statefulness.Const.Reading -> Some Portability.Const.Shareable
-    | None, Some Statefulness.Const.(Stateful | Writing) ->
+    | None, Some Statefulness.Const.Observing ->
+      Some Portability.Const.Shareable
+    | None, Some Statefulness.Const.Stateful ->
       Some Portability.Const.Nonportable
   in
   { annots with forkable; yielding; contention; portability }
@@ -679,27 +678,6 @@ let sort_dedup_modalities modalities =
   |> sort_dedup_modalities ~warn:false
 
 let untransl_modalities t = List.map untransl_modality t.moda_desc
-
-let transl_with_bound_modifiers annots =
-  let modal_annots, externality =
-    List.fold_left
-      (fun (modal_annots, externality)
-           ({ txt = Parsetree.Modality modality; loc } as annot) ->
-        match Modifier_axis_pair.of_string modality with
-        | P (Modal _, _) -> annot :: modal_annots, externality
-        | P (Nonmodal Externality, (value : Externality.t)) ->
-          modal_annots, Some value
-        | P (Nonmodal (Nullability | Separability), _) ->
-          raise (Error (loc, Unrecognized_modifier (Modality, modality)))
-        | exception Not_found ->
-          raise (Error (loc, Unrecognized_modifier (Modality, modality))))
-      ([], None) annots
-  in
-  let modality =
-    (transl_modalities ~maturity:Stable Immutable (List.rev modal_annots))
-      .moda_modalities
-  in
-  modality, externality
 
 let transl_alloc_mode annots =
   let { mode_modes = opt_modes; mode_desc = annots } =

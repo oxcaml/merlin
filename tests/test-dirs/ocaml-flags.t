@@ -76,8 +76,6 @@ logic.
   -no-keep-locs
   -labels
   -linkall
-  -requires-metaprogramming
-  -uses-metaprogramming
   -llvm-backend
   -make-runtime
   -make_runtime

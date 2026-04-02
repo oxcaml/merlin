@@ -524,10 +524,6 @@ and pattern : type k . _ -> _ -> k general_pattern -> unit = fun i ppf x ->
       line i ppf "Tpat_or\n";
       pattern i ppf p1;
       pattern i ppf p2;
-  | Tpat_fun_layout { id = s; sort; mode = m; _ } ->
-      line i ppf "Tpat_fun_layout \"%a\"\n" fmt_ident s;
-      line i ppf "sort %a\n" fmt_sort sort;
-      value_mode i ppf m
 
 and labeled_pattern : type k . _ -> _ -> string option * k general_pattern -> unit =
   fun i ppf (label, x) ->
@@ -858,6 +854,9 @@ and expression i ppf x =
   | Texp_antiquotation e ->
     line i ppf "Texp_antiquotation";
     expression i ppf e
+  | Texp_eval (typ, _) ->
+    line i ppf "Texp_eval";
+    core_type i ppf typ;
 
 and value_description i ppf x =
   line i ppf "value_description %a %a\n" fmt_ident x.val_id fmt_location

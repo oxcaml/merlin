@@ -30,7 +30,7 @@ module Pat = struct
         { id = Ident.create_local str.Asttypes.txt;
           name = str;
           uid;
-          sort = Var sort;
+          sort;
           mode
         }
     in
