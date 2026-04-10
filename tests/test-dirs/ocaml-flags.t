@@ -44,48 +44,6 @@ Merlin handle it or add it to the list of ignored flags.
   > EOF
   >   fi
   > }
-  Unhandled flag: -clambda-checks
-  Unhandled flag: -dasm-comments
-  Unhandled flag: -dcfg
-  Unhandled flag: -dcfg-invariants
-  Unhandled flag: -dcmm-invariants
-  Unhandled flag: -ddebug-available-regs
-  Unhandled flag: -debug-long-frames-threshold
-  Unhandled flag: -dfexpr
-  Unhandled flag: -dflambda-invariants
-  Unhandled flag: -dflow
-  Unhandled flag: -dfreshen
-  Unhandled flag: -dno-asm-comments
-  Unhandled flag: -drawfexpr
-  Unhandled flag: -dslot-offsets
-  Unhandled flag: -dump-inlining-paths
-  Unhandled flag: -enable-poll-insertion
-  Unhandled flag: -flambda2-expert-max-function-simplify-run
-  Unhandled flag: -fno-asan
-  Unhandled flag: -fno-trap-notes
-  Unhandled flag: -ftrap-notes
-  Unhandled flag: -function-sections
-  Unhandled flag: -gdwarf-may-alter-codegen-experimental
-  Unhandled flag: -gno-dwarf-may-alter-codegen-experimental
-  Unhandled flag: -gno-startup
-  Unhandled flag: -gstartup
-  Unhandled flag: -gupstream-dwarf
-  Unhandled flag: -insn-sched
-  Unhandled flag: -internal-assembler
-  Unhandled flag: -llvm-flags
-  Unhandled flag: -long-frames
-  Unhandled flag: -no-insn-sched
-  Unhandled flag: -no-long-frames
-  Unhandled flag: -no-unbox-free-vars-of-closures
-  Unhandled flag: -reaper-preserve-direct-calls
-  Unhandled flag: -save-ir-after
-  Unhandled flag: -verify-binary-emitter
-  A flag has been added to the compiler, and Merlin must known how to handle it. If the
-  flag is relevant to Merlin, Merlin should be updated to parse and use it. If not
-  (which is the usual case, especially for backend flags), Merlin needs to be told to
-  ignore the flag. Do this by adding it to either `ocaml_ignored_flags` or
-  `ocaml_ignored_parametrized_flags` in src/kernel/mconfig.ml, depending on whether
-  the flag takes a parameter.
 
 This list is printed to ensure that a change to the help text does not break the parsing
 logic.
