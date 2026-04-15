@@ -37,7 +37,6 @@ type error =
 [@@warning "-37"]
 
 exception Error of Location.t * error
-[@@warning "-38"]
 
 (* Expand a type, looking through ordinary synonyms, private synonyms, links,
    and [@@unboxed] types. The returned type will be therefore be none of these
@@ -113,10 +112,10 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
    sort info, or do something else. Internal ticket 5093. *)
 (* CR layouts v3.0: have a better error message
    for nullable jkinds.*)
-let type_sort ~why env _loc ty =
+let type_sort ~why env loc ty =
   match Ctype.type_sort ~why ~fixed:false env ty with
   | Ok sort -> sort
-  | Error _err -> Misc.fatal_error "merlin-jst: a representable layout is required here"
+  | Error err -> raise (Error (loc, Not_a_sort (env, ty, err)))
 
 (* [classification]s are used for two things: things in arrays, and things in
    lazys. In the former case, we need detailed information about unboxed
@@ -320,7 +319,7 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Unboxed_vector v -> Punboxedvectorarray v
   | Product c -> c
   | Void ->
-    Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
+    raise (Error (loc, Unsupported_void_in_array))
 
 let array_type_kind ~elt_sort ~elt_ty env loc ty =
   match scrape_poly env ty with
@@ -335,7 +334,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
       let rhs = Jkind.Builtin.value ~why:Array_type_kind in
       begin match Ctype.constrain_type_jkind env elt_ty rhs with
       | Ok _ -> Pgenarray
-      | Error _e ->
+      | Error e ->
         (* CR layouts v4: rather than constraining [elt_ty]'s jkind to be value,
            we could instead use its jkind to determine a non-value array kind.
 
@@ -349,10 +348,18 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
            we compute an array kind (array matching, array comprehension),
            [elt_ty] is [None].
         *)
-        Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
+        raise (Error(loc,
+          Opaque_array_non_value {
+            array_type = ty;
+            elt_kinding_failure = Some (env, elt_ty, e);
+          }))
       end
     | None ->
-      Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
+      raise (Error(loc,
+        Opaque_array_non_value {
+          array_type = ty;
+          elt_kinding_failure = None;
+        }))
     end
 
 (*
@@ -1176,10 +1183,11 @@ let function_arg_layout env loc sort ty =
 
 (** Whether a forward block is needed for a lazy thunk on a value, i.e.
     if the value can be represented as a float/forward/lazy *)
-let lazy_val_requires_forward env _loc ty =
+let lazy_val_requires_forward env loc ty =
   let sort = Jkind.Sort.Const.for_lazy_body in
-  let classify_product _ _sorts =
-    Misc.fatal_error "merlin-jst: product kind encountered in lazy_val_requires_forward"
+  let classify_product _ sorts =
+    let kind = Jkind.Sort.Const.Product sorts in
+    raise (Error (loc, Unsupported_product_in_lazy kind))
   in
   match classify ~classify_product env ty sort with
   | Any | Lazy -> true
