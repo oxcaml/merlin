@@ -20,6 +20,25 @@ open Types
 open Typedtree
 open Lambda
 
+type error =
+    Non_value_layout of Env.t * type_expr * Jkind.Violation.t option
+  | Sort_without_extension of
+      Jkind.Sort.t * Language_extension.maturity * type_expr option
+  | Small_number_sort_without_extension of Jkind.Sort.t * type_expr option
+  | Simd_sort_without_extension of Jkind.Sort.t * type_expr option
+  | Not_a_sort of Env.t * type_expr * Jkind.Violation.t
+  | Unsupported_product_in_lazy of Jkind.Sort.Const.t
+  | Unsupported_vector_in_product_array
+  | Mixed_product_array of Jkind.Sort.Const.t * type_expr
+  | Unsupported_void_in_array
+  | Opaque_array_non_value of
+      { array_type: type_expr;
+        elt_kinding_failure: (Env.t * type_expr * Jkind.Violation.t) option }
+[@@warning "-37"]
+
+exception Error of Location.t * error
+[@@warning "-38"]
+
 (* Expand a type, looking through ordinary synonyms, private synonyms, links,
    and [@@unboxed] types. The returned type will be therefore be none of these
    cases (except in case of missing cmis).
@@ -97,7 +116,7 @@ let maybe_pointer exp = maybe_pointer_type exp.exp_env exp.exp_type
 let type_sort ~why env _loc ty =
   match Ctype.type_sort ~why ~fixed:false env ty with
   | Ok sort -> sort
-  | Error _ -> Misc.fatal_error "merlin-jst: a representable layout is required here"
+  | Error _err -> Misc.fatal_error "merlin-jst: a representable layout is required here"
 
 (* [classification]s are used for two things: things in arrays, and things in
    lazys. In the former case, we need detailed information about unboxed
@@ -207,6 +226,62 @@ let classify ~classify_product env ty sort : _ classification =
   | Univar _ -> Misc.fatal_error "classify: Univar"
   | Genvar _ -> Misc.fatal_error "classify: Genvar"
 
+(*
+let rec scannable_product_array_kind elt_ty_for_error loc sorts =
+  List.map (sort_to_scannable_product_element_kind elt_ty_for_error loc) sorts
+
+and sort_to_scannable_product_element_kind elt_ty_for_error loc
+      (s : Jkind.Sort.Const.t) =
+  (* Unfortunate: this never returns `Pint_scannable`.  Doing so would require
+     this to traverse the type, rather than just the kind, or to add product
+     kinds. *)
+  match s with
+  | Base Value -> Paddr_scannable
+  | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
+          Untagged_immediate | Vec128 | Vec256 | Vec512) as c ->
+    raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
+  | Base Void ->
+    raise (Error (loc, Unsupported_void_in_array))
+  | Product sorts ->
+    Pproduct_scannable (scannable_product_array_kind elt_ty_for_error loc sorts)
+  | Univar _ ->
+    Misc.fatal_error "sort_to_scannable_product_element_kind: Univar"
+  | Genvar _ ->
+    Misc.fatal_error "sort_to_scannable_product_element_kind: Genvar"
+
+let rec ignorable_product_array_kind loc (sorts : Jkind.Sort.Const.t list) =
+  match sorts with
+  | [Base Vec128; Base Vec128] ->
+    [ Punboxedvector_ignorable Unboxed_vec128;
+      Punboxedvector_ignorable Unboxed_vec128 ]
+  | [Base Vec128; Base Vec128; Base Vec128; Base Vec128] ->
+    [ Punboxedvector_ignorable Unboxed_vec128;
+      Punboxedvector_ignorable Unboxed_vec128;
+      Punboxedvector_ignorable Unboxed_vec128;
+      Punboxedvector_ignorable Unboxed_vec128 ]
+  | _ -> List.map (sort_to_ignorable_product_element_kind loc) sorts
+
+and sort_to_ignorable_product_element_kind loc (s : Jkind.Sort.Const.t) =
+  match s with
+  | Base Value -> Pint_ignorable
+  | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
+  | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
+  | Base Bits8 -> Punboxedoruntaggedint_ignorable Untagged_int8
+  | Base Bits16 -> Punboxedoruntaggedint_ignorable Untagged_int16
+  | Base Bits32 -> Punboxedoruntaggedint_ignorable Unboxed_int32
+  | Base Bits64 -> Punboxedoruntaggedint_ignorable Unboxed_int64
+  | Base Word -> Punboxedoruntaggedint_ignorable Unboxed_nativeint
+  | Base Untagged_immediate -> Punboxedoruntaggedint_ignorable Untagged_int
+  | Base (Vec128 | Vec256 | Vec512) ->
+    raise (Error (loc, Unsupported_vector_in_product_array))
+  | Base Void -> raise (Error (loc, Unsupported_void_in_array))
+  | Product sorts -> Pproduct_ignorable (ignorable_product_array_kind loc sorts)
+  | Univar _ ->
+    Misc.fatal_error "sort_to_ignorable_product_element_kind: Univar"
+  | Genvar _ ->
+    Misc.fatal_error "sort_to_ignorable_product_element_kind: Genvar"
+*)
+
 let array_kind_of_elt ~elt_sort env loc ty =
   let elt_sort =
     match elt_sort with
@@ -215,15 +290,21 @@ let array_kind_of_elt ~elt_sort env loc ty =
       Jkind.Sort.default_for_transl_and_get
         (type_sort ~why:Array_element env loc ty)
   in
-  (* let elt_ty_for_error = ty in (* report the un-scraped ty in errors *) *)
+  let _elt_ty_for_error = ty in (* report the un-scraped ty in errors *)
   let classify_product ty _sorts =
     if Ctype.is_always_gc_ignorable env ty then
       Pgcignorableproductarray ()
     else
       Pgcscannableproductarray ()
   in
+  (* CR dkalinichenko: many checks in [classify] are redundant
+     with separability. *)
   match classify ~classify_product env ty elt_sort with
-  | Any -> if Config.flat_float_array then Pgenarray else Paddrarray
+  | Any ->
+    if Config.flat_float_array
+      && not (Ctype.check_type_separability env ty Non_float)
+    then Pgenarray
+    else Paddrarray
   | Float -> if Config.flat_float_array then Pfloatarray else Paddrarray
   | Addr | Lazy -> Paddrarray
   | Immediate -> Pintarray
@@ -239,7 +320,6 @@ let array_kind_of_elt ~elt_sort env loc ty =
   | Unboxed_vector v -> Punboxedvectorarray v
   | Product c -> c
   | Void ->
-    (*= raise (Error (loc, Unsupported_void_in_array)) *)
     Misc.fatal_error "merlin-jst: void kind encountered in array_kind_of_elt"
 
 let array_type_kind ~elt_sort ~elt_ty env loc ty =
@@ -255,7 +335,7 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
       let rhs = Jkind.Builtin.value ~why:Array_type_kind in
       begin match Ctype.constrain_type_jkind env elt_ty rhs with
       | Ok _ -> Pgenarray
-      | Error e ->
+      | Error _e ->
         (* CR layouts v4: rather than constraining [elt_ty]'s jkind to be value,
            we could instead use its jkind to determine a non-value array kind.
 
@@ -269,20 +349,9 @@ let array_type_kind ~elt_sort ~elt_ty env loc ty =
            we compute an array kind (array matching, array comprehension),
            [elt_ty] is [None].
         *)
-        (*= raise (Error(loc,
-          Opaque_array_non_value {
-            array_type = ty;
-            elt_kinding_failure = Some (env, elt_ty, e);
-          })) *)
-        ignore e;
         Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
       end
     | None ->
-      (*= raise (Error(loc,
-        Opaque_array_non_value {
-          array_type = ty;
-          elt_kinding_failure = None;
-        })) *)
       Misc.fatal_error "merlin-jst: non-value kind encountered in array_type_kind"
     end
 
@@ -1107,11 +1176,9 @@ let function_arg_layout env loc sort ty =
 
 (** Whether a forward block is needed for a lazy thunk on a value, i.e.
     if the value can be represented as a float/forward/lazy *)
-let lazy_val_requires_forward env (* loc *) ty =
+let lazy_val_requires_forward env _loc ty =
   let sort = Jkind.Sort.Const.for_lazy_body in
   let classify_product _ _sorts =
-    (* let kind = Jkind.Sort.Const.Product sorts in
-    raise (Error (loc, Unsupported_product_in_lazy kind)) *)
     Misc.fatal_error "merlin-jst: product kind encountered in lazy_val_requires_forward"
   in
   match classify ~classify_product env ty sort with
@@ -1146,9 +1213,135 @@ let classify_lazy_argument : Typedtree.expression ->
       (* TODO: handle flat float array, either at configure time or from the
          .merlin. *)
        `Constant_or_function
-    | Texp_ident _ when lazy_val_requires_forward e.exp_env (* e.exp_loc *) e.exp_type ->
+    | Texp_ident _ when lazy_val_requires_forward e.exp_env e.exp_loc e.exp_type ->
        `Identifier `Forward_value
     | Texp_ident _ ->
        `Identifier `Other
     | _ ->
        `Other
+
+(* Error report *)
+open Format_doc
+
+let report_error ppf = function
+  | Non_value_layout (env, ty, err) ->
+      fprintf ppf
+        "Non-value detected in [value_kind].@ Please report this error to \
+         the Jane Street compilers team.";
+      begin match err with
+      | None ->
+        fprintf ppf "@ Could not find cmi for: %a" Printtyp.type_expr ty
+      | Some err ->
+        fprintf ppf "@ %a"
+        (Jkind.Violation.report_with_offender
+           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
+           env) err
+      end
+  | Sort_without_extension (sort, maturity, ty) ->
+      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
+      begin match ty with
+      | None -> ()
+      | Some ty -> fprintf ppf " as sort for type@ %a" Printtyp.type_expr ty
+      end;
+      fprintf ppf
+        ",@ but this requires extension %s, which is not enabled.@ \
+         If you intended to use this layout, please add this flag to your \
+         build file.@ \
+         Otherwise, please report this error to the Jane Street compilers team."
+        (Language_extension.to_command_line_string Layouts maturity)
+  | Small_number_sort_without_extension (sort, ty) ->
+      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
+      begin match ty with
+      | None -> ()
+      | Some ty -> fprintf ppf " as sort for type@ %a" Printtyp.type_expr ty
+      end;
+      let extension, verb, flags =
+        match Language_extension.(is_at_least Layouts Stable),
+              Language_extension.(is_enabled Small_numbers) with
+        | false, true -> " layouts", "is", "this flag"
+        | true, false -> " small_numbers", "is", "this flag"
+        | false, false -> "s layouts and small_numbers", "are", "these flags"
+        | true, true -> assert false
+      in
+      fprintf ppf
+        ",@ but this requires the extension%s, which %s not enabled.@ \
+         If you intended to use this layout, please add %s to your \
+         build file.@ \
+         Otherwise, please report this error to the Jane Street compilers team."
+        extension verb flags
+  | Simd_sort_without_extension (sort, ty) ->
+      fprintf ppf "Non-value layout %a detected" Jkind.Sort.format sort;
+      begin match ty with
+      | None -> ()
+      | Some ty -> fprintf ppf " as sort for type@ %a" Printtyp.type_expr ty
+      end;
+      let extension, verb, flags =
+        match Language_extension.(is_at_least Layouts Stable),
+              Language_extension.(is_at_least SIMD Stable) with
+        | false, true -> " layouts", "is", "this flag"
+        | true, false -> " simd", "is", "this flag"
+        | false, false -> "s layouts and simd", "are", "these flags"
+        | true, true -> assert false
+      in
+      fprintf ppf
+        ",@ but this requires the extension%s, which %s not enabled.@ \
+         If you intended to use this layout, please add %s to your \
+         build file.@ \
+         Otherwise, please report this error to the Jane Street compilers team."
+        extension verb flags
+  | Not_a_sort (env, ty, err) ->
+      fprintf ppf "A representable layout is required here.@ %a"
+        (Jkind.Violation.report_with_offender
+           ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
+           env) err
+  | Unsupported_product_in_lazy const ->
+      fprintf ppf
+        "Product layout %a detected in [lazy] in [Typeopt.Layout]@ \
+         Please report this error to the Jane Street compilers team."
+        Jkind.Sort.Const.format const
+  | Unsupported_vector_in_product_array ->
+      fprintf ppf
+        "Unboxed vector types are not yet supported in arrays of unboxed@ \
+         products."
+  | Unsupported_void_in_array ->
+      fprintf ppf
+        "Types whose layout contains [void] are not yet supported in arrays."
+  | Mixed_product_array (const, elt_ty) ->
+      fprintf ppf
+        "An unboxed product array element must be formed from all@ \
+         external types (which are ignored by the gc) or all gc-scannable \
+         types.@ But this array operation is peformed for an array whose@ \
+         element type is %a, which is an unboxed product@ \
+         that is not external and contains a type with the non-scannable@ \
+         layout %a.@ \
+         @[Hint: if the array contents should not be scanned, annotating@ \
+         contained abstract types as [mod external] may resolve this error.@]"
+        Printtyp.type_expr elt_ty
+        Jkind.Sort.Const.format const
+  | Opaque_array_non_value { array_type; elt_kinding_failure }  ->
+      begin match elt_kinding_failure with
+      | Some (env, ty, err) ->
+        fprintf ppf
+        "This array operation cannot tell whether %a is an array type,@ \
+         possibly because it is abstract. In this case, the element type@ \
+         %a must be a value:@ @\n@[%a@]"
+          Printtyp.type_expr array_type
+          Printtyp.type_expr ty
+          (Jkind.Violation.report_with_offender
+             ~offender:(fun ppf -> Printtyp.type_expr ppf ty)
+             env) err
+      | None ->
+        fprintf ppf
+          "This array operation expects an array type, but %a does not appear@ \
+           to be one.@ (Hint: it is abstract?)"
+          Printtyp.type_expr array_type;
+      end
+
+let () =
+  Location.register_error_of_exn
+    (function
+      | Error (loc, err) ->
+          Some (Location.error_of_printer ~loc report_error err)
+      | _ ->
+        None
+    )
