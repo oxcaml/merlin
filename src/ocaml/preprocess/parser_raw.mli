@@ -446,7 +446,8 @@ module MenhirInterpreter : sig
     | N_reversed_bar_llist_extension_constructor_declaration_ : (Parsetree.extension_constructor list) nonterminal
     | N_reversed_bar_llist_extension_constructor_ : (Parsetree.extension_constructor list) nonterminal
     | N_reversed_bar_llist_constructor_declaration_ : (Parsetree.constructor_declaration list) nonterminal
-    | N_reverse_product_jkind : (Parsetree.jkind_annotation list) nonterminal
+    | N_reverse_product_jkind_gen_jkind_desc_no_with_kinds_ : (Parsetree.jkind_annotation list) nonterminal
+    | N_reverse_product_jkind_gen_jkind_desc_ : (Parsetree.jkind_annotation list) nonterminal
     | N_record_expr_content : (Parsetree.expression option *
   (Longident.t Location.loc * Parsetree.expression) list) nonterminal
     | N_rec_flag : (Asttypes.rec_flag) nonterminal
@@ -572,9 +573,15 @@ module MenhirInterpreter : sig
     | N_label_declarations : (Parsetree.label_declaration list) nonterminal
     | N_label_declaration_semi : (Parsetree.label_declaration) nonterminal
     | N_label_declaration : (Parsetree.label_declaration) nonterminal
+    | N_jkind_desc_no_with_kinds : (Parsetree.jkind_annotation_desc) nonterminal
+    | N_jkind_desc_gen_jkind_desc_no_with_kinds_ : (Parsetree.jkind_annotation_desc) nonterminal
+    | N_jkind_desc_gen_jkind_desc_ : (Parsetree.jkind_annotation_desc) nonterminal
     | N_jkind_desc : (Parsetree.jkind_annotation_desc) nonterminal
     | N_jkind_decl : (Parsetree.jkind_declaration) nonterminal
     | N_jkind_constraint : (Parsetree.jkind_annotation) nonterminal
+    | N_jkind_annotation_no_with_kinds : (Parsetree.jkind_annotation) nonterminal
+    | N_jkind_annotation_gen_jkind_desc_no_with_kinds_ : (Parsetree.jkind_annotation) nonterminal
+    | N_jkind_annotation_gen_jkind_desc_ : (Parsetree.jkind_annotation) nonterminal
     | N_jkind_annotation : (Parsetree.jkind_annotation) nonterminal
     | N_item_extension : (Parsetree.extension) nonterminal
     | N_interface : (Parsetree.signature) nonterminal

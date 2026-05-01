@@ -522,7 +522,7 @@ module Gen = struct
                   val_kind =
                     (* CR-someday: this sort should be based on the jkind of [tyleft]. But
                        this isn't important since this value is just used for printing. *)
-                    Val_reg (Base Value);
+                    Val_reg (Base Scannable);
                   val_lpoly = Lpoly.determined [];
                   val_loc = Location.none;
                   val_attributes = [];

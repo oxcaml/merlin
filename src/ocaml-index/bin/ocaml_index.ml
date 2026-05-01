@@ -59,10 +59,23 @@ let speclist =
       "Aggregate input-indexes shapes and store them in the new index" );
     ( "-I",
       Arg.String
-        (fun arg ->
+        (fun path ->
           build_path_rev :=
-            { !build_path_rev with visible = arg :: !build_path_rev.visible }),
+            { !build_path_rev with
+              visible =
+                { path; cmx_guaranteed = false } :: !build_path_rev.visible
+            }),
       "An extra directory to add to the load path" );
+    ( "-Ix",
+      Arg.String
+        (fun path ->
+          build_path_rev :=
+            { !build_path_rev with
+              visible =
+                { path; cmx_guaranteed = true } :: !build_path_rev.visible
+            }),
+      "An extra directory to add to the load path (Like -I, but indicates that \
+       cmx files for modules in <dir> are always available)" );
     ( "-H",
       Arg.String
         (fun arg ->

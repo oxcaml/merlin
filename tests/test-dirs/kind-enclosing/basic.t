@@ -69,11 +69,11 @@
   > EOF
   1:13-1:16: immediate
   1:13-1:16: immediate
-  1:6-2:5: value mod aliased immutable non_float
+  1:6-2:5: value non_float mod aliased immutable
 
   $ run 2:4 <<EOF
   > let f (foo : int) =
   >   foo
   > EOF
   2:2-2:5: immediate
-  1:6-2:5: value mod aliased immutable non_float
+  1:6-2:5: value non_float mod aliased immutable

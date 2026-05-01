@@ -13,8 +13,8 @@
   > type t = int
   > EOF
   Verbosity 0: immediate
-  Verbosity 1: value mod global many stateless immutable external_ non_float
-  Verbosity 2: value
+  Verbosity 1: value non_pointer mod global many stateless immutable external_
+  Verbosity 2: value non_pointer non_null
     mod global
         many
         stateless
@@ -25,16 +25,14 @@
         portable
         contended
         external_
-        non_null
-        non_float
         static
 
   $ run 1:17 <<EOF
   > type 'a t = 'a option
   > EOF
   Verbosity 0: immutable_data with 'a
-  Verbosity 1: value mod forkable unyielding many stateless immutable non_float with 'a
-  Verbosity 2: value
+  Verbosity 1: value non_float mod forkable unyielding many stateless immutable with 'a
+  Verbosity 2: value non_float non_null
     mod forkable
         unyielding
         many
@@ -42,8 +40,6 @@
         immutable
         portable
         contended
-        non_null
-        non_float
         local
         unique
         static
@@ -55,8 +51,8 @@
   > type t2 = Foo of int t1
   > EOF
   Verbosity 0: immutable_data with int t1
-  Verbosity 1: value mod forkable unyielding many stateless immutable non_float with int t1
-  Verbosity 2: value
+  Verbosity 1: value non_float mod forkable unyielding many stateless immutable with int t1
+  Verbosity 2: value non_float non_null
     mod forkable
         unyielding
         many
@@ -64,8 +60,6 @@
         immutable
         portable
         contended
-        non_null
-        non_float
         local
         unique
         static
@@ -76,10 +70,8 @@
   > type t : value mod portable
   > EOF
   Verbosity 0: value mod portable
-  Verbosity 1: value
+  Verbosity 1: value separable non_null
     mod portable
-        non_null
-        separable
         local
         unforkable
         yielding
@@ -90,10 +82,8 @@
         uncontended
         static
         internal
-  Verbosity 2: value
+  Verbosity 2: value separable non_null
     mod portable
-        non_null
-        separable
         local
         unforkable
         yielding
@@ -109,11 +99,9 @@
   > type t : value mod stateless
   > EOF
   Verbosity 0: value mod stateless
-  Verbosity 1: value
+  Verbosity 1: value separable non_null
     mod stateless
         portable
-        non_null
-        separable
         local
         unforkable
         yielding
@@ -123,11 +111,9 @@
         uncontended
         static
         internal
-  Verbosity 2: value
+  Verbosity 2: value separable non_null
     mod stateless
         portable
-        non_null
-        separable
         local
         unforkable
         yielding

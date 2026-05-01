@@ -1,5 +1,9 @@
 type profile_column = [ `Time | `Alloc | `Top_heap | `Abs_top_heap | `Counters ]
 type shape_format = Old_merlin | Debugging_shapes
+type visible_include =
+  { path : string;
+    cmx_guaranteed : bool;
+  }
 
 (** {0 OCaml compiler compatible command-line parameters}
 
@@ -10,7 +14,7 @@ type shape_format = Old_merlin | Debugging_shapes
 (** {1 Relevant settings}
     Parameters from OCaml compiler which affect Merlin behavior. *)
 val cmi_file             : string option ref
-val include_dirs         : string list ref
+val include_dirs         : visible_include list ref
 val hidden_include_dirs  : string list ref
 val include_paths_files : string list ref
 val hidden_include_paths_files : string list ref
@@ -32,6 +36,7 @@ val zero_alloc_check     : Zero_alloc_annotations.Check.t ref
 val zero_alloc_assert    : Zero_alloc_annotations.Assert.t ref
 val infer_with_bounds    : bool ref
 val kind_verbosity : int ref
+val ikinds : bool ref
 
 (** {1 Dummy values}
     Ignored by merlin but kept for compatibility with upstream code. *)
@@ -58,3 +63,4 @@ val gdwarf_config_max_type_to_shape_depth : int option ref
 val gdwarf_config_max_evaluation_steps_per_variable : int option ref
 val locs : bool ref
 val locations            : bool ref
+val ikinds_debug : bool ref

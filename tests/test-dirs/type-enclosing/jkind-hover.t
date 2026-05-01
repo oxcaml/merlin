@@ -50,7 +50,7 @@ Test that hovering over jkind annotations shows their full expansion.
   $ hover 1 14 1
   type t1 : immutable_data
                 ^
-  "immutable_data" : "value mod forkable unyielding many stateless immutable non_float"
+  "immutable_data" : "value non_float mod forkable unyielding many stateless immutable"
 
   $ hover 2 11 2
   type t2 : value mod portable
@@ -61,7 +61,7 @@ Test that hovering over jkind annotations shows their full expansion.
   $ hover 3 16 1
   type ('a : immediate) t3 : value
                   ^
-  "immediate)" : "value mod global many stateless immutable external_ non_float"
+  "immediate)" : "value non_pointer mod global many stateless immutable external_"
 
   $ hover 3 28 2
   type ('a : immediate) t3 : value
@@ -73,8 +73,8 @@ Test that hovering over jkind annotations shows their full expansion.
   $ hover 4 20 3
   type 'a t4 : immutable_data mod global with 'a
                       ^
-  "immutable_data " : "value mod forkable unyielding many stateless immutable non_float"
-  "immutable_data mod global " : "value mod global many stateless immutable non_float"
+  "immutable_data " : "value non_float mod forkable unyielding many stateless immutable"
+  "immutable_data mod global " : "value non_float mod global many stateless immutable"
   "type 'a t4 : immutable_data mod global with 'a" : "type 'a t4 : immutable_data mod global unforkable yielding with 'a"
 
   $ hover 5 11 2
@@ -86,28 +86,28 @@ Test that hovering over jkind annotations shows their full expansion.
   $ hover 6 11 1
   type t6 : bits32
              ^
-  "bits32" : "bits32 mod external_ non_float"
+  "bits32" : "bits32 mod external_"
 
   $ hover 7 11 2
   type t7 : bits32 mod portable contended
              ^
-  "bits32 " : "bits32 mod external_ non_float"
-  "bits32 mod portable contended" : "bits32 mod portable contended external_ non_float"
+  "bits32 " : "bits32 mod external_"
+  "bits32 mod portable contended" : "bits32 mod portable contended external_"
 
   $ hover 8 11 1
   type t8 : void
              ^
-  "void" : "void mod external_ non_float"
+  "void" : "void mod external_"
 
   $ hover 10 18 1
     val f : ('a : immediate). 'a -> 'a
                     ^
-  "immediate)" : "value mod global many stateless immutable external_ non_float"
+  "immediate)" : "value non_pointer mod global many stateless immutable external_"
 
   $ hover 11 18 1
     val g : ('b : bits32) -> ('b : value mod portable)
                     ^
-  "bits32)" : "bits32 mod external_ non_float"
+  "bits32)" : "bits32 mod external_"
 
 # CR-someday: This is failing because of poor error recovery.
   $ hover 11 35 2

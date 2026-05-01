@@ -139,7 +139,7 @@ let classify_node = function
   | Mode _ | Modality _ | Mod_bound _ ->
     (* CR modes: Have proper completion for modes and modalities *)
     `Expression
-  | Jkind_annotation _ | Jkind_declaration _ ->
+  | Jkind_annotation _ | Jkind_declaration _ | Scannable_axis_annotation _ ->
     (* CR modes: Have proper completion for jkinds *)
     `Type
   | Attribute _ ->

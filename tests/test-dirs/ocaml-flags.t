@@ -128,7 +128,6 @@ logic.
   -dflambda-let
   -dflambda-no-invariants
   -dflambda-verbose
-  -dflexpect-to
   -dflow
   -dfreshen
   -dgc-timings
@@ -291,6 +290,8 @@ logic.
   -heap-reduction-threshold
   -help
   -i
+  -ikinds
+  -ikinds-debug
   -impl
   -inline
   -inline-alloc-cost
@@ -443,6 +444,7 @@ logic.
   -strict-sequence
   -symbol-visibility-protected
   -thread
+  -thunkify-compilation-unit-initialization
   -unbox-closures
   -unbox-closures-factor
   -unboxed-types

@@ -70,7 +70,8 @@ let setup_reader_config config =
   zero_alloc_check := ocaml.zero_alloc_check;
   zero_alloc_assert := ocaml.zero_alloc_assert;
   infer_with_bounds := ocaml.infer_with_bounds;
-  kind_verbosity := ocaml.kind_verbosity
+  kind_verbosity := ocaml.kind_verbosity;
+  ikinds := ocaml.ikinds
 
 let init_params params =
   List.iter params ~f:(fun s ->
@@ -78,7 +79,12 @@ let init_params params =
 
 let setup_typer_config config =
   setup_reader_config config;
-  let visible = Mconfig.build_path config in
+  let visible =
+    Mconfig.build_path config
+    |> List.map ~f:(fun path : Clflags.visible_include ->
+        (* [cmx_guaranteed] isn't relevant to Merlin, so we can fill in a bogus value *)
+        { path; cmx_guaranteed = false })
+  in
   let hidden = Mconfig.hidden_build_path config in
   Load_path.(init ~auto_include:no_auto_include ~visible ~hidden);
   init_params config.ocaml.parameters

@@ -5,7 +5,7 @@ open Std
 let { Logger.log } = Logger.for_section "Mconfig"
 
 type ocaml =
-  { include_dirs : string list;
+  { include_dirs : Clflags.visible_include list;
     hidden_dirs : string list;
     no_std_include : bool;
     unsafe : bool;
@@ -29,7 +29,8 @@ type ocaml =
     zero_alloc_check : Zero_alloc_annotations.Check.t;
     zero_alloc_assert : Zero_alloc_annotations.Assert.t;
     infer_with_bounds : bool;
-    kind_verbosity : int
+    kind_verbosity : int;
+    ikinds : bool
   }
 
 let dump_warnings st =
@@ -37,9 +38,12 @@ let dump_warnings st =
   Warnings.restore st;
   Misc.try_finally Warnings.dump ~always:(fun () -> Warnings.restore st')
 
+let dump_visible_include ({ path; cmx_guaranteed } : Clflags.visible_include) =
+  `Assoc [ ("path", `String path); ("cmx_guaranteed", `Bool cmx_guaranteed) ]
+
 let dump_ocaml x =
   `Assoc
-    [ ("include_dirs", `List (List.map ~f:Json.string x.include_dirs));
+    [ ("include_dirs", `List (List.map ~f:dump_visible_include x.include_dirs));
       ("hidden_dirs", `List (List.map ~f:Json.string x.hidden_dirs));
       ("no_std_include", `Bool x.no_std_include);
       ("unsafe", `Bool x.unsafe);
@@ -63,7 +67,8 @@ let dump_ocaml x =
       ( "zero_alloc_assert",
         `String (Zero_alloc_annotations.Assert.to_string x.zero_alloc_assert) );
       ("infer_with_bounds", `Bool x.infer_with_bounds);
-      ("kind_verbosity", `Int x.kind_verbosity)
+      ("kind_verbosity", `Int x.kind_verbosity);
+      ("ikinds", `Bool x.ikinds)
     ]
 
 (** Some paths can be resolved relative to a current working directory *)
@@ -741,7 +746,9 @@ let ocaml_ignored_flags =
     "-no-insn-sched";
     "-no-long-frames";
     "-no-unbox-free-vars-of-closures";
-    "-verify-binary-emitter"
+    "-verify-binary-emitter";
+    "-ikinds-debug";
+    "-thunkify-compilation-unit-initialization"
   ]
 
 let ocaml_ignored_parametrized_flags =
@@ -786,7 +793,6 @@ let ocaml_ignored_parametrized_flags =
     "-no-extension";
     "-drawfexpr-to";
     "-dfexpr-to";
-    "-dflexpect-to";
     "-reorder-blocks-random";
     "-heap-reduction-threshold";
     "-flambda2-cse-depth";
@@ -872,9 +878,19 @@ let ocaml_alert_spec =
 
 let ocaml_flags =
   [ ( "-I",
-      marg_path (fun dir ocaml ->
-          { ocaml with include_dirs = dir :: ocaml.include_dirs }),
+      marg_path (fun path ocaml ->
+          { ocaml with
+            include_dirs =
+              { path; cmx_guaranteed = false } :: ocaml.include_dirs
+          }),
       "<dir> Add <dir> to the list of include directories" );
+    ( "-Ix",
+      marg_path (fun path ocaml ->
+          { ocaml with
+            include_dirs = { path; cmx_guaranteed = true } :: ocaml.include_dirs
+          }),
+      "<dir> Add <dir> to the list of include directories (Like -I, but \
+       indicates that cmx files for modules in <dir> are always available)" );
     ( "-H",
       marg_path (fun dir ocaml ->
           { ocaml with hidden_dirs = dir :: ocaml.hidden_dirs }),
@@ -1006,7 +1022,10 @@ let ocaml_flags =
     ( "-kind-verbosity",
       Marg.int (fun kind_verbosity ocaml -> { ocaml with kind_verbosity }),
       "Set the verbosity used for printing kinds (0=not verbose, 1=expanded, \
-       2=expanded with all mod bounds)" )
+       2=expanded with all mod bounds)" );
+    ( "-ikinds",
+      Marg.bool (fun ikinds ocaml -> { ocaml with ikinds }),
+      "Enable ikinds-based kind checker (experimental)" )
   ]
 
 (** {1 Main configuration} *)
@@ -1037,7 +1056,8 @@ let initial =
         zero_alloc_check = Zero_alloc_annotations.Check.Check_default;
         zero_alloc_assert = Zero_alloc_annotations.Assert.Assert_default;
         infer_with_bounds = false;
-        kind_verbosity = 0
+        kind_verbosity = 0;
+        ikinds = false
       };
     merlin =
       { build_path = [];
@@ -1165,11 +1185,15 @@ let hidden_source_path config =
   config.merlin.hidden_source_path @ config.ocaml.hidden_dirs
 
 let collect_paths ~log_title ~config paths =
+  let include_dirs =
+    List.map config.ocaml.include_dirs ~f:(fun (vi : Clflags.visible_include) ->
+        vi.path)
+  in
   let dirs =
     match config.ocaml.threads with
-    | `None -> config.ocaml.include_dirs
-    | `Threads -> "+threads" :: config.ocaml.include_dirs
-    | `Vmthreads -> "+vmthreads" :: config.ocaml.include_dirs
+    | `None -> include_dirs
+    | `Threads -> "+threads" :: include_dirs
+    | `Vmthreads -> "+vmthreads" :: include_dirs
   in
   let dirs = paths @ dirs in
   let stdlib = stdlib config in

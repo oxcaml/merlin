@@ -254,7 +254,8 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_extension_constructor_declaration_) -> "reversed_bar_llist_extension_constructor_declaration_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_extension_constructor_) -> "reversed_bar_llist_extension_constructor_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_constructor_declaration_) -> "reversed_bar_llist_constructor_declaration_"
-  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind) -> "reverse_product_jkind"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind_gen_jkind_desc_no_with_kinds_) -> "reverse_product_jkind_gen_jkind_desc_no_with_kinds_"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind_gen_jkind_desc_) -> "reverse_product_jkind_gen_jkind_desc_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_record_expr_content) -> "record_expr_content"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_rec_flag) -> "rec_flag"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_private_virtual_flags) -> "private_virtual_flags"
@@ -376,9 +377,15 @@ let print_symbol = function
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_label_declarations) -> "label_declarations"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_label_declaration_semi) -> "label_declaration_semi"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_label_declaration) -> "label_declaration"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_no_with_kinds) -> "jkind_desc_no_with_kinds"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_gen_jkind_desc_no_with_kinds_) -> "jkind_desc_gen_jkind_desc_no_with_kinds_"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_gen_jkind_desc_) -> "jkind_desc_gen_jkind_desc_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_desc) -> "jkind_desc"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_decl) -> "jkind_decl"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_constraint) -> "jkind_constraint"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_no_with_kinds) -> "jkind_annotation_no_with_kinds"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_gen_jkind_desc_no_with_kinds_) -> "jkind_annotation_gen_jkind_desc_no_with_kinds_"
+  | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_gen_jkind_desc_) -> "jkind_annotation_gen_jkind_desc_"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation) -> "jkind_annotation"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_item_extension) -> "item_extension"
   | MenhirInterpreter.X (MenhirInterpreter.N MenhirInterpreter.N_interface) -> "interface"
@@ -683,7 +690,8 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_extension_constructor_declaration_ -> (fun _ -> "reversed_bar_llist_extension_constructor_declaration_")
   | MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_extension_constructor_ -> (fun _ -> "reversed_bar_llist_extension_constructor_")
   | MenhirInterpreter.N MenhirInterpreter.N_reversed_bar_llist_constructor_declaration_ -> (fun _ -> "reversed_bar_llist_constructor_declaration_")
-  | MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind -> (fun _ -> "reverse_product_jkind")
+  | MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind_gen_jkind_desc_no_with_kinds_ -> (fun _ -> "reverse_product_jkind_gen_jkind_desc_no_with_kinds_")
+  | MenhirInterpreter.N MenhirInterpreter.N_reverse_product_jkind_gen_jkind_desc_ -> (fun _ -> "reverse_product_jkind_gen_jkind_desc_")
   | MenhirInterpreter.N MenhirInterpreter.N_record_expr_content -> (fun _ -> "record_expr_content")
   | MenhirInterpreter.N MenhirInterpreter.N_rec_flag -> (fun _ -> "rec_flag")
   | MenhirInterpreter.N MenhirInterpreter.N_private_virtual_flags -> (fun _ -> "private_virtual_flags")
@@ -805,9 +813,15 @@ let print_value (type a) : a MenhirInterpreter.symbol -> a -> string = function
   | MenhirInterpreter.N MenhirInterpreter.N_label_declarations -> (fun _ -> "label_declarations")
   | MenhirInterpreter.N MenhirInterpreter.N_label_declaration_semi -> (fun _ -> "label_declaration_semi")
   | MenhirInterpreter.N MenhirInterpreter.N_label_declaration -> (fun _ -> "label_declaration")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_no_with_kinds -> (fun _ -> "jkind_desc_no_with_kinds")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_gen_jkind_desc_no_with_kinds_ -> (fun _ -> "jkind_desc_gen_jkind_desc_no_with_kinds_")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_desc_gen_jkind_desc_ -> (fun _ -> "jkind_desc_gen_jkind_desc_")
   | MenhirInterpreter.N MenhirInterpreter.N_jkind_desc -> (fun _ -> "jkind_desc")
   | MenhirInterpreter.N MenhirInterpreter.N_jkind_decl -> (fun _ -> "jkind_decl")
   | MenhirInterpreter.N MenhirInterpreter.N_jkind_constraint -> (fun _ -> "jkind_constraint")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_no_with_kinds -> (fun _ -> "jkind_annotation_no_with_kinds")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_gen_jkind_desc_no_with_kinds_ -> (fun _ -> "jkind_annotation_gen_jkind_desc_no_with_kinds_")
+  | MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation_gen_jkind_desc_ -> (fun _ -> "jkind_annotation_gen_jkind_desc_")
   | MenhirInterpreter.N MenhirInterpreter.N_jkind_annotation -> (fun _ -> "jkind_annotation")
   | MenhirInterpreter.N MenhirInterpreter.N_item_extension -> (fun _ -> "item_extension")
   | MenhirInterpreter.N MenhirInterpreter.N_interface -> (fun _ -> "interface")

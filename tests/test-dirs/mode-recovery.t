@@ -158,7 +158,7 @@ The error is reported
         "message": "x must have a type of layout value because it is captured by an object.
   The layout of 'a is bits32
     because of the definition of x at file \"unboxed.ml\", line 3, characters 10-14.
-  But the layout of 'a must overlap with value
+  But the layout of 'a must be a value layout
     because it's the type of a variable captured in an object."
       }
     ],

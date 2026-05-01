@@ -11,6 +11,7 @@
     --rewrite-root Rewrite locations paths using the provided root
     --store-shapes Aggregate input-indexes shapes and store them in the new index
     -I An extra directory to add to the load path
+    -Ix An extra directory to add to the load path (Like -I, but indicates that cmx files for modules in <dir> are always available)
     -H An extra hidden directory to add to the load path
     --no-cmt-load-path Do not initialize the load path with the paths found in the first input cmt file
     -help  Display this list of options

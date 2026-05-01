@@ -77,9 +77,9 @@ module Persistent_signature = struct
     | filename, visibility when allow_hidden ->
       let cmi = Cmi_cache.read filename in
       Some { filename; cmi; visibility}
-    | filename, Visible ->
+    | filename, (Visible _ as visibility) ->
       let cmi = Cmi_cache.read filename in
-      Some { filename; cmi; visibility = Visible}
+      Some { filename; cmi; visibility}
     | _, Hidden
     | exception Not_found -> None)
 end
@@ -116,7 +116,7 @@ type import = {
 (* If a .cmi file is missing (or invalid), we
    store it as Missing in the cache. *)
 type import_info =
-  | Missing
+  | Missing of { hidden_were_allowed : bool }
   | Found of import
 
 (* Data relating to a global name (possibly with arguments) but not necessarily
@@ -210,7 +210,9 @@ let clear penv =
 let clear_missing {imports; _} =
   let missing_entries =
     Hashtbl.fold
-      (fun name r acc -> if r = Missing then name :: acc else acc)
+      (fun name r acc -> match r with
+       | Missing _ -> name :: acc
+       | Found _ -> acc)
       imports []
   in
   List.iter (Hashtbl.remove imports) missing_entries
@@ -232,7 +234,7 @@ let register_import_as_opaque {imported_opaque_units; _} s =
 let find_import_info_in_cache {imports; _} import =
   match Hashtbl.find imports import with
   | exception Not_found -> None
-  | Missing -> None
+  | Missing _ -> None
   | Found imp -> Some imp
 
 let find_name_info_in_cache {persistent_names; _} name =
@@ -447,18 +449,24 @@ let read_import penv ~check modname cmi =
   let filename = Unit_info.Artifact.filename cmi in
   add_import penv modname;
   let cmi = read_cmi_lazy filename in
-  let pers_sig = { Persistent_signature.filename; cmi; visibility = Visible } in
+  let pers_sig =
+    { Persistent_signature.filename; cmi;
+      visibility = Visible { cmx_guaranteed = false } }
+  in
   acknowledge_import penv ~check modname pers_sig
 
 let check_visibility ~allow_hidden imp =
-  if not allow_hidden && imp.imp_visibility = Load_path.Hidden then raise Not_found
+  match imp.imp_visibility with
+  | Hidden when not allow_hidden -> raise Not_found
+  | Hidden | Visible _ -> ()
 
 let find_import ~allow_hidden penv ~check modname =
   let {imports; _} = penv in
   if CU.Name.equal modname CU.Name.predef_exn then raise Not_found;
   match Hashtbl.find imports modname with
   | Found imp -> check_visibility ~allow_hidden imp; imp
-  | Missing -> raise Not_found
+  | Missing { hidden_were_allowed = true } -> raise Not_found
+  | Missing { hidden_were_allowed = false }
   | exception Not_found ->
       match can_load_cmis penv with
       | Cannot_load_cmis _ -> raise Not_found
@@ -467,7 +475,8 @@ let find_import ~allow_hidden penv ~check modname =
             match !Persistent_signature.load ~allow_hidden ~unit_name:modname with
             | Some psig -> psig
             | None ->
-                if allow_hidden then Hashtbl.add imports modname Missing;
+                Hashtbl.replace imports modname
+                  (Missing { hidden_were_allowed = allow_hidden });
                 raise Not_found
           in
           add_import penv modname;
@@ -1297,7 +1306,7 @@ let with_cmis penv f x =
 
 let forall ~found ~missing t =
   Std.Hashtbl.forall t.imports (fun name -> function
-      | Missing -> missing name
+      | Missing _ -> missing name
       | Found import ->
         found name import.imp_filename name
     )

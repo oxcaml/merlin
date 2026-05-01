@@ -91,6 +91,7 @@ type node =
   | Jkind_annotation of Parsetree.jkind_annotation
   | Jkind_declaration of Typedtree.jkind_declaration
   | Mod_bound of Parsetree.mode Location.loc
+  | Scannable_axis_annotation of string Location.loc
   | Attribute of attribute
 
 let node_update_env env0 = function
@@ -145,6 +146,7 @@ let node_update_env env0 = function
   | Modality _
   | Jkind_annotation _
   | Jkind_declaration _
+  | Scannable_axis_annotation _
   | Mod_bound _
   | Attribute _ -> env0
 
@@ -184,6 +186,7 @@ let node_real_loc loc0 = function
   | Jkind_annotation { pjka_loc = loc }
   | Jkind_declaration { jkind_loc = loc }
   | Mod_bound { loc }
+  | Scannable_axis_annotation { loc }
   | Attribute { attr_name = { loc } } -> loc
   | Module_type_declaration_name { mtd_name = loc } -> loc.Location.loc
   | Module_declaration_name { md_name = loc }
@@ -304,6 +307,9 @@ let option_fold f' o env (f : _ f0) acc =
 let of_core_type ct = app (Core_type ct)
 
 let of_mod_bound mod_bound = app (Mod_bound mod_bound)
+
+let of_scannable_axis_annotation scannable_axis_annotation =
+  app (Scannable_axis_annotation scannable_axis_annotation)
 
 let of_mode mode = app (Mode mode)
 
@@ -532,6 +538,7 @@ let rec of_expression_desc loc = function
   | Texp_hole _ -> id_fold
   | Texp_quotation exp -> of_expression exp
   | Texp_antiquotation exp -> of_expression exp
+  | Texp_apply_layout (exp, _) -> of_expression exp
 
 (* We should consider taking into account param.fp_loc at some point, as it
    allows us to respond with the *parameter*'s type (as opposed to the
@@ -703,7 +710,9 @@ let of_jkind_annotation_desc : Parsetree.jkind_annotation_desc -> _ =
     id_fold
   in
   function
-  | Pjk_default | Pjk_abbreviation _ -> id_fold
+  | Pjk_default -> id_fold
+  | Pjk_abbreviation (_, scannable_axis_annotations) ->
+    list_fold of_scannable_axis_annotation scannable_axis_annotations
   | Pjk_mod (jkind, mod_bounds) ->
     of_jkind_annotation jkind ** list_fold of_mod_bound mod_bounds
   | Pjk_with (jkind, ct, modalities) ->
@@ -782,6 +791,8 @@ let of_node node =
     | With_constraint (Twith_module _ | Twith_modsubst _) -> id_fold
     | With_constraint (Twith_modtype mt | Twith_modtypesubst mt) ->
       of_module_type mt
+    | With_constraint (Twith_jkind jk | Twith_jkindsubst jk) ->
+      app (Jkind_declaration jk)
     | Core_type { ctyp_desc } -> of_core_type_desc ctyp_desc
     | Package_type { pack_fields } ->
       list_fold (fun (_, ct) -> of_core_type ct) pack_fields
@@ -848,6 +859,7 @@ let of_node node =
     | Jkind_declaration { jkind_annotation } ->
       option_fold of_jkind_annotation jkind_annotation
     | Mod_bound _ -> id_fold
+    | Scannable_axis_annotation _ -> id_fold
     | Attribute _ -> id_fold
   in
   without_attributes ** list_fold of_attribute (node_attributes node)
@@ -911,6 +923,7 @@ let string_of_node = function
   | Jkind_annotation _ -> "jkind_annotation"
   | Jkind_declaration _ -> "jkind_declaration"
   | Mod_bound _ -> "mod_bound"
+  | Scannable_axis_annotation _ -> "scannable_axis_annotation"
   | Attribute _ -> "attribute"
 
 let mkloc = Location.mkloc

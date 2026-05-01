@@ -171,22 +171,6 @@ let get_mod_bound_doc mod_bound =
          the OCaml heap"
     | Axis_pair (Nonmodal Externality, External) ->
       Some "Values of types of this kind are never pointers to the OCaml heap"
-    | Axis_pair (Nonmodal Nullability, Maybe_null) ->
-      Some
-        "Values of types of this kind might be the bit pattern containing all \
-         0s"
-    | Axis_pair (Nonmodal Nullability, Non_null) ->
-      Some
-        "Values of types of this kind that are also a subkind of `value` are \
-         never the bit pattern containing all 0s"
-    | Axis_pair (Nonmodal Separability, Non_float) ->
-      Some "Values of types of this kind are never pointers to floats."
-    | Axis_pair (Nonmodal Separability, Separable) ->
-      Some
-        "No type of this kind includes both pointers to a float and other \
-         values."
-    | Axis_pair (Nonmodal Separability, Maybe_separable) ->
-      Some "Types of this kind may mix pointers to floats with other values."
     | Everything ->
       Some
         "Synonym for \"global aliased many contended portable unyielding \
@@ -217,8 +201,16 @@ let get_mode_doc (Atom (axis, mode) : Mode.Alloc.atom) =
       Some
         "The mutable parts of values with this mode can be read, but not \
          written (unless they are atomic)"
+    | Monadic Contention, Corrupted ->
+      Some
+        "The mutable parts of values with this mode can be written, but not \
+         read (unless they are atomic)"
     | Monadic Contention, Uncontended ->
       Some "The mutable parts of values with this mode can be fully accessed"
+    | Comonadic Portability, Corruptible ->
+      Some
+        "Values with this mode can be written to (but not read from) by other \
+         threads without causing data races"
     | Comonadic Portability, Nonportable ->
       Some
         "Values with this mode cannot be sent to or shared with other threads, \
@@ -316,6 +308,40 @@ let get_modality_doc (Atom (axis, modality) : Mode.Modality.atom) =
      { name = "Modality";
        description;
        documentation = syntax_doc_url Oxcaml "modes/syntax/";
+       level = Advanced
+     }
+    : syntax_info)
+
+let get_scannable_axis_annotation_doc annot =
+  let open Option.Infix in
+  let* description =
+    match annot with
+    | "non_pointer" -> Some "Values of types of this kind are never pointers."
+    | "non_pointer64" ->
+      Some
+        "Values of types of this kind are never pointers on 64-bit platforms."
+    | "non_float" ->
+      Some "Values of types of this kind are never pointers to floats."
+    | "separable" ->
+      Some
+        "No type of this kind includes both pointers to a float and other \
+         values."
+    | "maybe_separable" ->
+      Some "Types of this kind may mix pointers to floats with other values."
+    | "non_null" ->
+      Some
+        "Values of types of this kind are never the bit pattern containing all \
+         0s."
+    | "maybe_null" ->
+      Some
+        "Values of types of this kind might be the bit pattern containing all \
+         0s."
+    | _ -> None
+  in
+  (Some
+     { name = "Kind Modifier";
+       description;
+       documentation = syntax_doc_url Oxcaml "kinds/syntax/";
        level = Advanced
      }
     : syntax_info)
@@ -651,31 +677,13 @@ let get_oxcaml_syntax_doc cursor_loc nodes : syntax_info =
     | _ -> get_modality_doc modality)
   (* Jkinds *)
   | Mod_bound { txt = Mode mod_bound; _ } :: _ -> get_mod_bound_doc mod_bound
-  | Jkind_annotation { pjka_desc = Pjk_abbreviation (abbrev, modifiers); _ }
-    :: _ -> (
+  | Scannable_axis_annotation { txt = annot; _ } :: _ ->
+    get_scannable_axis_annotation_doc annot
+  | Jkind_annotation { pjka_desc = Pjk_abbreviation (abbrev, _); _ } :: _ ->
     (* CR-someday: It isn't ideal that this is based on the parsetree, as this will result
        in an incorrect hint in the presence of shadowing. To properly fix, the compiler
        should introduce a typed jkind into the typedtree. Internal ticket 6600. *)
-    match
-      Loc_comparison_result.is_inside (compare_cursor_to_loc abbrev.loc)
-    with
-    | true -> get_jkind_abbrev_doc abbrev.txt
-    | false ->
-      List.find_opt modifiers ~f:(fun (modifier : _ Location.loc) ->
-          Loc_comparison_result.is_inside (compare_cursor_to_loc modifier.loc))
-      |> Option.bind ~f:(fun (modifier : _ Location.loc) ->
-          match modifier.txt with
-          | "non_pointer" ->
-            (Some
-               { name = "Kind Modifier";
-                 description =
-                   "Modifies a value kind abbreviation to indicate that its \
-                    representation is never a pointer.";
-                 documentation = syntax_doc_url Oxcaml "kinds/syntax/";
-                 level = Advanced
-               }
-              : syntax_info)
-          | _ -> None))
+    get_jkind_abbrev_doc abbrev.txt
   | Jkind_annotation { pjka_desc = Pjk_mod _; _ } :: _ ->
     Some
       { name = "`mod` keyword (in a kind)";

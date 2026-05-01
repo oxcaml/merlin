@@ -104,6 +104,7 @@ type node =
   | Jkind_annotation of Parsetree.jkind_annotation
   | Jkind_declaration of jkind_declaration
   | Mod_bound of Parsetree.mode Location.loc
+  | Scannable_axis_annotation of string Location.loc
   | Attribute of attribute
       (** The location of an [Attribute] is considered to be the location of the
           [attr_name], not the overall attribute. This is because in an [Mbrowse.t], an

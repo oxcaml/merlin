@@ -106,6 +106,7 @@ let expr_tail_positions = function
   | Texp_open (_, e) -> [ Expression e ]
   | Texp_ifthenelse (_, e1, Some e2) -> [ Expression e1; Expression e2 ]
   | Texp_exclave e -> [ Expression e ]
+  | Texp_apply_layout (e, _) -> [ Expression e ]
 
 let tail_positions = function
   | Expression expr -> expr_tail_positions expr.exp_desc
