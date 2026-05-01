@@ -245,7 +245,7 @@ and sort_to_scannable_product_element_kind elt_ty_for_error loc
      this to traverse the type, rather than just the kind, or to add product
      kinds. *)
   match s with
-  | Base Value -> Paddr_scannable
+  | Base Scannable -> Paddr_scannable
   | Base (Float64 | Float32 | Bits8 | Bits16 | Bits32 | Bits64 | Word |
           Untagged_immediate | Vec128 | Vec256 | Vec512) as c ->
     raise (Error (loc, Mixed_product_array (c, elt_ty_for_error)))
@@ -272,7 +272,7 @@ let rec ignorable_product_array_kind loc (sorts : Jkind.Sort.Const.t list) =
 
 and sort_to_ignorable_product_element_kind loc (s : Jkind.Sort.Const.t) =
   match s with
-  | Base Value -> Pint_ignorable
+  | Base Scannable -> Pint_ignorable
   | Base Float64 -> Punboxedfloat_ignorable Unboxed_float64
   | Base Float32 -> Punboxedfloat_ignorable Unboxed_float32
   | Base Bits8 -> Punboxedoruntaggedint_ignorable Untagged_int8
