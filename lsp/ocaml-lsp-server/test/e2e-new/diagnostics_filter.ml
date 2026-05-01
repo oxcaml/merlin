@@ -39,7 +39,7 @@ let y = garbage
   in
   let%map () = print_diagnostics ~path:"../this-directory-does-not-exist/foo.ml" source in
   [%expect
-    {| No config found for file ocaml-lsp-server/test/e2e-new/this-directory-does-not-exist/foo.ml. Try calling 'dune build'. |}]
+    {| No config found for file lsp/ocaml-lsp-server/test/e2e-new/this-directory-does-not-exist/foo.ml. Try calling 'dune build'. |}]
 ;;
 
 let%expect_test "doesn't add other diagnostics if syntax errors" =

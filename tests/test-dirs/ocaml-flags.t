@@ -1,5 +1,5 @@
 Get a list of all flags that ocamlopt.opt understands.
-  $ OCAMLOPT="$MERLIN_TEST_OCAML_PATH/bin/ocamlc"
+  $ OCAMLOPT="ocamlc"
   $ OCAML_FLAGS=$("$OCAMLOPT" --help | grep -oP '(?<=  )-[a-z\-_0-9]+(?= )')
 
 Verify that each flag appears in mconfig.ml. Each flag should either be handled or be in

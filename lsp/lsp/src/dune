@@ -9,8 +9,8 @@
  (instrumentation
   (backend bisect_ppx)))
 
-(cinaps
- (files types.ml types.mli)
- (libraries lsp_gen))
+; (cinaps
+;  (files types.ml types.mli)
+;  (libraries lsp_gen))
 
 (ocamllex uri_lexer)

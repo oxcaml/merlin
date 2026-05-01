@@ -975,7 +975,7 @@ let%expect_test "completes from a module" =
       }
     }
     {
-      "detail": "'a -> 'a list -> bool",
+      "detail": "'a @ local -> 'a list @ local -> bool",
       "kind": 12,
       "label": "mem",
       "sortText": "0003",
@@ -1014,7 +1014,7 @@ let%expect_test "completes from a module" =
       }
     }
     {
-      "detail": "'a -> 'a list -> bool",
+      "detail": "'a @ local -> 'a list @ local -> bool",
       "kind": 12,
       "label": "memq",
       "sortText": "0006",

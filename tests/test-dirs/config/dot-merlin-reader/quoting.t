@@ -53,7 +53,7 @@
         "intf": ".rei"
       }
     ],
-    "stdlib": "lib/ocaml",
+    "stdlib": null,
     "source_root": null,
     "unit_name": null,
     "unit_name_for": {},

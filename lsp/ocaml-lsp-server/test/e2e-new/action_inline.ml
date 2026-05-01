@@ -522,7 +522,10 @@ let _ =
     type t = { x : int; y : int }
     let _ =
       let f { x; y } = x + y in
-      (let { x; y } = { x = 1; y = 1 } in x + y)
+      (let { x = ((x)[@merlin.punned-record-pattern ]);
+           y = ((y)[@merlin.punned-record-pattern ]) }
+       = { x = 1; y = 1 } in
+     x + y)
     |}]
 ;;
 
@@ -542,7 +545,8 @@ let _ =
     type t = { x : int; y : int }
     let _ =
       let f { x; _ } = x + 1 in
-      (let { x;_} = { x = 1; y = 1 } in x + 1)
+      (let { x = ((x)[@merlin.punned-record-pattern ]);_} = { x = 1; y = 1 } in
+     x + 1)
     |}]
 ;;
 

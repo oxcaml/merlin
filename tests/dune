@@ -21,6 +21,7 @@
   %{bin:ocamlmerlin-server}
   %{bin:ocamlmerlin}
   %{bin:dot-merlin-reader}
+  %{bin:ocaml-index}
   %{bin:revert-newlines}))
 
 (cram
