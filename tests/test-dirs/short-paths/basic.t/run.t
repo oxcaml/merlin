@@ -133,7 +133,7 @@
         "type": "typer",
         "sub": [],
         "valid": true,
-        "message": "This expression has type t = M.t but an expression was expected of type unit"
+        "message": "The value x has type t = M.t but an expression was expected of type unit"
       },
       {
         "start": {
@@ -170,7 +170,7 @@
         "type": "typer",
         "sub": [],
         "valid": true,
-        "message": "This expression has type int but an expression was expected of type Dep.M.t"
+        "message": "The constant 5 has type int but an expression was expected of type Dep.M.t"
       }
     ],
     "notifications": []
@@ -309,7 +309,7 @@
         "type": "typer",
         "sub": [],
         "valid": true,
-        "message": "This expression has type N.O.t but an expression was expected of type unit"
+        "message": "The value x has type N.O.t but an expression was expected of type unit"
       },
       {
         "start": {
@@ -343,7 +343,7 @@
         "type": "typer",
         "sub": [],
         "valid": true,
-        "message": "This expression has type int but an expression was expected of type Dep.t"
+        "message": "The constant 5 has type int but an expression was expected of type Dep.t"
       }
     ],
     "notifications": []
