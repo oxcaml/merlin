@@ -45,9 +45,6 @@ module Doc = struct
   let type_declaration id ppf decl =
     !Oprint.out_sig_item ppf (tree_of_type_declaration id decl Trec_first)
 
-  let type_declaration_for_merlin =
-    Out_type.type_declaration_for_merlin
-
   let type_expr ppf ty =
     (* [type_expr] is used directly by error message printers,
        we mark eventual loops ourself to avoid any misuse and stack overflow *)
@@ -61,9 +58,6 @@ module Doc = struct
   let type_scheme ppf ty =
     prepare_for_printing [ty];
     prepared_type_scheme ppf ty
-
-  let type_scheme_for_merlin =
-    Out_type.type_scheme_for_merlin
 
   let path ppf p =
     !Oprint.out_ident ppf (tree_of_path p)
@@ -150,12 +144,9 @@ let modality ?id ax =
   Fmt.compat (modality ?id:(Option.map Fmt.deprecated id) ax)
 
 let type_scheme = Fmt.compat type_scheme
-let type_scheme_for_merlin = Out_type.Compat.type_scheme_for_merlin
 let shared_type_scheme = Fmt.compat shared_type_scheme
 
 let type_declaration  = Fmt.compat1 type_declaration
-let type_declaration_for_merlin =
-  Out_type.Compat.type_declaration_for_merlin
 let type_expansion = Fmt.compat1 type_expansion
 let value_description = Fmt.compat1 value_description
 let label = Fmt.compat label
@@ -211,7 +202,6 @@ module Compat = struct
   let type_path = type_path
   let type_expr = type_expr
   let type_scheme = type_scheme
-  let type_scheme_for_merlin = type_scheme_for_merlin
   let shared_type_scheme = shared_type_scheme
   let type_expansion = type_expansion
   let label = label
@@ -221,7 +211,6 @@ module Compat = struct
   let extension_only_constructor = extension_only_constructor
   let value_description = value_description
   let type_declaration = type_declaration
-  let type_declaration_for_merlin = type_declaration_for_merlin
   let modtype_declaration = modtype_declaration
   let class_declaration = class_declaration
   let cltype_declaration = cltype_declaration

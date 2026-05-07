@@ -61,9 +61,6 @@ module type Printers := sig
 
     val type_scheme: type_expr printer
 
-    val type_scheme_for_merlin:
-      print_non_value_jkind_on_type_variables:bool -> type_expr printer
-
     val shared_type_scheme: type_expr printer
     (** [shared_type_scheme] is very similar to [type_scheme], but does not
         reset the printing context first. This is intended to be used in cases
@@ -94,8 +91,6 @@ module type Printers := sig
 
     val value_description: Ident.t -> value_description printer
     val type_declaration: Ident.t -> type_declaration printer
-    val type_declaration_for_merlin:
-      print_non_value_inferred_jkind:bool -> Ident.t -> type_declaration printer
     val modtype_declaration: Ident.t -> modtype_declaration printer
     val class_declaration: Ident.t -> class_declaration printer
     val cltype_declaration: Ident.t -> class_type_declaration printer
