@@ -1,3 +1,0 @@
-(test
- (name sherlodoc_test)
- (libraries fmt alcotest merlin-lib.sherlodoc))

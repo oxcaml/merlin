@@ -1,4 +1,0 @@
-(cram
- (applies_to hd-directives)
- (enabled_if
-  (<> %{os_type} Win32)))
