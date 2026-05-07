@@ -446,8 +446,8 @@ let rec of_expression_desc loc = function
            | _, Omitted _ -> id_fold
            | _, Arg (e, _) -> of_expression e)
          ls
-  | Texp_match (e, _, cs, _) -> of_expression e ** list_fold of_case cs
-  | Texp_try (e, cs) -> of_expression e ** list_fold of_case cs
+  | Texp_match (e, _, cs, _, _) -> of_expression e ** list_fold of_case cs
+  | Texp_try (e, cs, _) -> of_expression e ** list_fold of_case cs
   | Texp_tuple (es, _) -> list_fold (fun (_lbl, e) -> of_expression e) es
   | Texp_unboxed_tuple es ->
     list_fold (fun (_lbl, e, _sort) -> of_expression e) es
@@ -794,8 +794,8 @@ let of_node node =
     | With_constraint (Twith_jkind jk | Twith_jkindsubst jk) ->
       app (Jkind_declaration jk)
     | Core_type { ctyp_desc } -> of_core_type_desc ctyp_desc
-    | Package_type { pack_fields } ->
-      list_fold (fun (_, ct) -> of_core_type ct) pack_fields
+    | Package_type { tpt_cstrs } ->
+      list_fold (fun (_, ct) -> of_core_type ct) tpt_cstrs
     | Row_field rf ->
       begin match rf.rf_desc with
       | Ttag (_, _, cts) -> list_fold of_core_type cts
@@ -1095,8 +1095,8 @@ let node_paths_full =
     [ (reloc (Path.Pident mtd_id) mtd_name, Some (Lident mtd_name.txt)) ]
   | With_constraint c -> with_constraint_paths c
   | Core_type ct -> core_type_paths ct
-  | Package_type { pack_path; pack_txt } ->
-    [ (reloc pack_path pack_txt, Some pack_txt.txt) ]
+  | Package_type { tpt_path; tpt_txt } ->
+    [ (reloc tpt_path tpt_txt, Some tpt_txt.txt) ]
   | Value_description { val_id; val_name } ->
     [ (reloc (Path.Pident val_id) val_name, Some (Lident val_name.txt)) ]
   | Type_declaration { typ_id; typ_name } ->

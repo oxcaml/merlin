@@ -125,14 +125,14 @@ let rec gen_patterns ?(recurse = true) env type_expr =
             ignore
               (let pattern_env =
                  Ctype.Pattern_env.make env ~equations_scope:0
-                   ~allow_recursive_equations:true
+                   ~in_counterexample:false
                in
                (* This function is run within a [Printtyp.wrap_printing_env] (this happens
                   in query_commands.ml), which calls [Env.without_cmis] to avoid loading
                   cmis for printing. But we may need to load cmis during this unification,
                   so we wrap in a [Env.with_cmis]. *)
                Env.with_cmis (fun () ->
-                   Ctype.unify_gadt pattern_env type_expr typ));
+                   Ctype.unify_gadt pattern_env ~pat:type_expr ~expected:typ));
             true
           with Ctype.Unify _trace -> false
         in
@@ -223,7 +223,7 @@ let rec get_match = function
       get_match parents
     | Expression m -> (
       match m.Typedtree.exp_desc with
-      | Typedtree.Texp_match (e, _, _, _) -> (m, e.exp_type)
+      | Typedtree.Texp_match (e, _, _, _, _) -> (m, e.exp_type)
       | Typedtree.Texp_function _ ->
         let typ = m.exp_type in
         (* Function must have arrow type. This arrow type

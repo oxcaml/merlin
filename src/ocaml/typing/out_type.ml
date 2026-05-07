@@ -2643,6 +2643,8 @@ let rec tree_of_modtype ?abbrev = function
       Omty_functor (param, res, mres))
   | Mty_alias p ->
       Omty_alias (tree_of_path (Some Module) p)
+  | Mty_for_hole ->
+      Omty_hole
   | Mty_strengthen _ as mty ->
       begin match !expand_module_type !printing_env mty with
       | Mty_strengthen (mty,p,a) ->

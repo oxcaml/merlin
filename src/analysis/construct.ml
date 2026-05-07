@@ -568,15 +568,15 @@ module Gen = struct
         | Trepr (ty, _) ->
           (* CR modes: This isn't quite right, but it's probably good enough. *)
           exp_or_hole env ty
-        | Tpackage (path, lids_args) -> begin
+        | Tpackage ({ pack_path = path; _ } as pack) -> begin
           let open Ast_helper in
           try
             let ty =
-              Typemod.modtype_of_package env Location.none path lids_args
+              Typemod.modtype_of_package env Location.none pack
             in
             let ast =
               Exp.constraint_
-                (Exp.pack (module_ env ty))
+                (Exp.pack (module_ env ty) None)
                 (Some (Ptyp_of_type.core_type typ))
                 []
             in
