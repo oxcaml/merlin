@@ -2154,15 +2154,6 @@ let solve_constructor_annotation
                             Unbound_existential (ids, ty))))
         ids_decls ty_ex
     in
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-    if rem <> [] then
-      raise (error (cty.ctyp_loc, !!penv,
-                    Unbound_existential (ids, ty)))
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-    if rem <> [] then
-      raise (Error (cty.ctyp_loc, !!penv,
-                    Unbound_existential (ids, ty)))
-=======
     (* The other type names should be bound to newly introduced existentials. *)
     let bound_ids = ref ids in
     List.iter
@@ -2171,16 +2162,16 @@ let solve_constructor_annotation
         begin match get_desc tv' with
         | Tconstr (Path.Pident id', [], _) ->
               if List.exists (Ident.same id') !bound_ids then
-                raise (Error (cty.ctyp_loc, !!penv,
+                raise (error (cty.ctyp_loc, !!penv,
                               Bind_existential (Bind_already_bound, id, tv')));
               (* Both id and id' are Scoped identifiers, so their stamps grow *)
               if Ident.scope id' <> penv.equations_scope
               || Ident.compare_stamp id id' > 0 then
-                raise (Error (cty.ctyp_loc, !!penv,
+                raise (error (cty.ctyp_loc, !!penv,
                               Bind_existential (Bind_not_in_scope, id, tv')));
               bound_ids := id' :: !bound_ids
         | _ ->
-            raise (Error (cty.ctyp_loc, !!penv,
+            raise (error (cty.ctyp_loc, !!penv,
                           Bind_existential
                             (Bind_non_locally_abstract, id, tv')));
         end;
@@ -2191,7 +2182,6 @@ let solve_constructor_annotation
         Pattern_env.set_env penv env)
       rem;
     if rem <> [] then Btype.cleanup_abbrev ();
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   end;
   ty_args, Some (List.map (fun (ty, _, jkind) -> ty, jkind) existentials, cty)
 
@@ -3588,26 +3578,12 @@ and type_pat_aux
             constr.cstr_arity > 1 ||
             Builtin_attributes.explicit_arity sp.ppat_attributes
           ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-          if components_have_label spl then
-            raise (error(loc, !!penv, Constructor_labeled_arg))
-          else
-            List.map snd spl
-        | {ppat_desc = Ppat_any} as sp when
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-          if components_have_label spl then
-            raise (Error(loc, !!penv, Constructor_labeled_arg))
-          else
-            List.map snd spl
-        | {ppat_desc = Ppat_any} as sp when
-=======
             List.map (fun (l, sp) ->
               match l with
-              | Some _ -> raise (Error(loc, !!penv, Constructor_labeled_arg))
+              | Some _ -> raise (error (loc, !!penv, Constructor_labeled_arg))
               | None -> sp
             ) spl
         | Some({ppat_desc = Ppat_any} as sp) when
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
             constr.cstr_arity = 0 && existential_styp = None
           ->
             Location.prerr_warning sp.ppat_loc
@@ -4812,42 +4788,8 @@ let collect_unknown_apply_args env funct ty_fun0 mode_fun rev_args sargs
                   Msupport.resume_raise
                     (error(funct.exp_loc, env, Incoherent_label_order))
             | _ ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-                let previous_arg_loc =
-                  (* [rev_args] is the arguments typed until now, in reverse
-                     order of appearance. Not all arguments have a location
-                     attached (eg. an optional argument that is not passed). *)
-                  (* CR ccasinghino: the above comment is confusing - these
-                     arguments are in reverse order according to the function
-                     type, but not according to their positions in the source
-                     program.  We diverge from upstream here by not trying to
-                     provide a good location in the [Eliminated_optional_arg]
-                     case - maybe fix one day if it is noticeable. *)
-                  rev_args
-                  |> List.find_map get_arg_loc
-                  |> Option.value ~default:funct.exp_loc
-                in
                 Msupport.resume_raise
                   (error(funct.exp_loc, env, Apply_non_function {
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-                let previous_arg_loc =
-                  (* [rev_args] is the arguments typed until now, in reverse
-                     order of appearance. Not all arguments have a location
-                     attached (eg. an optional argument that is not passed). *)
-                  (* CR ccasinghino: the above comment is confusing - these
-                     arguments are in reverse order according to the function
-                     type, but not according to their positions in the source
-                     program.  We diverge from upstream here by not trying to
-                     provide a good location in the [Eliminated_optional_arg]
-                     case - maybe fix one day if it is noticeable. *)
-                  rev_args
-                  |> List.find_map get_arg_loc
-                  |> Option.value ~default:funct.exp_loc
-                in
-                raise(Error(funct.exp_loc, env, Apply_non_function {
-=======
-                raise(Error(funct.exp_loc, env, Apply_non_function {
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
                     funct;
                     func_ty = expand_head env funct.exp_type;
                     res_ty = expand_head env ty_res;
@@ -4902,36 +4844,6 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 mode_fun sargs
     | Some (ad, arrow_kind) ->
       begin
         let (l, mode_arg, mode_ret) = ad in
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-        let may_warn loc w =
-          if not !warned && !Clflags.principal && lv <> generic_level
-          then begin
-            warned := true;
-            Location.prerr_warning loc w
-          end
-        in
-        let sort_arg =
-          match type_sort ~why:Function_argument ~fixed:false env ty_arg with
-          | Ok sort -> sort
-          | Error err -> raise(error(sarg1.pexp_loc, env,
-                                     Function_type_not_rep(ty_arg, err)))
-        in
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        let may_warn loc w =
-          if not !warned && !Clflags.principal && lv <> generic_level
-          then begin
-            warned := true;
-            Location.prerr_warning loc w
-          end
-        in
-        let sort_arg =
-          match type_sort ~why:Function_argument ~fixed:false env ty_arg with
-          | Ok sort -> sort
-          | Error err -> raise(Error(sarg1.pexp_loc, env,
-                                     Function_type_not_rep(ty_arg, err)))
-        in
-=======
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
         let name = label_name l
         and optional = is_optional l
         and omittable = is_omittable l in
@@ -5972,28 +5884,6 @@ let name_cases default lst =
 
 (* Typing of expressions *)
 
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-(** [sdesc_for_hint] is used by error messages to report literals in their
-    original formatting *)
-let unify_exp ?sdesc_for_hint env exp expected_ty =
-  let loc = proper_exp_loc exp in
-  try
-    unify_exp_types loc env exp.exp_type expected_ty
-  with Error(loc, env, Expr_type_clash(err, tfc, None)) ->
-    raise (error(loc, env, Expr_type_clash(err, tfc, sdesc_for_hint)))
-
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-(** [sdesc_for_hint] is used by error messages to report literals in their
-    original formatting *)
-let unify_exp ?sdesc_for_hint env exp expected_ty =
-  let loc = proper_exp_loc exp in
-  try
-    unify_exp_types loc env exp.exp_type expected_ty
-  with Error(loc, env, Expr_type_clash(err, tfc, None)) ->
-    raise (Error(loc, env, Expr_type_clash(err, tfc, sdesc_for_hint)))
-
-=======
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
 let is_exclave_extension_node = function
   | "extension.exclave" | "ocaml.exclave" | "exclave" -> true
   | _ -> false
@@ -6846,78 +6736,6 @@ and type_expect_
                 (Longident.Lident ("self-" ^ cl_num))
                 env
             in
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-      submode ~loc ~env actual_mode expected_mode;
-      if List.is_empty layout_args then exp
-      else { exp with exp_desc = Texp_apply_layout (exp, layout_args) }
-  | Pexp_constant(Pconst_string (str, _, _) as cst) -> (
-      let cst = constant_or_raise env loc cst in
-      (* Terrible hack for format strings *)
-      let ty_exp = expand_head env (protect_expansion env ty_expected) in
-      let fmt6_path =
-        Path.(Pdot (Pident (Ident.create_persistent "CamlinternalFormatBasics"),
-                    "format6"))
-      in
-      let is_format = match get_desc ty_exp with
-        | Tconstr(path, _, _) when Path.same path fmt6_path ->
-          if !Clflags.principal && get_level ty_exp <> generic_level then
-            Location.prerr_warning loc
-              (not_principal "this coercion to format6");
-          true
-        | _ -> false
-      in
-      if is_format then
-        let format_parsetree =
-          { (type_format loc str env) with pexp_loc = sexp.pexp_loc }  in
-        type_expect env expected_mode
-          format_parsetree ty_expected_explained
-      else
-        rue {
-          exp_desc = Texp_constant cst;
-          exp_loc = loc; exp_extra = [];
-          exp_type = instance Predef.type_string;
-          exp_attributes = sexp.pexp_attributes;
-          exp_env = env }
-  )
-  | Pexp_unboxed_unit ->
-      Language_extension.assert_enabled ~loc Layouts Language_extension.Stable;
-=======
-      submode ~loc ~env actual_mode expected_mode;
-      if List.is_empty layout_args then exp
-      else { exp with exp_desc = Texp_apply_layout (exp, layout_args) }
-  | Pexp_constant({pconst_desc = Pconst_string (str, _, _); _} as cst) -> (
-    let cst = constant_or_raise env loc cst in
-    (* Terrible hack for format strings *)
-    let ty_exp = expand_head env (protect_expansion env ty_expected) in
-    let fmt6_path =
-      Path.(Pdot (Pident (Ident.create_persistent "CamlinternalFormatBasics"),
-                  "format6"))
-    in
-    let is_format = match get_desc ty_exp with
-      | Tconstr(path, _, _) when Path.same path fmt6_path ->
-        if !Clflags.principal && get_level ty_exp <> generic_level then
-          Location.prerr_warning loc
-            (not_principal "this coercion to format6");
-        true
-      | _ -> false
-    in
-    if is_format then
-      let format_parsetree =
-        { (type_format loc str env) with pexp_loc = sexp.pexp_loc }  in
-      type_expect env expected_mode
-        format_parsetree ty_expected_explained
-    else
-      rue {
-        exp_desc = Texp_constant cst;
-        exp_loc = loc; exp_extra = [];
-        exp_type = instance Predef.type_string;
-        exp_attributes = sexp.pexp_attributes;
-        exp_env = env }
-  )
-  | Pexp_unboxed_unit ->
-      Language_extension.assert_enabled ~loc Layouts Language_extension.Stable;
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
             Texp_ident { path; lid; desc; kind;
               unique_use = unique_use ~loc ~env actual_mode
                 (as_single_mode expected_mode); mode = actual_mode }
@@ -6935,7 +6753,7 @@ and type_expect_
       submode ~loc ~env actual_mode expected_mode;
       if List.is_empty layout_args then exp
       else { exp with exp_desc = Texp_apply_layout (exp, layout_args) }
-  | Pexp_constant(Pconst_string (str, _, _) as cst) -> (
+  | Pexp_constant({pconst_desc = Pconst_string (str, _, _); _} as cst) -> (
     let cst = constant_or_raise env loc cst in
     (* Terrible hack for format strings *)
     let ty_exp = expand_head env (protect_expansion env ty_expected) in
@@ -8259,77 +8077,8 @@ and type_expect_
       re { exp with exp_extra =
              (Texp_poly cty, loc, sexp.pexp_attributes) :: exp.exp_extra }
   | Pexp_newtype(name, jkind, sbody) ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
     type_newtype_expr ~loc ~env ~expected_mode ~rue ~attributes:sexp.pexp_attributes
       name jkind sbody
-  | Pexp_pack m ->
-      let (p, fl) =
-        match get_desc (Ctype.expand_head env (instance ty_expected)) with
-          Tpackage (p, fl) ->
-            if !Clflags.principal &&
-              get_level (Ctype.expand_head env
-                           (protect_expansion env ty_expected))
-                < Btype.generic_level
-            then
-              Location.prerr_warning loc
-                (not_principal "this module packing");
-            (p, fl)
-        | Tvar _ ->
-            raise (error (loc, env, Cannot_infer_signature))
-        | _ ->
-            raise (error (loc, env, Not_a_packed_module ty_expected))
-      in
-      let (modl, fl') = !type_package env m p fl in
-      let mode = Typedtree.mode_without_locks_exn modl.mod_mode in
-      submode ~loc ~env mode expected_mode;
-      rue {
-        exp_desc = Texp_pack modl;
-        exp_loc = loc; exp_extra = [];
-        exp_type = newty (Tpackage (p, fl'));
-        exp_attributes = sexp.pexp_attributes;
-        exp_env = env }
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-    type_newtype_expr ~loc ~env ~expected_mode ~rue ~attributes:sexp.pexp_attributes
-      name jkind sbody
-  | Pexp_pack m ->
-      let (p, fl) =
-        match get_desc (Ctype.expand_head env (instance ty_expected)) with
-          Tpackage (p, fl) ->
-            if !Clflags.principal &&
-              get_level (Ctype.expand_head env
-                           (protect_expansion env ty_expected))
-                < Btype.generic_level
-            then
-              Location.prerr_warning loc
-                (not_principal "this module packing");
-            (p, fl)
-        | Tvar _ ->
-            raise (Error (loc, env, Cannot_infer_signature))
-        | _ ->
-            raise (Error (loc, env, Not_a_packed_module ty_expected))
-      in
-      let (modl, fl') = !type_package env m p fl in
-      let mode = Typedtree.mode_without_locks_exn modl.mod_mode in
-      submode ~loc ~env mode expected_mode;
-      rue {
-        exp_desc = Texp_pack modl;
-        exp_loc = loc; exp_extra = [];
-        exp_type = newty (Tpackage (p, fl'));
-        exp_attributes = sexp.pexp_attributes;
-        exp_env = env }
-=======
-      let body, ety, id, uid =
-        type_newtype env name jkind (fun env ->
-          let expr = type_exp env expected_mode sbody in
-          expr, expr.exp_type)
-      in
-      (* non-expansive if the body is non-expansive, so we don't introduce
-         any new extra node in the typed AST. *)
-      rue { body with exp_loc = loc; exp_type = ety;
-            exp_extra =
-            (Texp_newtype (id, name, jkind, uid),
-             loc, sexp.pexp_attributes) :: body.exp_extra
-          }
   | Pexp_pack (m, optyp) ->
       begin match optyp with
       | Some ptyp ->
@@ -8365,9 +8114,9 @@ and type_expect_
                   (not_principal "this module packing");
               pack
           | Tvar _ ->
-              raise (Error (loc, env, Cannot_infer_signature))
+              raise (error (loc, env, Cannot_infer_signature))
           | _ ->
-              raise (Error (loc, env, Not_a_packed_module ty_expected))
+              raise (error (loc, env, Not_a_packed_module ty_expected))
           in
           let (modl, pack') = !type_package env m pack in
           let mode = Typedtree.mode_without_locks_exn modl.mod_mode in
@@ -8379,7 +8128,6 @@ and type_expect_
             exp_attributes = sexp.pexp_attributes;
             exp_env = env }
       end
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   | Pexp_open (od, e) ->
       Env.check_no_open_quotations loc env Open_qt;
       let tv = newvar (Jkind.Builtin.any ~why:Dummy_jkind) in
@@ -10085,15 +9833,8 @@ and type_label_exp
         if create then
           raise (error(loc, env, Private_type ty_expected))
         else
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
           raise (error(lid.loc, env, Private_label(lid.txt, ty_expected)));
       let snap = if vars = [] then None else Some (Btype.snapshot ()) in
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-          raise (Error(lid.loc, env, Private_label(lid.txt, ty_expected)));
-      let snap = if vars = [] then None else Some (Btype.snapshot ()) in
-=======
-          raise (Error(lid.loc, env, Private_label(lid.txt, ty_expected)));
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
       let overwrite =
         match overwrite with
         | No_overwrite_label -> No_overwrite
@@ -10461,14 +10202,7 @@ and type_application env app_loc expected_mode position_and_mode
       let type_sort ~why ty =
         match Ctype.type_sort ~why ~fixed:false env ty with
         | Ok sort -> sort
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
         | Error err -> raise (error (app_loc, env, Function_type_not_rep (ty, err)))
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        | Error err -> raise (Error (app_loc, env, Function_type_not_rep (ty, err)))
-=======
-        | Error err ->
-          raise (Error (app_loc, env, Function_type_not_rep (ty, err)))
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
       in
       let arg_sort = type_sort ~why:Function_argument ty_arg in
       let arg_mode, _ =
@@ -10535,19 +10269,13 @@ and type_application env app_loc expected_mode position_and_mode
             type_omitted_parameters_and_build_result_type expected_mode env
               app_loc ty_ret mode_ret args
           in
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
           (try check_curried_application_complete ~env ~app_loc untyped_args
           with exn -> raise_error exn);
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-          check_curried_application_complete ~env ~app_loc untyped_args;
-=======
-          check_curried_application_complete ~env ~app_loc untyped_args;
           (* example:
              [ty_ret] becomes [a:bar -> unit]
              [args] becomes [(Label "a", Omitted ());
                              (Optional "opt", Arg None);
                              (Nolabel, Arg n)] *)
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
           ty_ret, mode_ret, args, position_and_mode
         end
       in
@@ -10703,16 +10431,8 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
     | Not_a_variant_type ->
         let srt = wrong_kind_sort_of_constructor lid.txt in
         let ctx = Expression explanation in
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-        let err = Wrong_expected_kind(srt, ctx, ty_expected) in
-        raise (error (loc, env, err))
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        let error = Wrong_expected_kind(srt, ctx, ty_expected) in
-        raise (Error (loc, env, error))
-=======
         let error = Wrong_expected_kind(srt, ctx, ty_expected) in
         raise (Error (sexp.pexp_loc, env, error))
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   in
   let constrs =
     Env.lookup_all_constructors ~loc:lid.loc Env.Positive lid.txt env
@@ -10724,35 +10444,6 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
   in
   let sargs =
     match sarg with
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-    | None -> []
-    | Some se -> begin
-        match se.pexp_desc with
-        | Pexp_tuple sel when
-            constr.cstr_arity > 1 || Builtin_attributes.explicit_arity attrs
-          ->
-          if components_have_label sel then
-            raise(error(loc, env, Constructor_labeled_arg))
-          else
-            List.map (fun (_, e) -> e) sel
-        | _ -> [se]
-      end
-  in
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-    | None -> []
-    | Some se -> begin
-        match se.pexp_desc with
-        | Pexp_tuple sel when
-            constr.cstr_arity > 1 || Builtin_attributes.explicit_arity attrs
-          ->
-          if components_have_label sel then
-            raise(Error(loc, env, Constructor_labeled_arg))
-          else
-            List.map (fun (_, e) -> e) sel
-        | _ -> [se]
-      end
-  in
-=======
       None -> []
     | Some {pexp_desc = Pexp_tuple sel} when
         constr.cstr_arity > 1
@@ -10765,19 +10456,10 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
         | None -> se
       ) sel
     | Some se -> [se] in
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   if List.length sargs <> constr.cstr_arity then
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-    raise(error(loc, env, Constructor_arity_mismatch
-                            (lid.txt, constr.cstr_arity, List.length sargs)));
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-    raise(Error(loc, env, Constructor_arity_mismatch
-                            (lid.txt, constr.cstr_arity, List.length sargs)));
-=======
     raise(Error(sexp.pexp_loc, env,
                 Constructor_arity_mismatch
                   (lid.txt, constr.cstr_arity, List.length sargs)));
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   let separate = !Clflags.principal || Env.has_local_constraints env in
   let unify_as_construct ty_expected =
     with_local_level_generalize_structure_if separate begin fun () ->
@@ -10828,13 +10510,7 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
               Pexp_record (_, (Some {pexp_desc = Pexp_ident _}| None))})}] ->
         Required
       | _ ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-        raise (error(loc, env, Inlined_record_expected))
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        raise (Error(loc, env, Inlined_record_expected))
-=======
         raise (Error(sexp.pexp_loc, env, Inlined_record_expected))
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
       end
   in
   let constructor_mode =
@@ -10897,21 +10573,9 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
   if constr.cstr_private = Private then
     begin match constr.cstr_repr with
     | Variant_extensible ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-        raise(error(loc, env, Private_constructor (constr, ty_res)))
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        raise(Error(loc, env, Private_constructor (constr, ty_res)))
-=======
         raise(Error(sexp.pexp_loc, env, Private_constructor (constr, ty_res)))
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
     | Variant_boxed _ | Variant_unboxed ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-        raise (error(loc, env, Private_type ty_res));
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        raise (Error(loc, env, Private_type ty_res));
-=======
         raise (Error(sexp.pexp_loc, env, Private_type ty_res));
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
     | Variant_with_null -> assert false
       (* [Variant_with_null] can't be made private due to [or_null_reexport]. *)
     end;
@@ -10952,79 +10616,13 @@ and type_statement ?explanation ?(position=RNontail) env sexp =
     end
   in
   (* Raise the current level to detect non-returning functions *)
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-  let exp =
-    with_local_level
-      (fun () -> type_exp env (mode_max_with_position position) sexp)
-  in
-  let subexp = final_subexpression exp in
-  let ty = expand_head env exp.exp_type in
-  if is_Tvar ty && not !has_errors
-     && get_level ty > get_current_level ()
-     && not (allow_polymorphic subexp) then
-    Location.prerr_warning
-      subexp.exp_loc
-      Warnings.Nonreturning_statement;
-  if !Clflags.strict_sequence then
-    (* CR layouts v5: when we have unboxed unit, allow it for -strict-sequence *)
-    let expected_ty = instance Predef.type_unit in
-    with_explanation explanation (fun () ->
-      unify_exp env exp expected_ty);
-    exp, Jkind.Sort.scannable
-  else begin
-    (* We're requiring the statement to have a representable jkind.  But that
-       doesn't actually rule out things like "assert false"---we'll just end up
-       getting a sort variable for its jkind. *)
-    (* CR layouts v10: Abstract jkinds will introduce cases where we really
-       have [any] and can't get a sort here. *)
-    let tv, sort = new_rep_var ~why:Statement () in
-    if not !has_errors then check_partial_application ~statement:true exp;
-    with_explanation explanation (fun () ->
-      try unify_var env ty tv
-      with Unify err ->
-        raise(error(exp.exp_loc, env,
-          Expr_type_clash(err, None, Some sexp.pexp_desc))));
-    exp, sort
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-  let exp =
-    with_local_level
-      (fun () -> type_exp env (mode_max_with_position position) sexp)
-  in
-  let subexp = final_subexpression exp in
-  let ty = expand_head env exp.exp_type in
-  if is_Tvar ty
-     && get_level ty > get_current_level ()
-     && not (allow_polymorphic subexp) then
-    Location.prerr_warning
-      subexp.exp_loc
-      Warnings.Nonreturning_statement;
-  if !Clflags.strict_sequence then
-    (* CR layouts v5: when we have unboxed unit, allow it for -strict-sequence *)
-    let expected_ty = instance Predef.type_unit in
-    with_explanation explanation (fun () ->
-      unify_exp env exp expected_ty);
-    exp, Jkind.Sort.scannable
-  else begin
-    (* We're requiring the statement to have a representable jkind.  But that
-       doesn't actually rule out things like "assert false"---we'll just end up
-       getting a sort variable for its jkind. *)
-    (* CR layouts v10: Abstract jkinds will introduce cases where we really have
-       [any] and can't get a sort here. *)
-    let tv, sort = new_rep_var ~why:Statement () in
-    check_partial_application ~statement:true exp;
-    with_explanation explanation (fun () ->
-      try unify_var env ty tv
-      with Unify err ->
-        raise(Error(exp.exp_loc, env,
-          Expr_type_clash(err, None, Some sexp.pexp_desc))));
-    exp, sort
-=======
   with_local_level_generalize
     (fun () -> type_exp env (mode_max_with_position position) sexp, sort)
   ~before_generalize: begin fun (exp, _sort) ->
     let subexp = final_subexpression exp in
     let ty = expand_head env exp.exp_type in
     if is_Tvar ty
+    && not !has_errors
     && get_level ty > get_current_level ()
     && not (allow_polymorphic subexp) then
       Location.prerr_warning
@@ -11034,14 +10632,13 @@ and type_statement ?explanation ?(position=RNontail) env sexp =
       with_explanation explanation (fun () ->
         unify_exp ~sexp env exp expected_ty)
     else begin
-      check_partial_application ~statement:true exp;
+      if not !has_errors then check_partial_application ~statement:true exp;
       with_explanation explanation (fun () ->
         try unify_var env ty expected_ty
         with Unify err ->
-          raise(Error(exp.exp_loc, env,
+          raise(error(exp.exp_loc, env,
             Expr_type_clash(err, None, Some sexp))));
     end
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   end
 
 (* Most of the arguments are the same as [type_cases].
@@ -11551,16 +11148,8 @@ and type_let ?check ?check_strict ?(force_toplevel = false)
             with_local_level_generalize_if is_recursive (fun () ->
               type_pattern_list Value existential_context env mutable_flag spatl
                 nvs sorts allow_modules ~is_lpoly
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-            ) ~post:(fun (_, _, _, pvs, _) ->
-              iter_pattern_variables_type generalize pvs)
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-            ) ~post:(fun (_, _, _, pvs, _) ->
-                       iter_pattern_variables_type generalize pvs)
-=======
             ) ~before_generalize:(fun (_, _, _, pvs, _) ->
                                     iter_pattern_variables_type generalize pvs)
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
           in
           (* If recursive, first unify with an approximation of the
              expression *)
