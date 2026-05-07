@@ -378,7 +378,7 @@ module Gen = struct
     let constructor env type_expr path constrs =
       log ~title:"constructors" "[%s]"
         (String.concat ~sep:"; "
-           (List.map constrs ~f:(fun c -> c.Types.cstr_name)));
+           (List.map constrs ~f:(fun c -> c.Data_types.cstr_name)));
       (* [make_constr] builds the PAST repr of a type constructor applied
          to holes *)
       let make_constr env path type_expr cstr_descr =
@@ -416,7 +416,7 @@ module Gen = struct
               if Util.typeable env exp type_expr then Some exp
               else (
                 log ~title:"constructor" "%s's type is not unifiable with %a"
-                  cstr_descr.Types.cstr_name Logger.fmt (fun fmt ->
+                  cstr_descr.Data_types.cstr_name Logger.fmt (fun fmt ->
                     Printtyp.Compat.type_expr fmt type_expr);
                 None))
         | None -> []
@@ -456,10 +456,10 @@ module Gen = struct
     let record env typ path labels record_form =
       log ~title:"record labels" "[%s]"
         (String.concat ~sep:"; "
-           (List.map labels ~f:(fun l -> l.Types.lbl_name)));
+           (List.map labels ~f:(fun l -> l.Data_types.lbl_name)));
 
       let labels =
-        List.map labels ~f:(fun ({ lbl_name; _ } as lbl) ->
+        List.map labels ~f:(fun ({ Data_types.lbl_name; _ } as lbl) ->
             let _, arg, res = Ctype.instance_label ~fixed:true lbl in
             Ctype.unify env res typ;
             let lid =

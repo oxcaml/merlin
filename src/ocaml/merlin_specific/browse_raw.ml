@@ -79,8 +79,8 @@ type node =
   | Method_call of expression * meth * Location.t
   | Record_field :
       [ `Expression of expression | `Pattern of pattern ]
-      * 'rep Types.gen_label_description
-      * 'rep Types.record_form
+      * 'rep Data_types.gen_label_description
+      * 'rep Data_types.record_form
       * Longident.t Location.loc
       -> node
   | Module_binding_name of module_binding
@@ -947,7 +947,7 @@ let fake_path { Location.loc; txt = lid } typ name =
 let pattern_paths (type k) { Typedtree.pat_desc; pat_extra; _ } =
   let init =
     match (pat_desc : k pattern_desc) with
-    | Tpat_construct (lid_loc, { Types.cstr_name; cstr_res; _ }, _, _) ->
+    | Tpat_construct (lid_loc, { Data_types.cstr_name; cstr_res; _ }, _, _) ->
       fake_path lid_loc cstr_res cstr_name
     | Tpat_var { id; name = { loc; txt }; _ } ->
       [ (mkloc (Path.Pident id) loc, Some (Longident.Lident txt)) ]
@@ -999,7 +999,7 @@ let expression_paths { Typedtree.exp_desc; exp_extra; _ } =
         | _ -> assert false
       in
       [ (mkloc (Path.Pident id) loc, lid) ]
-    | Texp_construct (lid_loc, { Types.cstr_name; cstr_res; _ }, _, _) ->
+    | Texp_construct (lid_loc, { Data_types.cstr_name; cstr_res; _ }, _, _) ->
       fake_path lid_loc cstr_res cstr_name
     | Texp_open (od, _) -> module_expr_paths od.open_expr
     (* Normally, [expression_paths] just works at top-level, without
@@ -1112,7 +1112,7 @@ let node_paths_full =
   | Class_declaration ci -> ci_paths ci
   | Class_description ci -> ci_paths ci
   | Class_type_declaration ci -> ci_paths ci
-  | Record_field (_, { Types.lbl_res; lbl_name; _ }, _, lid_loc) ->
+  | Record_field (_, { Data_types.lbl_res; lbl_name; _ }, _, lid_loc) ->
     fake_path lid_loc lbl_res lbl_name
   | _ -> []
 
