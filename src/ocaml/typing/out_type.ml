@@ -830,7 +830,37 @@ let rec get_best_path r env =
         (List.rev l);
       get_best_path r env
 
-let best_type_path p =
+let _ = get_best_path
+
+let rec path_starts_from_hidden_load_path = function
+  | Path.Pident id -> begin
+      match Ident.to_global id with
+      | None -> false
+      | Some modname ->
+          let filename = Global_module.Name.to_string modname ^ ".cmi" in
+          match Load_path.find_normalized_with_visibility filename with
+          | _, Load_path.Hidden -> true
+          | _, Load_path.Visible _ -> false
+          | exception Not_found -> false
+    end
+  | Path.Pdot (path, _) | Path.Pextra_ty (path, _) ->
+      path_starts_from_hidden_load_path path
+  | Path.Papply (path1, path2) ->
+      path_starts_from_hidden_load_path path1
+      || path_starts_from_hidden_load_path path2
+
+let short_paths_best_type_path p =
+  match Short_paths.find_type (Env.short_paths !printing_env) p with
+  | Short_paths.Nth n -> (p, Nth n)
+  | Short_paths.Path (subst, path) ->
+      let subst =
+        match subst with
+        | None -> Id
+        | Some subst -> Map subst
+      in
+      (path, subst)
+
+let legacy_best_type_path p =
   if !printing_env == Env.empty
   then (p, Id)
   else if !Clflags.real_paths
@@ -851,6 +881,17 @@ let best_type_path p =
     let p'' = get_path () in
     (* Format.eprintf "%a = %a -> %a@." path p path p' path p''; *)
     (p'', s)
+
+let best_type_path p =
+  let legacy_path, _ as legacy = legacy_best_type_path p in
+  if
+    path_starts_from_hidden_load_path legacy_path
+    || Short_paths.type_path_is_hidden_or_invisible
+      (Env.short_paths !printing_env) legacy_path
+  then
+    short_paths_best_type_path p
+  else
+    legacy
 
 (* Print a type expression *)
 
@@ -2887,26 +2928,15 @@ let tree_of_modtype_declaration ?(abbrev = false) id md =
   abbreviate ~abbrev tree_of_modtype_declaration id md
 
 let best_type_path p =
-  if !printing_env == Env.empty
-  then (p, Id)
-  else if !Clflags.real_paths
-  then (p, Id)
+  let legacy_path, _ as legacy = legacy_best_type_path p in
+  if
+    path_starts_from_hidden_load_path legacy_path
+    || Short_paths.type_path_is_hidden_or_invisible
+      (Env.short_paths !printing_env) legacy_path
+  then
+    short_paths_best_type_path p
   else
-    let (p', s) = normalize_type_path !printing_env p in
-    let get_path () =
-      try
-        get_best_path (Path.Map.find p' !printing_map) !printing_env
-      with Not_found -> rewrite_double_underscore_paths !printing_env p'
-    in
-    while !printing_cont <> [] &&
-      fst (path_size (get_path ()) !printing_env) > !printing_depth
-    do
-      printing_cont := List.map snd (Env.run_iter_cont !printing_cont);
-      incr printing_depth;
-    done;
-    let p'' = get_path () in
-    (* Format.eprintf "%a = %a -> %a@." path p path p' path p''; *)
-    (p'', s)
+    legacy
 
 let shorten_type_path env p =
   wrap_printing_env ~error:false env (fun () -> fst (best_type_path p))

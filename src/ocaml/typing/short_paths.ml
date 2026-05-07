@@ -1915,6 +1915,13 @@ let find_type_simple t path =
   | exception Not_found -> path
   | path -> path
 
+let type_path_is_hidden_or_invisible t path =
+  let Shortest shortest = shortest t in
+  match Graph.find_type shortest.graph path with
+  | exception Not_found -> false
+  | typ ->
+      Type.hidden typ || not (Graph.is_type_path_visible shortest.graph path)
+
 let find_class_type t path =
   let Shortest shortest = shortest t in
   match Shortest.find_class_type shortest path with
