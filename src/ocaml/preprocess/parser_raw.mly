@@ -3889,11 +3889,11 @@ pattern_no_exn:
       self AS mkrhs(val_ident)
         { Ppat_alias($1, $3) }
     | self AS error
-        { expecting $loc($3) "identifier" }
+        { expecting $loc($3) "identifier"; assert false }
     | labeled_tuple_pattern(self)
         { $1 }
     | self COLONCOLON error
-        { expecting $loc($3) "pattern" }
+        { expecting $loc($3) "pattern"; assert false }
     | self BAR pattern
         { Ppat_or($1, $3) }
     (*| self BAR error
@@ -4429,13 +4429,13 @@ type_variance:
         if $1 = "-+" then Bivariant, NoInjectivity else
         if $1 = "+-!" then Bivariant, Injective else
         if $1 = "-+!" then Bivariant, Injective else
-        expecting $loc($1) "type_variance" }
+        (expecting $loc($1) "type_variance"; assert false) }
   | PREFIXOP
       { if $1 = "!+" then Covariant, Injective else
         if $1 = "!-" then Contravariant, Injective else
         if $1 = "!+-" then Bivariant, Injective else
         if $1 = "!-+" then Bivariant, Injective else
-        expecting $loc($1) "type_variance" }
+        (expecting $loc($1) "type_variance"; assert false) }
 ;
 
 (* A sequence of constructor declarations is either a single BAR, which
