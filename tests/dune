@@ -16,8 +16,10 @@
  (package merlin)
  (applies_to :whole_subtree)
  (deps
+  (env_var MERLIN_TEST_OCAML_PATH)
   %{bin:merlin-wrapper}
   %{bin:ocamlc-wrapper}
+  %{bin:ocaml-index}
   %{bin:ocamlmerlin-server}
   %{bin:ocamlmerlin}
   %{bin:dot-merlin-reader}
