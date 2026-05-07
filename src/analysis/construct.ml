@@ -528,7 +528,7 @@ module Gen = struct
                   val_attributes = [];
                   val_zero_alloc = Zero_alloc.default;
                   val_modalities = Mode.Modality.(of_const Const.id);
-                  val_uid = Uid.mk ~current_unit:(Env.get_unit_name ())
+                  val_uid = Uid.mk ~current_unit:(Env.get_current_unit ())
                 }
               in
               let env =
