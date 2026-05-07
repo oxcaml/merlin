@@ -2871,6 +2871,9 @@ let best_type_path p =
     (* Format.eprintf "%a = %a -> %a@." path p path p' path p''; *)
     (p'', s)
 
+let shorten_type_path env p =
+  wrap_printing_env ~error:false env (fun () -> fst (best_type_path p))
+
 let tree_of_class_type kind cty = tree_of_class_type kind [] cty
 let prepare_class_type cty = prepare_class_type [] cty
 
