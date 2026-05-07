@@ -1948,7 +1948,7 @@ let prepare_decl id decl =
   end;
   ty_manifest, params
 
-let tree_of_type_decl id decl =
+let tree_of_type_decl ?(print_non_value_inferred_jkind = false) id decl =
   let ty_manifest, params = prepare_decl id decl in
   let type_param ot_variance ot_jkind =
     function
@@ -2060,8 +2060,9 @@ let tree_of_type_decl id decl =
     Jkind.is_value_for_printing ~ignore_null:false !printing_env decl.type_jkind
   in
   let otype_jkind =
-    match ty, is_value, unsafe_mode_crossing with
-    | (Otyp_abstract, false, _) | (_, _, true) ->
+    match ty, is_value, unsafe_mode_crossing, print_non_value_inferred_jkind with
+    | (Otyp_abstract, false, _, _) | (_, _, true, _)
+    | (_, false, _, true) ->
         (* The two cases of (C1) from the Note correspond to Otyp_abstract.
            Anything but the default must be user-written, so we print the
            user-written annotation. *)
@@ -2090,9 +2091,9 @@ let add_type_decl_to_preparation id decl =
 let tree_of_prepared_type_decl id decl =
   tree_of_type_decl id decl
 
-let tree_of_type_decl id decl =
+let tree_of_type_decl ?print_non_value_inferred_jkind id decl =
   reset_except_conflicts();
-  tree_of_type_decl id decl
+  tree_of_type_decl ?print_non_value_inferred_jkind id decl
 
 let add_constructor_to_preparation c =
   prepare_type_constructor_arguments c.cd_args;
@@ -2102,8 +2103,9 @@ let prepared_constructor ppf c =
   !Oprint.out_constr ppf (tree_of_single_constructor c)
 
 
-let tree_of_type_declaration id decl rs =
-  Osig_type (tree_of_type_decl id decl, tree_of_rec rs)
+let tree_of_type_declaration ?print_non_value_inferred_jkind id decl rs =
+  Osig_type
+    (tree_of_type_decl ?print_non_value_inferred_jkind id decl, tree_of_rec rs)
 
 let tree_of_prepared_type_declaration id decl rs =
   Osig_type (tree_of_prepared_type_decl id decl, tree_of_rec rs)
@@ -2114,6 +2116,38 @@ let add_type_declaration_to_preparation id decl =
 let prepared_type_declaration id ppf decl =
   !Oprint.out_sig_item ppf
     (tree_of_prepared_type_declaration id decl Trec_first)
+
+let type_declaration_for_merlin ~print_non_value_inferred_jkind id ppf decl =
+  !Oprint.out_sig_item ppf
+    (tree_of_type_declaration ~print_non_value_inferred_jkind id decl
+       Trec_first)
+
+let print_annotated_qtvs_as_comment ppf qtvs =
+  let qtvs =
+    List.filter_map
+      (function
+        | _, None -> None
+        | name, Some annot -> Some (name, annot))
+      qtvs
+  in
+  match qtvs with
+  | [] -> ()
+  | _ :: _ as qtvs ->
+      let annotated_qtv ppf (name, jkind) =
+        Format_doc.fprintf ppf "@['%s : %a@]" name !Oprint.out_jkind jkind
+      in
+      Format_doc.fprintf ppf " @[(* @[%a@] *)@]"
+        (Format_doc.pp_print_list annotated_qtv
+           ~pp_sep:(fun ppf () -> Format_doc.fprintf ppf ", "))
+        qtvs
+
+let type_scheme_for_merlin ~print_non_value_jkind_on_type_variables ppf ty =
+  prepare_for_printing [ty];
+  prepared_type_scheme ppf ty;
+  if print_non_value_jkind_on_type_variables
+  then (
+    let qtvs = extract_qtvs [ty] in
+    print_annotated_qtvs_as_comment ppf qtvs)
 
 
 (* When printing extension constructor, it is important to ensure that
@@ -2881,3 +2915,15 @@ let tree_of_type_path p =
   let (p', s) = best_type_path p in
   let p'' = if (s = Id) then p' else p in
   tree_of_path p''
+
+module Compat = struct
+  type 'a printer = Format.formatter -> 'a -> unit
+
+  let type_declaration_for_merlin ~print_non_value_inferred_jkind id =
+    Format_doc.compat
+      (type_declaration_for_merlin ~print_non_value_inferred_jkind id)
+
+  let type_scheme_for_merlin ~print_non_value_jkind_on_type_variables =
+    Format_doc.compat
+      (type_scheme_for_merlin ~print_non_value_jkind_on_type_variables)
+end
