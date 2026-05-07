@@ -16,6 +16,10 @@
 open Out_type
 module Fmt = Format_doc
 
+let wrap_printing_env ?verbosity ?(error = false) env f =
+  let _ = verbosity in
+  wrap_printing_env ~error env f
+
 let namespaced_ident namespace  id =
   Out_name.print (ident_name (Some namespace) id)
 

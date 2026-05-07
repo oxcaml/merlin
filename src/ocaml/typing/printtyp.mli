@@ -33,7 +33,8 @@ val printed_signature: string -> Format.formatter -> signature -> unit
 
 module type Printers := sig
 
-    val wrap_printing_env: error:bool -> Env.t -> (unit -> 'a) -> 'a
+    val wrap_printing_env:
+      ?verbosity:'verbosity -> ?error:bool -> Env.t -> (unit -> 'a) -> 'a
     (** Call the function using the environment for type path shortening This
         affects all the printing functions below Also, if [~error:true], then
         disable the loading of cmis *)
