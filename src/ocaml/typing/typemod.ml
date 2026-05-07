@@ -5000,7 +5000,7 @@ let report_error ~loc _env = function
          Names must be unique in a given structure or signature.@]"
         (Sig_component_kind.to_string kind) Style.inline_code name
   | Non_generalizable { vars; expression } ->
-      let[@manual.ref "ss:valuerestriction"] manual_ref = [ 6; 1; 2 ] in
+      let manual_ref = [ 6; 1; 2 ] in
       Out_type.prepare_for_printing vars;
       Out_type.add_type_to_preparation expression;
       Location.errorf ~loc
@@ -5011,7 +5011,7 @@ let report_error ~loc _env = function
            (Style.as_inline_code Out_type.prepared_type_scheme)) vars
         Misc.print_see_manual manual_ref
   | Non_generalizable_module { vars; mty; item } ->
-      let[@manual.ref "ss:valuerestriction"] manual_ref = [ 6; 1; 2 ] in
+      let manual_ref = [ 6; 1; 2 ] in
       Out_type.prepare_for_printing vars;
       Out_type.add_type_to_preparation item.val_type;
       Location.errorf ~loc
