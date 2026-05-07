@@ -33,7 +33,7 @@ module Util = struct
   let predef_types =
     let tbl = Hashtbl.create 14 in
     let () =
-      let constant c = Ast_helper.Exp.constant c in
+      let constant c = Ast_helper.Exp.constant (Ast_helper.Const.mk c) in
       let construct s =
         Ast_helper.Exp.construct (Location.mknoloc (Longident.Lident s)) None
       in

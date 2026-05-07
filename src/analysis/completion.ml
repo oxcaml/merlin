@@ -636,7 +636,8 @@ let complete_prefix ?get_doc ?target_type ?(kinds = []) ~keywords ~prefix
   in
   try
     match prefix with
-    | Longident.Ldot (prefix_path, prefix) -> find ~prefix_path ~is_label prefix
+    | Longident.Ldot (prefix_path, prefix) ->
+      find ~prefix_path:prefix_path.txt ~is_label prefix.txt
     | Longident.Lident prefix ->
       (* Regular completion *)
       let compl = find ~is_label prefix in

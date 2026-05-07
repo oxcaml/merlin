@@ -24,7 +24,8 @@ end = struct
   let rec to_shortest_lid ~(opens : Path.t list) = function
     | Path.Pdot (path, name) when List.exists ~f:(Path.same path) opens ->
       Longident.Lident name
-    | Path.Pdot (path, name) -> Ldot (to_shortest_lid ~opens path, name)
+    | Path.Pdot (path, name) ->
+      Ldot (Location.mknoloc (to_shortest_lid ~opens path), Location.mknoloc name)
     | Pident ident -> Lident (Ident.name ident)
     | _ -> assert false
 
@@ -33,7 +34,7 @@ end = struct
     Option.value_map name ~default:lid ~f:(fun name ->
         match lid with
         | Lident _ -> Lident name
-        | Ldot (lid, _) -> Ldot (lid, name)
+        | Ldot (lid, _) -> Ldot (lid, Location.mknoloc name)
         | _ -> assert false)
 
   let to_shortest_lid ~env ?name ~env_check path =
