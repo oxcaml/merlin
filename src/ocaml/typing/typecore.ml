@@ -11925,19 +11925,9 @@ and type_andops env sarg sands expected_sort expected_ty =
         expected_sort,
         []
     | { pbop_op = sop; pbop_exp = sexp; pbop_loc = loc; _ } :: rest ->
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-      let op_path, op_desc, op_type, ty_arg, sort_arg, ty_rest, sort_rest,
-          ty_result, op_result_sort =
-          with_local_level_iter_if_principal begin fun () ->
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-        let op_path, op_desc, op_type, ty_arg, sort_arg, ty_rest, sort_rest,
-            ty_result, op_result_sort =
-          with_local_level_iter_if_principal begin fun () ->
-=======
         let op_path, op_desc, op_type, ty_arg, sort_arg, ty_rest, sort_rest,
             ty_result, op_result_sort =
           with_local_level_generalize_structure_if_principal begin fun () ->
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
             let op_path, op_desc = type_binding_op_ident env sop in
             let op_type = op_desc.val_type in
             let ty_arg, sort_arg = new_rep_var ~why:Function_argument () in
@@ -12527,15 +12517,9 @@ let type_expression env jkind sexp =
       let expected = mk_expected (newvar jkind) in
       type_expect env mode_toplevel_expression sexp expected
     end
-<<<<<<< janestreet/merlin-jst:merge-5.4-minus37
-      ~post:(may_lower_contravariant_then_generalize env)
-||||||| oxcaml/oxcaml.git:eb63e0e41869ede83ad3001e4facdff54383861d
-    ~post:(may_lower_contravariant_then_generalize env)
-=======
     ~before_generalize:(fun exp ->
         may_lower_contravariant env exp;
         generalize exp.exp_type)
->>>>>>> oxcaml/oxcaml.git:cf93f7beb6e730de4b7217c27b960e6e7ba1ada9
   in
   let exp =
     match sexp.pexp_desc with
