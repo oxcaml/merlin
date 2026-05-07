@@ -1398,7 +1398,7 @@ let type_continuation_pat env expected_ty sp =
         Some (id, desc)
   | Ppat_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
-  | _ -> raise (Error (loc, env, Invalid_continuation_pattern))
+  | _ -> raise (error (loc, env, Invalid_continuation_pattern))
 
 (* unification inside type_exp and type_expect *)
 let unify_exp_types loc env ty expected_ty =
@@ -1440,7 +1440,7 @@ let unify_exp ~sexp env exp expected_ty =
   try
     unify_exp_types loc env exp.exp_type expected_ty
   with Error(loc, env, Expr_type_clash(err, tfc, None)) ->
-    raise (Error(loc, env, Expr_type_clash(err, tfc, Some sexp)))
+    raise (error (loc, env, Expr_type_clash(err, tfc, Some sexp)))
 
 (* helper notation for Pattern_env.t *)
 let (!!) (penv : Pattern_env.t) = penv.env
@@ -1451,7 +1451,7 @@ let (!!) (penv : Pattern_env.t) = penv.env
 let unify_pat_types loc env ty ty' =
   try unify env ty ty' with
   | Unify err ->
-      raise(Error(loc, env, Pattern_type_clash(err, None)))
+      raise(error(loc, env, Pattern_type_clash(err, None)))
   | Tags(l1,l2) ->
       raise(Typetexp.Error(loc, env, Typetexp.Variant_tags (l1, l2)))
 
@@ -3175,7 +3175,7 @@ let forbid_atomic_field_patterns loc penv (label_lid, label, pat) =
     | _ -> false
   in
   if Types.is_atomic label.lbl_mut && not (wildcard pat) then
-    raise (Error (loc, !!penv, Atomic_in_pattern label_lid.txt))
+    raise (error (loc, !!penv, Atomic_in_pattern label_lid.txt))
 
 (** [type_pat] propagates the expected type, and
     unification may update the typing environment. *)
@@ -3246,7 +3246,7 @@ and type_pat_aux
        when we allow non-values in boxed tuples. *)
     assert (closed = Open || List.length spl >= 2);
     Option.iter
-      (fun l -> raise (Error (loc, !!penv, Repeated_tuple_pat_label l)))
+      (fun l -> raise (error (loc, !!penv, Repeated_tuple_pat_label l)))
       (Misc.repeated_label spl);
     let args =
       match get_desc (expand_head !!penv expected_ty) with
@@ -3282,7 +3282,7 @@ and type_pat_aux
       Language_extension.Stable;
     assert (closed = Open || List.length spl >= 2);
     Option.iter
-      (fun l -> raise (Error (loc, !!penv, Repeated_tuple_pat_label l)))
+      (fun l -> raise (error (loc, !!penv, Repeated_tuple_pat_label l)))
       (Misc.repeated_label spl);
     let args =
       match get_desc (expand_head !!penv expected_ty) with
@@ -3628,7 +3628,7 @@ and type_pat_aux
         match Ctype.check_constructor_crossing_destruction !!penv
           lid constr.cstr_tag ~res:expected_ty ~args locks with
         | Ok mode -> mode
-        | Error e -> raise (Error (lid.loc, !!penv,
+        | Error e -> raise (error (lid.loc, !!penv,
           Submode_failed (e, Constructor lid.txt)))
       in
       let is_contained_by : Mode.Hint.is_contained_by =
@@ -3856,7 +3856,7 @@ and type_pat_aux
         pat_unique_barrier = Unique_barrier.not_computed ();
       }
   | Ppat_effect _ ->
-      raise (Error (loc, !!penv, Effect_pattern_below_toplevel))
+      raise (error (loc, !!penv, Effect_pattern_below_toplevel))
   | Ppat_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
 
@@ -4757,7 +4757,7 @@ let collect_unknown_apply_args env funct ty_fun0 mode_fun rev_args sargs
                 in
                 let loc = Location.merge ~ghost:false locs in
                 let some_args_ok = not (Misc.Stdlib.List.is_empty rev_args) in
-                raise(Error(loc, env,
+                raise(error(loc, env,
                             Impossible_function_jkind
                               { some_args_ok; ty_fun; jkind }))
               end;
@@ -4880,7 +4880,7 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 mode_fun sargs
                   if is_position l
                   then
                     raise
-                      (Error
+                      (error
                          ( sarg.pexp_loc
                          , env
                          , Nonoptional_call_pos_label label))
@@ -4900,7 +4900,7 @@ let collect_apply_args env funct ignore_labels ty_fun ty_fun0 mode_fun sargs
               with
               | Ok sort -> sort
               | Error err ->
-                raise(Error(first_arg_loc, env,
+                raise(error(first_arg_loc, env,
                             Function_type_not_rep(ty_arg, err)))
             in
             let arg =
@@ -4950,7 +4950,7 @@ let type_omitted_parameters_and_build_result_type expected_mode env loc ty_ret
                match type_sort ~why:Function_result ~fixed:false env ty_ret with
                | Ok sort -> sort
                | Error err ->
-                 raise (Error (loc, env, Function_type_not_rep (ty_ret, err)))
+                 raise (error (loc, env, Function_type_not_rep (ty_ret, err)))
              in
              let ty_ret =
                newty2 ~level
@@ -6362,7 +6362,7 @@ let rec type_exp ?recarg ?(overwrite=No_overwrite) env expected_mode sexp =
 
 and check_layout_args_empty ~loc ~env layout_args ctx =
   if not (List.is_empty layout_args) then
-    raise (Error (loc, env, Layout_poly_inst_not_yet_supported ctx))
+    raise (error (loc, env, Layout_poly_inst_not_yet_supported ctx))
 
 and type_expect ?recarg ?(overwrite=No_overwrite) env
       (expected_mode : expected_mode) sexp ty_expected_explained =
@@ -7145,7 +7145,7 @@ and type_expect_
         split_cases [] [] [] caselist
       in
       if val_caselist = [] && eff_caselist <> [] then
-        raise (Error (loc, env, No_value_clauses));
+        raise (error (loc, env, No_value_clauses));
       let val_cases, partial =
         type_cases Computation env arg_pat_mode expected_mode arg.exp_type
           sort ty_expected_explained ~check_if_total:true loc val_caselist
@@ -7388,7 +7388,7 @@ and type_expect_
           type_label_exp ~overwrite:No_overwrite_label false env mode loc ty_record
             (lid, label, snewval) Legacy
         | Immutable ->
-          raise(Error(loc, env, Label_not_mutable lid.txt))
+          raise(error(loc, env, Label_not_mutable lid.txt))
       in
       let record =
         { record with exp_extra =
@@ -7514,7 +7514,7 @@ and type_expect_
         true
       | Baccess_field
           (_, { lbl_mut = Mutable { mode = _; atomic = Atomic }; _ }) ->
-        raise (Error(loc, env, Block_index_atomic_unsupported))
+        raise (error(loc, env, Block_index_atomic_unsupported))
     in
     let (el_ty, modality), uas =
       List.fold_left_map
@@ -7538,7 +7538,7 @@ and type_expect_
       match Modality.Const.equate modality expected_modality with
       | Ok () -> ()
       | Error err ->
-        raise (Error(loc, env, Block_index_modality_mismatch { mut; err }))
+        raise (error(loc, env, Block_index_modality_mismatch { mut; err }))
     end;
     let el_ty =
       if flat_float then
@@ -7554,7 +7554,7 @@ and type_expect_
         | Tconstr(p, args, _) when has_unboxed_version p ->
           newconstr (Path.unboxed_version p) args
         | _ ->
-          raise (Error(loc, env, Block_index_flattened_record el_ty))
+          raise (error(loc, env, Block_index_flattened_record el_ty))
       else
         el_ty
     in
@@ -8338,7 +8338,7 @@ and type_expect_
           in
           Env.mark_label_used Env.Projection label.lbl_uid;
           if (not (Types.is_atomic label.lbl_mut))
-          then raise (Error (loc, env, Label_not_atomic lid.txt));
+          then raise (error (loc, env, Label_not_atomic lid.txt));
           let alloc_mode, argument_mode =
             register_allocation ~loc expected_mode
           in
@@ -8347,7 +8347,7 @@ and type_expect_
           with
           | Ok () -> ()
           | Error _ ->
-            raise (Error (loc, env, Modalities_on_atomic_field lid.txt))
+            raise (error (loc, env, Modalities_on_atomic_field lid.txt))
           end;
           submode ~loc ~env rmode argument_mode;
           let record =
@@ -8364,7 +8364,7 @@ and type_expect_
             exp_attributes = sexp.pexp_attributes;
             exp_env = env }
       | _ ->
-          raise (Error (loc, env, Invalid_atomic_loc_payload))
+          raise (error (loc, env, Invalid_atomic_loc_payload))
       end
   | Pexp_extension ext ->
       raise (Error_forward (Builtin_attributes.error_of_extension ext))
@@ -8431,7 +8431,7 @@ and type_expect_
       if not (Language_extension.is_enabled Overwriting) then
         raise (Typetexp.Error (loc, env, Unsupported_extension Overwriting));
       if not (can_be_overwritten exp2.pexp_desc) then
-        raise (Error (exp2.pexp_loc, env, Overwrite_of_invalid_term));
+        raise (error (exp2.pexp_loc, env, Overwrite_of_invalid_term));
       let cell_mode, _ =
         (* The overwritten cell has to be unique
            and should have the areality expected here: *)
@@ -8585,7 +8585,7 @@ and type_block_access env expected_base_ty principal
       | Record_float -> true
       | Record_ufloat -> false
       | Record_unboxed ->
-        raise (Error (lid.loc, env, Block_access_record_unboxed))
+        raise (error (lid.loc, env, Block_access_record_unboxed))
       | Record_inlined _ ->
         Misc.fatal_error "Typecore.type_block_access: inlined record"
     in
@@ -8593,7 +8593,7 @@ and type_block_access env expected_base_ty principal
       match label.lbl_private with
       | Public -> ()
       | Private ->
-        raise (Error (lid.loc, env, Block_access_private_record))
+        raise (error (lid.loc, env, Block_access_private_record))
     in
     let modality = label.lbl_modalities in
     { ba; base_ty = ty_res; el_ty = ty_arg; flat_float; modality }
@@ -8641,7 +8641,7 @@ and type_unboxed_access env loc el_ty ua =
       try unify_exp_types loc env ty_res el_ty
       with Error (_, _, Expr_type_clash _) ->
         let err = Invalid_unboxed_access { prev_el_type = el_ty; ua } in
-        raise (Error (lid.loc, env, err))
+        raise (error (lid.loc, env, err))
     end;
     (ty_arg, label.lbl_modalities), Uaccess_unboxed_field (lid, label)
 
@@ -9834,7 +9834,6 @@ and type_label_exp
           raise (error(loc, env, Private_type ty_expected))
         else
           raise (error(lid.loc, env, Private_label(lid.txt, ty_expected)));
-      let snap = if vars = [] then None else Some (Btype.snapshot ()) in
       let overwrite =
         match overwrite with
         | No_overwrite_label -> No_overwrite
@@ -10288,7 +10287,7 @@ and type_tuple ~overwrite ~loc ~env ~(expected_mode : expected_mode) ~ty_expecte
   let arity = List.length sexpl in
   assert (arity >= 2);
   Option.iter
-    (fun l -> raise (Error (loc, env, Repeated_tuple_exp_label l)))
+    (fun l -> raise (error (loc, env, Repeated_tuple_exp_label l)))
     (Misc.repeated_label sexpl);
   let alloc_mode, value_mode =
     register_allocation_value_mode ~loc expected_mode.mode
@@ -10360,7 +10359,7 @@ and type_unboxed_tuple ~loc ~env ~(expected_mode : expected_mode) ~ty_expected
   let arity = List.length sexpl in
   assert (arity >= 2);
   Option.iter
-    (fun l -> raise (Error (loc, env, Repeated_tuple_exp_label l)))
+    (fun l -> raise (error (loc, env, Repeated_tuple_exp_label l)))
     (Misc.repeated_label sexpl);
   let argument_mode =
     expected_mode.mode
@@ -10431,8 +10430,8 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
     | Not_a_variant_type ->
         let srt = wrong_kind_sort_of_constructor lid.txt in
         let ctx = Expression explanation in
-        let error = Wrong_expected_kind(srt, ctx, ty_expected) in
-        raise (Error (sexp.pexp_loc, env, error))
+        let err = Wrong_expected_kind(srt, ctx, ty_expected) in
+        raise (error (sexp.pexp_loc, env, err))
   in
   let constrs =
     Env.lookup_all_constructors ~loc:lid.loc Env.Positive lid.txt env
@@ -10452,12 +10451,12 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
       List.map (fun (l, se) ->
         match l with
         | Some _ ->
-          raise (Error(sexp.pexp_loc, env, Constructor_labeled_arg))
+          raise (error(sexp.pexp_loc, env, Constructor_labeled_arg))
         | None -> se
       ) sel
     | Some se -> [se] in
   if List.length sargs <> constr.cstr_arity then
-    raise(Error(sexp.pexp_loc, env,
+    raise(error(sexp.pexp_loc, env,
                 Constructor_arity_mismatch
                   (lid.txt, constr.cstr_arity, List.length sargs)));
   let separate = !Clflags.principal || Env.has_local_constraints env in
@@ -10510,14 +10509,14 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
               Pexp_record (_, (Some {pexp_desc = Pexp_ident _}| None))})}] ->
         Required
       | _ ->
-        raise (Error(sexp.pexp_loc, env, Inlined_record_expected))
+        raise (error(sexp.pexp_loc, env, Inlined_record_expected))
       end
   in
   let constructor_mode =
     match Ctype.check_constructor_crossing_creation env lid
       constr.cstr_tag ~res:ty_res ~args:ty_args locks with
     | Ok mode -> mode
-    | Error e -> raise (Error (lid.loc, env,
+    | Error e -> raise (error (lid.loc, env,
         Submode_failed (e, Constructor lid.txt)))
   in
   let expected_mode =
@@ -10536,7 +10535,7 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
   in
   begin match overwrite, constr.cstr_repr with
   | Overwriting(_, _, _), Variant_unboxed ->
-    raise (Error (sexp.pexp_loc, env, Overwrite_of_invalid_term));
+    raise (error (sexp.pexp_loc, env, Overwrite_of_invalid_term));
   | _, _ -> ()
   end;
   let overwrites =
@@ -10573,9 +10572,9 @@ and type_construct ~overwrite ~sexp env (expected_mode : expected_mode) lid sarg
   if constr.cstr_private = Private then
     begin match constr.cstr_repr with
     | Variant_extensible ->
-        raise(Error(sexp.pexp_loc, env, Private_constructor (constr, ty_res)))
+        raise(error(sexp.pexp_loc, env, Private_constructor (constr, ty_res)))
     | Variant_boxed _ | Variant_unboxed ->
-        raise (Error(sexp.pexp_loc, env, Private_type ty_res));
+        raise (error(sexp.pexp_loc, env, Private_type ty_res));
     | Variant_with_null -> assert false
       (* [Variant_with_null] can't be made private due to [or_null_reexport]. *)
     end;
@@ -11101,7 +11100,7 @@ and type_let ?check ?check_strict ?(force_toplevel = false)
       end;
       List.iter (fun binding ->
         if binding.pvb_is_poly <> first.pvb_is_poly then
-          raise (Error(binding.pvb_loc, env, Mixed_poly_nonpoly_bindings))
+          raise (error(binding.pvb_loc, env, Mixed_poly_nonpoly_bindings))
       ) rest;
       first.pvb_is_poly
   in
