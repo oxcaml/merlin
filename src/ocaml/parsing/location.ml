@@ -885,7 +885,7 @@ let batch_mode_printer : report_printer =
       pp_footnote report.footnote
   in
   let pp self ppf report =
-    setup_tags ();
+    (* setup_tags (); *)
     separate_new_message ppf;
     let printer ppf () = match report.kind with
       | Report_warning _
@@ -941,7 +941,7 @@ let batch_mode_printer : report_printer =
 (*
 let terminfo_toplevel_printer (lb: lexbuf): report_printer =
   let pp self ppf err =
-    setup_tags ();
+    (* setup_tags (); *)
     (* Highlight all toplevel locations of the report, instead of displaying
        the main location. Do it now instead of in [pp_main_loc], to avoid
        messing with Format boxes. *)
