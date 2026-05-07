@@ -200,6 +200,7 @@ let () =
   Jkind.set_print_type_expr Doc.type_expr
 
 module Compat = struct
+  let wrap_printing_env = wrap_printing_env
   let longident = longident
   let ident = ident
   let path = path
@@ -211,6 +212,7 @@ module Compat = struct
   let label = label
   let constructor = constructor
   let constructor_arguments = constructor_arguments
+  let modality = modality
   let extension_constructor = extension_constructor
   let extension_only_constructor = extension_only_constructor
   let value_description = value_description

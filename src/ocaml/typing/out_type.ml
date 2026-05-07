@@ -2919,8 +2919,6 @@ let tree_of_type_path p =
   tree_of_path p''
 
 module Compat = struct
-  type 'a printer = Format.formatter -> 'a -> unit
-
   let type_declaration_for_merlin ~print_non_value_inferred_jkind id =
     Format_doc.compat
       (type_declaration_for_merlin ~print_non_value_inferred_jkind id)
