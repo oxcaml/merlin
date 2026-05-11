@@ -617,16 +617,12 @@ let tree_of_rec = function
 
 type param_subst = Id | Nth of int | Map of int list
 
-let is_nth = function
-    Nth _ -> true
-  | _ -> false
-
 let compose l1 = function
   | Id -> Map l1
   | Map l2 -> Map (List.map (List.nth l1) l2)
   | Nth n  -> Nth (List.nth l1 n)
 
-let apply_subst s1 tyl =
+let _apply_subst s1 tyl =
   if tyl = [] then []
   (* cf. PR#7543: Typemod.type_package doesn't respect type constructor arity *)
   else
@@ -832,35 +828,7 @@ let rec get_best_path r env =
 
 let _ = get_best_path
 
-let rec path_starts_from_hidden_load_path = function
-  | Path.Pident id -> begin
-      match Ident.to_global id with
-      | None -> false
-      | Some modname ->
-          let filename = Global_module.Name.to_string modname ^ ".cmi" in
-          match Load_path.find_normalized_with_visibility filename with
-          | _, Load_path.Hidden -> true
-          | _, Load_path.Visible _ -> false
-          | exception Not_found -> false
-    end
-  | Path.Pdot (path, _) | Path.Pextra_ty (path, _) ->
-      path_starts_from_hidden_load_path path
-  | Path.Papply (path1, path2) ->
-      path_starts_from_hidden_load_path path1
-      || path_starts_from_hidden_load_path path2
-
-let short_paths_best_type_path p =
-  match Short_paths.find_type (Env.short_paths !printing_env) p with
-  | Short_paths.Nth n -> (p, Nth n)
-  | Short_paths.Path (subst, path) ->
-      let subst =
-        match subst with
-        | None -> Id
-        | Some subst -> Map subst
-      in
-      (path, subst)
-
-let legacy_best_type_path p =
+let best_type_path_original p =
   if !printing_env == Env.empty
   then (p, Id)
   else if !Clflags.real_paths
@@ -882,16 +850,47 @@ let legacy_best_type_path p =
     (* Format.eprintf "%a = %a -> %a@." path p path p' path p''; *)
     (p'', s)
 
+type type_result = Short_paths.type_result =
+  | Nth of int
+  | Path of int list option * Path.t
+
+type type_resolution = Short_paths.type_resolution =
+  | Nth of int
+  | Subst of int list
+  | Id
+
+let apply_subst ns args =
+  List.map (List.nth args) ns
+
+let apply_subst_opt nso args =
+  match nso with
+  | None -> args
+  | Some ns -> apply_subst ns args
+
+let apply_nth n args =
+  List.nth args n
+
 let best_type_path p =
-  let legacy_path, _ as legacy = legacy_best_type_path p in
-  if
-    path_starts_from_hidden_load_path legacy_path
-    || Short_paths.type_path_is_hidden_or_invisible
-      (Env.short_paths !printing_env) legacy_path
-  then
-    short_paths_best_type_path p
-  else
-    legacy
+  if !Clflags.real_paths || !printing_env == Env.empty
+  then Path(None, p)
+  else Short_paths.find_type (Env.short_paths !printing_env) p
+
+let best_type_path_resolution p =
+  if !Clflags.real_paths || !printing_env == Env.empty
+  then Id
+  else Short_paths.find_type_resolution (Env.short_paths !printing_env) p
+
+let best_type_path_simple p =
+  if !Clflags.real_paths || !printing_env == Env.empty
+  then p
+  else Short_paths.find_type_simple (Env.short_paths !printing_env) p
+
+(* When building a tree for a best type path, we should not disambiguate
+   identifiers whenever the short-path algorithm detected a better path than
+   the original one. *)
+let tree_of_best_type_path p p' =
+  if Path.same p p' then tree_of_path (Some Type) p'
+  else tree_of_path None p'
 
 (* Print a type expression *)
 
@@ -921,9 +920,15 @@ let nameable_row row =
    subterms that would be printed by the type printer. *)
 let printer_iter_type_expr f ty =
   match get_desc ty with
-  | Tconstr(p, tyl, _) ->
-      let (_p', s) = best_type_path p in
-      List.iter f (apply_subst s tyl)
+  | Tconstr(p, tyl, _) -> begin
+      match best_type_path_resolution p with
+      | Nth n ->
+          f (apply_nth n tyl)
+      | Subst ns ->
+          List.iter f (apply_subst ns tyl)
+      | Id ->
+          List.iter f tyl
+    end
   | Tvariant row -> begin
       match row_name row with
       | Some(_p, tyl) when nameable_row row ->
@@ -1221,8 +1226,11 @@ module Aliases = struct
   let aliasable ty =
     match get_desc ty with
       Tvar _ | Tunivar _ | Tpoly _ | Trepr _ -> false
-    | Tconstr (p, _, _) ->
-        not (is_nth (snd (best_type_path p)))
+    | Tconstr (p, _, _) -> begin
+        match best_type_path_resolution p with
+        | Nth _ -> false
+        | Subst _ | Id -> true
+      end
     | _ -> true
 
   let should_visit_object ty =
@@ -1492,26 +1500,29 @@ let rec tree_of_modal_typexp mode modal ty =
         Otyp_tuple (tree_of_labeled_typlist mode labeled_tyl)
     | Tunboxed_tuple labeled_tyl ->
         Otyp_unboxed_tuple (tree_of_labeled_typlist mode labeled_tyl)
-    | Tconstr(p, tyl, _abbrev) ->
-        let p', s = best_type_path p in
-        let tyl' = apply_subst s tyl in
-        if is_nth s && not (tyl'=[])
-        then tree_of_typexp mode Alloc.Const.legacy (List.hd tyl')
-        else begin
-          Internal_names.add p';
-          Otyp_constr (tree_of_path (Some Type) p', tree_of_typlist mode tyl')
-        end
+    | Tconstr(p, tyl, _abbrev) -> begin
+        match best_type_path p with
+        | Nth n ->
+            tree_of_typexp mode Alloc.Const.legacy (apply_nth n tyl)
+        | Path (nso, p') ->
+            Internal_names.add p';
+            let tyl' = apply_subst_opt nso tyl in
+            Otyp_constr (tree_of_path (Some Type) p', tree_of_typlist mode tyl')
+      end
     | Tvariant row ->
         let { fields; name; closed; present; all_present; tags } =
           tree_of_typvariant_repr row
         in
         begin match name with
         | Some(p, tyl) when nameable_row row ->
-            let (p', s) = best_type_path p in
-            let id = tree_of_path (Some Type) p' in
-            let args = tree_of_typlist mode (apply_subst s tyl) in
             let out_variant =
-              if is_nth s then List.hd args else Otyp_constr (id, args) in
+              match best_type_path p with
+              | Nth n -> tree_of_typexp mode Alloc.Const.legacy (apply_nth n tyl)
+              | Path (s, p) ->
+                  let id = tree_of_path (Some Type) p in
+                  let args = tree_of_typlist mode (apply_subst_opt s tyl) in
+                  Otyp_constr (id, args)
+            in
             if closed && all_present then
               out_variant
             else
@@ -1537,15 +1548,19 @@ let rec tree_of_modal_typexp mode modal ty =
           (fun () -> Otyp_splice (tree_of_typexp mode alloc_mode ty))
     | Tquote_eval ty ->
         let ty = newgenty (Tquote ty) in
-        let p', s = best_type_path Predef.path_eval in
-        let tyl = apply_subst s [ty] in
-        Internal_names.add p';
-        let tyl =
-          wrap_printing_env_unguarded
-            (Env.enter_quotation !printing_env)
-            (fun () -> tree_of_typlist mode tyl)
-        in
-        Otyp_constr (tree_of_path (Some Type) p', tyl)
+        begin match best_type_path Predef.path_eval with
+        | Nth n ->
+            tree_of_typexp mode Alloc.Const.legacy (apply_nth n [ty])
+        | Path (s, p') ->
+            Internal_names.add p';
+            let tyl = apply_subst_opt s [ty] in
+            let tyl =
+              wrap_printing_env_unguarded
+                (Env.enter_quotation !printing_env)
+                (fun () -> tree_of_typlist mode tyl)
+            in
+            Otyp_constr (tree_of_path (Some Type) p', tyl)
+        end
     | Tnil | Tfield _ ->
         tree_of_typobject mode ty None
     | Tsubst _ ->
@@ -1760,9 +1775,8 @@ and tree_of_typobject mode fi nm =
       Otyp_object {fields; open_row}
   | Some (p, _ty :: tyl) ->
       let args = tree_of_typlist mode tyl in
-      let (p', s) = best_type_path p in
-      assert (s = Id);
-      Otyp_class (tree_of_path (Some Type) p', args)
+      let p' = best_type_path_simple p in
+      Otyp_class (tree_of_best_type_path p p', args)
   | _ -> fatal_error "Out_type.tree_of_typobject"
 
 and tree_of_typfields rest = function
@@ -2830,16 +2844,16 @@ let same_path t t' =
   let open Types in
   eq_type t t' ||
   match get_desc t, get_desc t' with
-    Tconstr(p,tl,_), Tconstr(p',tl',_) ->
-      let (p1, s1) = best_type_path p and (p2, s2)  = best_type_path p' in
-      begin match s1, s2 with
-        Nth n1, Nth n2 when n1 = n2 -> true
-      | (Id | Map _), (Id | Map _) when Path.same p1 p2 ->
-          let tl = apply_subst s1 tl and tl' = apply_subst s2 tl' in
+  | Tconstr(p,tl,_), Tconstr(p',tl',_) -> begin
+      match best_type_path p, best_type_path p' with
+      | Nth n, Nth n' when n = n' -> true
+      | Path(nso, p), Path(nso', p') when Path.same p p' ->
+          let tl = apply_subst_opt nso tl in
+          let tl' = apply_subst_opt nso' tl' in
           List.length tl = List.length tl' &&
           List.for_all2 eq_type tl tl'
       | _ -> false
-      end
+    end
   | _ ->
       false
 
@@ -2927,27 +2941,16 @@ let tree_of_type_declaration ident td rs =
 let tree_of_modtype_declaration ?(abbrev = false) id md =
   abbreviate ~abbrev tree_of_modtype_declaration id md
 
-let best_type_path p =
-  let legacy_path, _ as legacy = legacy_best_type_path p in
-  if
-    path_starts_from_hidden_load_path legacy_path
-    || Short_paths.type_path_is_hidden_or_invisible
-      (Env.short_paths !printing_env) legacy_path
-  then
-    short_paths_best_type_path p
-  else
-    legacy
-
 let shorten_type_path env p =
-  wrap_printing_env ~error:false env (fun () -> fst (best_type_path p))
+  wrap_printing_env ~error:false env (fun () -> best_type_path_simple p)
 
 let tree_of_class_type kind cty = tree_of_class_type kind [] cty
 let prepare_class_type cty = prepare_class_type [] cty
 
 let tree_of_type_path p =
-  let (p', s) = best_type_path p in
+  let (p', s) = best_type_path_original p in
   let p'' = if (s = Id) then p' else p in
-  tree_of_path p''
+  tree_of_best_type_path p p''
 
 module Compat = struct
   let type_declaration_for_merlin ~print_non_value_inferred_jkind id =
