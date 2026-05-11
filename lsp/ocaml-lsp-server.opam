@@ -47,7 +47,6 @@ depends: [
   "ocamlformat-rpc-lib" {>= "0.21.0"}
   "odoc" {with-doc}
   "odoc-parser" {= "3.1.0+ox"}
-  "merlin-lib" {= "5.2.1-502+ox"}
   "ppx_yojson_conv"
   "core_unix"
   "async"
