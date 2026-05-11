@@ -14,6 +14,6 @@
   ppx_expect.config
   ppx_expect.config_types
   ppx_inline_test.config
-  ppx_expect.runtime_types)
+  ppx_expect.runtime)
  (preprocess
   (pps ppx_expect)))

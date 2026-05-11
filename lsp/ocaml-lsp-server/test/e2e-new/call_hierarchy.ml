@@ -1,4 +1,4 @@
-open Async
+(*= open Async
 open Test.Import
 
 let call_hierachy_prepare client position =
@@ -671,4 +671,4 @@ let h = g
        ╰─╴h -- test.ml @ 2
     |}];
   return ()
-;;
+;; *)

@@ -33,10 +33,11 @@ let make
   { event_index; action; file; lines; hash; position }
 ;;
 
-let log_lsp_timing ~wall_time (t : t) =
+let log_lsp_timing ~wall_time:_ (_t : t) =
   if not am_running_test
   then
-    [%log.info
+    ()
+    (*= [%log.info
       "lsp timing"
         (wall_time : float)
         ~event_index:(t.event_index : int)
@@ -44,7 +45,7 @@ let log_lsp_timing ~wall_time (t : t) =
         ~file:(t.file : string list)
         ~lines:(t.lines : int list)
         ~hash:(t.hash : int list)
-        ~position:(t.position : (int * int) list)]
+        ~position:(t.position : (int * int) list)] *)
 ;;
 
 let with_logging ~f t =
@@ -82,7 +83,15 @@ let log_merlin_timing ~wall_time ~timing_breakdown t =
     let ppx = extract "ppx" in
     let reader = extract "reader" in
     let typer = extract "typer" in
-    [%log.info
+    ignore total_time;
+    ignore error;
+    ignore pp;
+    ignore ppx;
+    ignore reader;
+    ignore typer;
+    ignore wall_time;
+    ignore t
+    (*= [%log.info
       "merlin timing"
         (wall_time : float)
         (total_time : float)
@@ -96,18 +105,19 @@ let log_merlin_timing ~wall_time ~timing_breakdown t =
         ~file:(t.file : string list)
         ~lines:(t.lines : int list)
         ~hash:(t.hash : int list)
-        ~position:(t.position : (int * int) list)])
+        ~position:(t.position : (int * int) list)]) *))
 ;;
 
 let log_event_start t =
   if not am_running_test
   then
-    [%log.info
+    ignore t
+    (*= [%log.info
       "lsp event"
         ~event_index:(t.event_index : int)
         ~action:(t.action : string)
         ~file:(t.file : string list)
         ~lines:(t.lines : int list)
         ~hash:(t.hash : int list)
-        ~position:(t.position : (int * int) list)]
+        ~position:(t.position : (int * int) list)] *)
 ;;

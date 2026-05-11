@@ -38,7 +38,7 @@
   ppx_string
   ppx_yojson_conv_lib
   ppxlib
-  ppxlib_ast.astlib
+  ppxlib.astlib
   re
   re2
   spawn
