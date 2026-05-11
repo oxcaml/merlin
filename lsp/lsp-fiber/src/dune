@@ -1,0 +1,18 @@
+(library
+ (name lsp_fiber)
+ (libraries
+  dyn
+  fiber
+  lev_fiber_async
+  jsonrpc
+  jsonrpc_fiber
+  lsp
+  ppx_yojson_conv_lib
+  stdune
+  yojson)
+ (instrumentation
+  (backend bisect_ppx))
+ (flags (
+   :standard
+   -open
+   Lev_fiber_async)))
