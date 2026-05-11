@@ -15,7 +15,6 @@
 This query should not hang indefinitely
   $ $MERLIN single type-enclosing -position 11:17 -short-paths \
   > -filename test.ml < test.ml |
-  > revert-newlines |
   > jq '.value'
   [
     {

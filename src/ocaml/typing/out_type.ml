@@ -672,8 +672,7 @@ let rec normalize_type_path ?(cache=false) env p =
       Tconstr (p1, tyl, _) ->
         if List.length params = List.length tyl
         && List.for_all2 eq_type params tyl
-        then
-          if Path.same p p1 then (p, Id) else normalize_type_path ~cache env p1
+        then normalize_type_path ~cache env p1
         else if cache || List.length params <= List.length tyl
              || not (uniq (List.map get_id tyl)) then (p, Id)
         else
