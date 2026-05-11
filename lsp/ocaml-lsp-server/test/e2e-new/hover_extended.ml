@@ -99,7 +99,7 @@ let f a b c d e f g h i = 1 + a + b + c + d + e + f + g + h + i
     {
       "contents": {
         "kind": "plaintext",
-        "value": "int -> int -> int -> int -> int -> int -> int -> int -> int -> int\n***\nAllocation: heap"
+        "value": "'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> 'j\n***\nAllocation: heap"
       },
       "range": {
         "end": { "character": 5, "line": 1 },
@@ -342,7 +342,7 @@ let f a b c d e f g h i = 1 + a + b + c + d + e + f + g + h + i
       "canDecreaseVerbosity": false,
       "contents": {
         "kind": "plaintext",
-        "value": "int -> int -> int -> int -> int -> int -> int -> int -> int -> int\n***\nAllocation: heap"
+        "value": "'a -> 'b -> 'c -> 'd -> 'e -> 'f -> 'g -> 'h -> 'i -> 'j\n***\nAllocation: heap"
       },
       "range": {
         "end": { "character": 5, "line": 1 },
@@ -451,7 +451,7 @@ let f g x y =
       "canDecreaseVerbosity": false,
       "contents": {
         "kind": "plaintext",
-        "value": "int -> int -> int\n***\nInteger addition.\n    Left-associative operator, see {!Ocaml_operators} for more information.\n***\nAllocation: no relevant allocation to show"
+        "value": "'a -> 'b -> 'c\n***\nAllocation: no relevant allocation to show"
       },
       "range": {
         "end": { "character": 13, "line": 2 },

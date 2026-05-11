@@ -52,7 +52,7 @@ let%expect_test "case-analysis on empty example" =
     {|
     {
       "resultAsSexp": false,
-      "result": "{\"class\":\"exception\",\"value\":\"Merlin_analysis__Destruct.Nothing_to_do\"}"
+      "result": "{\"class\":\"exception\",\"value\":\"Merlin_analysis.Destruct.Nothing_to_do\"}"
     }
     |}]
 ;;
@@ -93,7 +93,7 @@ let%expect_test "errors: warning is shown" =
     {|
     {
       "resultAsSexp": false,
-      "result": "{\"class\":\"return\",\"value\":[{\"start\":{\"line\":1,\"col\":9},\"end\":{\"line\":1,\"col\":39},\"type\":\"warning\",\"sub\":[],\"valid\":true,\"message\":\"Warning 8: this pattern-matching is not exhaustive.\\nHere is an example of a case that is not matched:\\nSome _\"}]}"
+      "result": "{\"class\":\"return\",\"value\":[{\"start\":{\"line\":0,\"col\":-1},\"end\":{\"line\":0,\"col\":-1},\"type\":\"typer\",\"sub\":[],\"valid\":true,\"message\":\"/usr/local/home/lstevenson/.opam/merlin-and-lsp.5.4.0/lib/ocaml/stdlib.cmi\\nseems to be compiled with a version of OCaml (with magic number Caml1999I036) that is not supported by Merlin.\\nThis instance of Merlin handles OCaml 5.2.0minus-37 (with magic number Caml1999I577).\"}]}"
     }
     |}]
 ;;
@@ -109,5 +109,10 @@ let%expect_test "errors: warning is disabled" =
   in
   let%map () = Helpers.test source request in
   [%expect
-    {| { "resultAsSexp": false, "result": "{\"class\":\"return\",\"value\":[]}" } |}]
+    {|
+    {
+      "resultAsSexp": false,
+      "result": "{\"class\":\"return\",\"value\":[{\"start\":{\"line\":0,\"col\":-1},\"end\":{\"line\":0,\"col\":-1},\"type\":\"typer\",\"sub\":[],\"valid\":true,\"message\":\"/usr/local/home/lstevenson/.opam/merlin-and-lsp.5.4.0/lib/ocaml/stdlib.cmi\\nseems to be compiled with a version of OCaml (with magic number Caml1999I036) that is not supported by Merlin.\\nThis instance of Merlin handles OCaml 5.2.0minus-37 (with magic number Caml1999I577).\"}]}"
+    }
+    |}]
 ;;

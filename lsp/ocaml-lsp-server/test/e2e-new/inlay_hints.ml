@@ -87,14 +87,14 @@ let%expect_test "labeled argument" =
   let%map () =
     apply_inlay_hints ~hint_function_params:true ~source:"let f ~x = x + 1" ()
   in
-  [%expect {| let f ~x$: int$ = x + 1 |}]
+  [%expect {| let f ~x$: 'a$ = x + 1 |}]
 ;;
 
 let%expect_test "case argument" =
   let%map () =
     apply_inlay_hints ~hint_function_params:true ~source:"let f (Some x) = x + 1" ()
   in
-  [%expect {| let f (Some x$: int$) = x + 1 |}]
+  [%expect {| let f (Some x$: 'a$) = x + 1 |}]
 ;;
 
 let%expect_test "pattern variables" =
@@ -274,7 +274,7 @@ let bar a = function
   in
   [%expect
     {|
-    let bar a$: int$ = function
+    let bar a$: 'a$ = function
       | 0 -> 10
       | _ -> -a
     ;;

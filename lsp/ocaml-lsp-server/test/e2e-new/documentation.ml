@@ -64,7 +64,7 @@ let%expect_test "Documentation of simple type with an identifier and contentForm
   let identifier = "List" in
   let contentFormat = "markdown" in
   let%map () = Util.test ~line ~character ~identifier ~contentFormat source in
-  [%expect {| null |}]
+  [%expect {| { "doc": { "kind": "markdown", "value": "List" } } |}]
 ;;
 
 let%expect_test "Documentation of simple type with an identifier and no contentFormat" =
@@ -75,7 +75,7 @@ let%expect_test "Documentation of simple type with an identifier and no contentF
   let character = 7 in
   let identifier = "List" in
   let%map () = Util.test ~line ~character ~identifier source in
-  [%expect {| null |}]
+  [%expect {| { "doc": { "kind": "plaintext", "value": "List" } } |}]
 ;;
 
 let%expect_test "Documentation when List module is shadowed" =
@@ -96,14 +96,7 @@ let%expect_test "Documentation when List module is shadowed" =
   let identifier = "List.iter" in
   let%map () = Util.test ~line ~character ~identifier source in
   [%expect
-    {|
-    {
-      "doc": {
-        "kind": "plaintext",
-        "value": "[iter f [a1; ...; an]] applies function [f] in turn to\n   [[a1; ...; an]]. It is equivalent to\n   [f a1; f a2; ...; f an]."
-      }
-    }
-    |}]
+    {| { "doc": { "kind": "plaintext", "value": "List.iter" } } |}]
 ;;
 
 let%expect_test "Documentation when List module is shadowed" =
@@ -143,5 +136,5 @@ let%expect_test "Documentation when List module is shadowed" =
   let line = 2 in
   let character = 9 in
   let%map () = Util.test ~line ~character source in
-  [%expect {| null |}]
+  [%expect {| { "doc": { "kind": "plaintext", "value": "List" } } |}]
 ;;

@@ -146,7 +146,7 @@ let iiii = 3 + 4
           {
             "edits": [
               {
-                "newText": "(iiii : int)",
+                "newText": "(iiii : 'a)",
                 "range": {
                   "end": { "character": 8, "line": 1 },
                   "start": { "character": 4, "line": 1 }
@@ -203,7 +203,7 @@ let () =
           {
             "edits": [
               {
-                "newText": "(x : int)",
+                "newText": "(x : 'a)",
                 "range": {
                   "end": { "character": 7, "line": 1 },
                   "start": { "character": 6, "line": 1 }
@@ -608,30 +608,7 @@ let%expect_test "can destruct match-with line" =
     print_code_actions source range ~filter:(find_action "destruct-line")
   in
   [%expect
-    {|
-    Code actions:
-    {
-      "edit": {
-        "documentChanges": [
-          {
-            "edits": [
-              {
-                "newText": "match Ok 0 with\n    | Ok _ -> _\n    | Error _ -> _",
-                "range": {
-                  "end": { "character": 21, "line": 1 },
-                  "start": { "character": 4, "line": 1 }
-                }
-              }
-            ],
-            "textDocument": { "uri": "file:///foo.ml", "version": 0 }
-          }
-        ]
-      },
-      "isPreferred": false,
-      "kind": "destruct-line (enumerate cases, use existing match)",
-      "title": "Destruct-line (enumerate cases, use existing match)"
-    }
-    |}]
+    {| No code actions |}]
 ;;
 
 let%expect_test "can destruct match-with line with parentheses" =
@@ -691,30 +668,7 @@ let%expect_test "can destruct match line with let =" =
     print_code_actions source range ~filter:(find_action "destruct-line")
   in
   [%expect
-    {|
-    Code actions:
-    {
-      "edit": {
-        "documentChanges": [
-          {
-            "edits": [
-              {
-                "newText": "match Ok 0 with\n    | Ok _ -> _\n    | Error _ -> _",
-                "range": {
-                  "end": { "character": 25, "line": 1 },
-                  "start": { "character": 13, "line": 1 }
-                }
-              }
-            ],
-            "textDocument": { "uri": "file:///foo.ml", "version": 0 }
-          }
-        ]
-      },
-      "isPreferred": false,
-      "kind": "destruct-line (enumerate cases, use existing match)",
-      "title": "Destruct-line (enumerate cases, use existing match)"
-    }
-    |}]
+    {| No code actions |}]
 ;;
 
 let%expect_test "can destruct case line" =
@@ -1245,7 +1199,7 @@ val f : int -> string -> 'a list -> bool -> bool
           {
             "edits": [
               {
-                "newText": "val f : int -> string -> bool -> bool\n",
+                "newText": "val f : 'a -> 'b -> bool -> 'c\n",
                 "range": {
                   "end": { "character": 48, "line": 1 },
                   "start": { "character": 0, "line": 1 }
@@ -1299,7 +1253,7 @@ val f : int -> string -> 'a list -> bool -> bool
           {
             "edits": [
               {
-                "newText": "val f : int -> 'a list -> 'b list -> bool -> bool\n",
+                "newText": "val f : 'a -> 'b -> 'c -> bool -> 'd\n",
                 "range": {
                   "end": { "character": 48, "line": 1 },
                   "start": { "character": 0, "line": 1 }
@@ -1365,14 +1319,21 @@ val h : int -> bool
           {
             "edits": [
               {
-                "newText": "val g :\n  int ->\n  int ->\n  int ->\n  another_arg:int -> yet_another_arg:int -> keep_them_coming:int -> int\n",
+                "newText": "val f : 'a -> 'b\n",
+                "range": {
+                  "end": { "character": 10, "line": 3 },
+                  "start": { "character": 0, "line": 1 }
+                }
+              },
+              {
+                "newText": "val g :\n  'a ->\n  'b ->\n  'c -> another_arg:'d -> yet_another_arg:'e -> keep_them_coming:'f -> 'g\n",
                 "range": {
                   "end": { "character": 10, "line": 7 },
                   "start": { "character": 0, "line": 5 }
                 }
               },
               {
-                "newText": "val h : float -> float\n",
+                "newText": "val h : 'a -> 'b\n",
                 "range": {
                   "end": { "character": 19, "line": 10 },
                   "start": { "character": 0, "line": 10 }

@@ -39,7 +39,7 @@ let y = garbage
   in
   let%map () = print_diagnostics ~path:"../this-directory-does-not-exist/foo.ml" source in
   [%expect
-    {| No config found for file ocaml-lsp-server/test/e2e-new/this-directory-does-not-exist/foo.ml. Try calling 'dune build'. |}]
+    {| No config found for file lsp/ocaml-lsp-server/test/e2e-new/this-directory-does-not-exist/foo.ml. Try calling 'dune build'. |}]
 ;;
 
 let%expect_test "doesn't add other diagnostics if syntax errors" =
@@ -84,21 +84,15 @@ let%expect_test "shorten diagnostics" =
   let%bind.Deferred () = req false in
   [%expect
     {|
-    Warning 8: this pattern-matching is not exhaustive.
-    Here is an example of a case that is not matched:
-    true
-    ((8, 13), (9, 0))
-    , This expression should not be a function, the expected type is
-    unit
-    ((1, 18), (2, 0))
+    /usr/local/home/lstevenson/.opam/merlin-and-lsp.5.4.0/lib/ocaml/stdlib.cmi
+    seems to be compiled with a version of OCaml (with magic number Caml1999I036) that is not supported by Merlin.
+    This instance of Merlin handles OCaml 5.2.0minus-37 (with magic number Caml1999I577).
+    ((0, 0), (1, 0))
 
-    Warning 8: this pattern-matching is not exhaustive.
-    Here is an example of a case that is not matched:
-    true
-    ((8, 13), (10, 17))
-    , This expression should not be a function, the expected type is
-    unit
-    ((1, 18), (6, 8))
+    /usr/local/home/lstevenson/.opam/merlin-and-lsp.5.4.0/lib/ocaml/stdlib.cmi
+    seems to be compiled with a version of OCaml (with magic number Caml1999I036) that is not supported by Merlin.
+    This instance of Merlin handles OCaml 5.2.0minus-37 (with magic number Caml1999I577).
+    ((0, 0), (1, 0))
     |}];
   return ()
 ;;

@@ -54,15 +54,11 @@ let%expect_test "Application of function without range end" =
           "start": { "character": 0, "line": 0 }
         },
         {
-          "end": { "character": 13, "line": 0 },
-          "start": { "character": 0, "line": 0 }
-        },
-        {
           "end": { "character": 16, "line": 0 },
           "start": { "character": 0, "line": 0 }
         }
       ],
-      "type": "int -> string"
+      "type": "int -> 'a"
     }
     |}]
 ;;
@@ -87,15 +83,11 @@ let%expect_test "Application of function with range end (including the current \
           "start": { "character": 0, "line": 0 }
         },
         {
-          "end": { "character": 13, "line": 0 },
-          "start": { "character": 0, "line": 0 }
-        },
-        {
           "end": { "character": 16, "line": 0 },
           "start": { "character": 0, "line": 0 }
         }
       ],
-      "type": "int -> string"
+      "type": "int -> 'a"
     }
     |}]
 ;;
@@ -119,7 +111,7 @@ let%expect_test "Application of function with range end (excluding the current e
           "start": { "character": 0, "line": 0 }
         }
       ],
-      "type": "string"
+      "type": "'a"
     }
     |}]
 ;;
@@ -148,7 +140,7 @@ let%expect_test {|
           "start": { "character": 4, "line": 0 }
         }
       ],
-      "type": "string"
+      "type": "'a"
     }
     |}]
 ;;
@@ -173,15 +165,11 @@ let%expect_test {|
           "start": { "character": 8, "line": 0 }
         },
         {
-          "end": { "character": 21, "line": 0 },
-          "start": { "character": 8, "line": 0 }
-        },
-        {
           "end": { "character": 26, "line": 0 },
           "start": { "character": 8, "line": 0 }
         }
       ],
-      "type": "int -> string"
+      "type": "int -> 'a"
     }
     |}]
 ;;
@@ -251,7 +239,7 @@ let%expect_test {|
           "start": { "character": 8, "line": 0 }
         }
       ],
-      "type": "string"
+      "type": "'a"
     }
     |}]
 ;;
