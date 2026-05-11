@@ -114,7 +114,7 @@ let free (expr : Typedtree.expression) =
   let idents = ref [] in
   let expr_iter (iter : I.iterator) (expr : Typedtree.expression) =
     match expr.exp_desc with
-    | Texp_ident (path, { txt = ident; _ }, _, _, _, _) -> idents := (ident, path) :: !idents
+    | Texp_ident { path; lid = { txt = ident; _ }; _ } -> idents := (ident, path) :: !idents
     | _ ->
       I.default_iterator.expr iter expr;
       (* if a variable was bound but is no longer, it must be associated with a

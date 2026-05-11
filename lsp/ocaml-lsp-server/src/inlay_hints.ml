@@ -9,7 +9,7 @@ let range_overlaps_loc range loc =
 
 let outline_type ~env typ =
   Ocaml_typing.Printtyp.wrap_printing_env env (fun () ->
-    Format.asprintf "@[<h>: %a@]" (Merlin_utils.Format_doc.compat Ocaml_typing.Printtyp.type_scheme) typ)
+    Format.asprintf "@[<h>: %a@]" (Ocaml_utils.Format_doc.compat Ocaml_typing.Printtyp.type_scheme) typ)
   |> String.extract_words ~is_word_char:(function
     | ' ' | '\t' | '\n' -> false
     | _ -> true)

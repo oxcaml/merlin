@@ -397,6 +397,7 @@ end = struct
       | Ptyp_tuple _ | Ptyp_unboxed_tuple _
       | Ptyp_quote _ | Ptyp_splice _
       | Ptyp_repr _ -> `Default_iterator
+      | _ -> `Default_iterator
     in
     match iter with
     | `Default_iterator -> Ast_iterator.default_iterator.typ self ct
@@ -562,7 +563,7 @@ end = struct
           (including their locations!) are not type equal to each other. *)
       let ({ loc_start; loc_end; loc_ghost } : Loc.t) = string_loc in
       Ppx_string.parse
-        ~config:(Ppx_string.config_for_string Local_input_heap_output)
+        ~config:Ppx_string.config_for_string
         ~string_loc:{ loc_start; loc_end; loc_ghost }
         ~delimiter
         string
@@ -722,7 +723,6 @@ end = struct
       | Pexp_idx (block_access, unboxed_accesses) ->
         (match block_access with
         | Baccess_field l -> lident l (Token_type.of_builtin Property) ()
-        | Baccess_array (_, _, e) -> self.expr self e
         | Baccess_block (_, e) -> self.expr self e);
         List.iter unboxed_accesses ~f:(fun (Parsetree.Uaccess_unboxed_field l) ->
           lident l (Token_type.of_builtin Property) ());
@@ -968,8 +968,8 @@ end = struct
        | Ptyp_open (_, _)
        | Ptyp_of_kind _ | Ptyp_tuple _ | Ptyp_unboxed_tuple _ | Ptyp_any _ | Ptyp_var _
        | Ptyp_quote _ | Ptyp_splice _
-       | Ptyp_repr _ ->
-         Token_type.of_builtin Variable)
+       | Ptyp_repr _ -> Token_type.of_builtin Variable
+       | _ -> Token_type.of_builtin Variable)
       (Token_modifiers_set.singleton Declaration);
     self.typ self pval_type;
     (* TODO: handle pval_prim ? *)

@@ -171,7 +171,7 @@ let handle_prepare ~log_info (server : State.t Server.t) params =
     | Not_a_function_or_identifier, _ -> Fiber.return None
     | Maybe_fn_call_or_reference rhs, _ -> resolve_definition rhs
     | Maybe_fn_alias (lhs, rhs), module_path ->
-      Core.Set_once.set_if_none first_alias (uri, lhs, module_path);
+      Core.Set_once.set_if_none first_alias [%here] (uri, lhs, module_path);
       resolve_definition rhs
     | Fn_definition id, module_path ->
       let item =

@@ -68,6 +68,10 @@ end
 module String = struct
   include Stdune.String
 
+  let is_prefix s ~prefix = starts_with ~prefix s
+  let is_prefixed ~by s = starts_with ~prefix:by s
+  let is_suffix s ~suffix = ends_with ~suffix s
+
   let strip = trim
 
   include struct
